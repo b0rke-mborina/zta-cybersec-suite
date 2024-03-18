@@ -12,7 +12,7 @@ class DataStore(BaseModel):
 	key: str
 
 @app.get("/cryptography/key/get", status_code = 200)
-def getKey(data: DataGet):
+async def getKey(data: DataGet):
 	print(data)
 	try:
 		return { "key_retrieval": "success", "key": "HERE_GOES_KEY" }
@@ -20,7 +20,7 @@ def getKey(data: DataGet):
 		return { "key_retrieval": "failure", "error": str(e) }
 
 @app.post("/cryptography/key/store", status_code = 200)
-def storeKey(data: DataStore):
+async def storeKey(data: DataStore):
 	print(data)
 	try:
 		return { "key_storage": "success" }

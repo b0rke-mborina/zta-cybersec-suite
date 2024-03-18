@@ -18,7 +18,7 @@ class Data(BaseModel):
 	key: str = None
 
 @app.get("/cryptography/decrypt", status_code = 200)
-def decryption(data: Data):
+async def decryption(data: Data):
 	print(data)
 	try:
 		return { "decryption": "success", "plaintext": "HERE_GOES_PLAINTEXT" }

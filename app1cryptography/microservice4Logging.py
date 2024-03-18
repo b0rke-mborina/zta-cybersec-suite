@@ -1,7 +1,10 @@
+import json
 from fastapi import FastAPI
-from pydantic import BaseModel, validator
-from enum import Enum
+from pydantic import BaseModel, model_validator, validator
+import uvicorn
 import datetime
+from enum import Enum
+
 
 app = FastAPI()
 
@@ -28,11 +31,27 @@ class Data(BaseModel):
 		except ValueError:
 			raise ValueError("Timestamp must be in ISO 8601 format")
 		return v
+	
+	@model_validator(mode='before')
+	@classmethod
+	def to_py_dict(cls, data):
+		return json.loads(data)
+
+def make_external_request():
+	print("HERE")
+	raise ExternalServiceUnavailableError()
+
+class ExternalServiceUnavailableError(Exception):
+	pass
 
 @app.get("/cryptography/logging", status_code = 200)
-def logging(data: Data):
+async def logging(data: Data):
+	print("I AM AT LOGGING MICROSERVICE")
 	print(data)
+	return {"result": "logging success"}
 	try:
 		return { "logging": "success" }
 	except Exception as e:
 		return { "logging": "failure", "error_message": str(e) }
+
+# uvicorn app1Cryptography.microservice4Logging:app --reload --host 127.0.0.1 --port 8004
