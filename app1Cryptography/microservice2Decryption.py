@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import aiohttp
 import asyncio
@@ -19,6 +21,20 @@ class Data(BaseModel):
 	algorithm: Algorithm
 	plaintext: str
 	key: str = None
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+	return JSONResponse(
+		status_code = 400,
+		content = { "encryption": "failure", "error_message": "Input invalid." },
+	)
+
+@app.exception_handler(HTTPException)
+async def httpExceptionHandler(request, exc):
+	return JSONResponse(
+		status_code = 500,
+		content = { "encryption": "failure", "error_message": "Unexpected error occured." },
+	)
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
@@ -57,16 +73,21 @@ async def decryption(data: Data):
 	print("Res 1:")
 	print(result1)
 
+	if result1[0].get("logging") != "success":
+		raise HTTPException(500)
+
 	result2 = await task("get", link2, data2)
 	print("Res 2:")
 	print(result2)
 
+	if result2[0].get("key_management") != "success":
+		raise HTTPException(500)
+
 	result3 = await task("post", link3, data3)
 	print("Res 2:")
-	print(result3)
+	print(result3) # """"""
 
-	return { "message": "Request processed successfully", "result logging": result1, "result key get": result2, "result key store": result3 }
-	try:
-		return { "decryption": "success", "plaintext": "HERE_GOES_PLAINTEXT" }
-	except Exception as e:
-		return { "decryption": "failure", "error": str(e) }
+	if result3[0].get("key_management") != "success":
+		raise HTTPException(500)
+
+	return { "encryption": "success", "ciphertext": "HERE_GOES_PLAINTEXT" }

@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator, validator
 import json
 import datetime
@@ -34,17 +35,17 @@ class Data(BaseModel):
 	@model_validator(mode='before')
 	@classmethod
 	def to_py_dict(cls, data):
-		return json.loads(data)
+		return json.loads(data) # """"""
 
-def make_external_request():
-	print("HERE")
-	raise ExternalServiceUnavailableError()
-
-class ExternalServiceUnavailableError(Exception):
-	pass
+@app.exception_handler(Exception)
+async def exceptionHandler(request, exc):
+	return JSONResponse(
+		status_code = 500,
+		content = { "logging": "failure", "error_message": "Unexpected error occured." },
+	)
 
 @app.get("/cryptography/logging", status_code = 200)
 async def logging(data: Data):
-	print("I AM AT LOGGING MICROSERVICE")
 	print(data)
-	return {"result": "logging success"}
+	# raise Exception()
+	return {"logging": "success"}
