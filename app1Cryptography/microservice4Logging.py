@@ -1,7 +1,6 @@
-import json
 from fastapi import FastAPI
 from pydantic import BaseModel, model_validator, validator
-import uvicorn
+import json
 import datetime
 from enum import Enum
 
@@ -49,9 +48,3 @@ async def logging(data: Data):
 	print("I AM AT LOGGING MICROSERVICE")
 	print(data)
 	return {"result": "logging success"}
-	try:
-		return { "logging": "success" }
-	except Exception as e:
-		return { "logging": "failure", "error_message": str(e) }
-
-# uvicorn app1Cryptography.microservice4Logging:app --reload --host 127.0.0.1 --port 8004

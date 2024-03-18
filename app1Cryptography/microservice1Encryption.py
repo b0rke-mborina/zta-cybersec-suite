@@ -1,13 +1,13 @@
-import json
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, model_validator
-import uvicorn
 import aiohttp
 import asyncio
+import json
 from enum import Enum
 
 
 app = FastAPI()
+
 
 class Algorithm(str, Enum):
 	TripleDES = "TripleDES"
@@ -26,16 +26,13 @@ async def service_2_exception_handler(request, exc):
 	error_message = "Input invalid." if exc.status_code == 422 else exc.detail
 	return {"detail": error_message}
 
-async def request(session, data):
-	async with session.get("http://127.0.0.1:8004/cryptography/logging", data = json.dumps(data)) as response:
-		return await response.json()
+async def request(session, method, url, data):
+	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
+			return await response.json()
 
-
-async def task(reqData):
+async def task(method, url, reqData):
 	async with aiohttp.ClientSession() as session:
-		# tasks = [request(session) for i in range(100)]
-		# result = await asyncio.gather(*tasks)
-		task = request(session, reqData)
+		task = request(session, method, url, reqData)
 		result = await asyncio.gather(task)
 		return result
 
@@ -44,22 +41,35 @@ async def encryption(data: Data):
 	print("I AM AT ENCRYPTION MICROSERVICE")
 	print(data)
 
-	nesto={}
-	nesto["timestamp"] = "2024-03-17"
-	nesto["level"] = "INFO"
-	nesto["logger_source"] = 1
-	nesto["user_id"] = 1
-	nesto["request"] = "something"
-	nesto["error_message"] = "this is fine"
+	link1 = "http://127.0.0.1:8004/cryptography/logging"
+	link2 = "http://127.0.0.1:8003/cryptography/key/get"
+	link3 = "http://127.0.0.1:8003/cryptography/key/store"
 
-	result = await task(nesto)
-	print("Res:")
-	print(result)
+	data1 = {}
+	data1["timestamp"] = "2024-03-17"
+	data1["level"] = "INFO"
+	data1["logger_source"] = 1
+	data1["user_id"] = 1
+	data1["request"] = "something"
+	data1["error_message"] = "this is fine"
 
-	return { "message": "Request processed successfully", "data": result }
-	"""try:
-		return { "encryption": "success", "ciphertext": "HERE_GOES_CIPHERTEXT" }
-	except Exception as e:
-		return { "encryption": "failure", "error": str(e) }"""
+	data2 = {}
+	data2["user_id"] = 11
 
-# uvicorn app1Cryptography.microservice1Encryption:app --reload --host 127.0.0.1 --port 8001
+	data3 = {}
+	data3["user_id"] = 11
+	data3["key"] = "HERE_GOES_KEY"
+
+	result1 = await task("get", link1, data1)
+	print("Res 1:")
+	print(result1)
+
+	result2 = await task("get", link2, data2)
+	print("Res 2:")
+	print(result2)
+
+	result3 = await task("post", link3, data3)
+	print("Res 2:")
+	print(result3)
+
+	return { "message": "Request processed successfully", "result logging": result1, "result key get": result2, "result key store": result3 }

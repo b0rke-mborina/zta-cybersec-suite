@@ -1,15 +1,27 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
+import json
+
 
 app = FastAPI()
 
 
 class DataGet(BaseModel):
 	user_id: int
+	
+	@model_validator(mode='before')
+	@classmethod
+	def to_py_dict(cls, data):
+		return json.loads(data) # """"""
 
 class DataStore(BaseModel):
 	user_id: int
 	key: str
+	
+	@model_validator(mode='before')
+	@classmethod
+	def to_py_dict(cls, data):
+		return json.loads(data)
 
 @app.get("/cryptography/key/get", status_code = 200)
 async def getKey(data: DataGet):
