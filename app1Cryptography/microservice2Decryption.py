@@ -2,10 +2,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-import aiohttp
-import asyncio
-import json
+from .utilityFunctions import task
 from enum import Enum
+
 
 app = FastAPI()
 
@@ -35,16 +34,6 @@ async def httpExceptionHandler(request, exc):
 		status_code = 500,
 		content = { "encryption": "failure", "error_message": "Unexpected error occured." },
 	)
-
-async def request(session, method, url, data):
-	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
-			return await response.json()
-
-async def task(method, url, reqData):
-	async with aiohttp.ClientSession() as session:
-		task = request(session, method, url, reqData)
-		result = await asyncio.gather(task)
-		return result
 
 @app.get("/cryptography/decrypt", status_code = 200)
 async def decryption(data: Data):
