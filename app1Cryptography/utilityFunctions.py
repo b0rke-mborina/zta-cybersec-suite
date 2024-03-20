@@ -11,3 +11,12 @@ async def task(method, url, reqData):
 		task = request(session, method, url, reqData)
 		result = await asyncio.gather(task)
 		return result
+
+async def log():
+	pass
+
+async def getKey():
+	pass
+
+async def storeKey():
+	pass
