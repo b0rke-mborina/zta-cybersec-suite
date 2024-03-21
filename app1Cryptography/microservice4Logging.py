@@ -4,6 +4,7 @@ from pydantic import BaseModel, model_validator, validator
 import json
 import datetime
 from enum import Enum
+from .utilityFunctions import log
 
 
 app = FastAPI()
@@ -46,6 +47,6 @@ async def exceptionHandler(request, exc):
 
 @app.get("/cryptography/logging", status_code = 200)
 async def logging(data: Data):
-	print(data)
-	# raise Exception()
+	# print(data)
+	await log(data, "app1Logs.db")
 	return {"logging": "success"}

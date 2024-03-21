@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
 import json
+from .utilityFunctions import getKey, storeKey
 
 
 app = FastAPI()
@@ -32,11 +33,13 @@ async def exceptionHandler(request, exc):
 	)
 
 @app.get("/cryptography/key/get", status_code = 200)
-async def getKey(data: DataGet):
+async def keyGet(data: DataGet):
 	print(data)
+	await getKey(data.user_id, "app1Keys.db")
 	return { "key_management": "success", "key": "HERE_GOES_KEY" }
 
 @app.post("/cryptography/key/store", status_code = 200)
-async def storeKey(data: DataStore):
+async def keyStore(data: DataStore):
 	print(data)
+	await storeKey(data.user_id, data.key, "app1Keys.db")
 	return { "key_management": "success" }
