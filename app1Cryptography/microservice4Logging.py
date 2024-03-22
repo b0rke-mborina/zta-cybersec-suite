@@ -45,7 +45,7 @@ async def exceptionHandler(request, exc):
 		content = { "logging": "failure", "error_message": "Unexpected error occured." },
 	)
 
-@app.get("/cryptography/logging", status_code = 200)
+@app.post("/cryptography/logging", status_code = 200)
 async def logging(data: Data):
 	# print(data)
 	await log(data, "app1Logs.db")

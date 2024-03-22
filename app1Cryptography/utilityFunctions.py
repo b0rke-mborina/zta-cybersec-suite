@@ -8,7 +8,7 @@ async def request(session, method, url, data):
 	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
 			return await response.json()
 
-async def task(method, url, reqData):
+async def sendRequest(method, url, reqData):
 	async with aiohttp.ClientSession() as session:
 		task = request(session, method, url, reqData)
 		result = await asyncio.gather(task)
@@ -40,6 +40,7 @@ async def getKey(userId, dbName):
 		await cursor.execute("SELECT * FROM Key WHERE user_id = ?", (userId, ))
 		results = await cursor.fetchall()
 		print("numberOfKeys", len(results))
+		return results[0].key if len(results) == 1 else ""
 
 async def storeKey(userId, key, dbName):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
@@ -48,3 +49,69 @@ async def storeKey(userId, key, dbName):
 			(userId, key)
 		)
 		await db.commit()
+
+def encrypt(algorithm, plaintext, key):
+	match algorithm:
+		case "DES":
+			return "ciphertext"
+		case "TripleDES":
+			return "ciphertext"
+		case "AES":
+			return "ciphertext"
+		case "RSA":
+			return "ciphertext"
+		case "Blowfish":
+			return "ciphertext"
+		case "Twofish":
+			return "ciphertext"
+
+def encryptDES():
+	pass
+
+def encryptTripleDES():
+	pass
+
+def encryptAES():
+	pass
+
+def encryptRSA():
+	pass
+
+def encryptBlowfish():
+	pass
+
+def encryptTwofish():
+	pass
+
+def decrypt(algorithm, ciphertext, key):
+	match algorithm:
+		case "DES":
+			return "ciphertext"
+		case "TripleDES":
+			return "ciphertext"
+		case "AES":
+			return "ciphertext"
+		case "RSA":
+			return "ciphertext"
+		case "Blowfish":
+			return "ciphertext"
+		case "Twofish":
+			return "ciphertext"
+
+def decryptDES():
+	pass
+
+def decryptTripleDES():
+	pass
+
+def decryptAES():
+	pass
+
+def decryptRSA():
+	pass
+
+def decryptBlowfish():
+	pass
+
+def decryptTwofish():
+	pass

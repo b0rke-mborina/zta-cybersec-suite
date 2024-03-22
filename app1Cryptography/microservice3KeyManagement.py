@@ -34,12 +34,12 @@ async def exceptionHandler(request, exc):
 
 @app.get("/cryptography/key/get", status_code = 200)
 async def keyGet(data: DataGet):
-	print(data)
-	await getKey(data.user_id, "app1Keys.db")
-	return { "key_management": "success", "key": "HERE_GOES_KEY" }
+	# print(data)
+	key = await getKey(data.user_id, "app1Keys.db")
+	return { "key_management": "success", "key": key }
 
 @app.post("/cryptography/key/store", status_code = 200)
 async def keyStore(data: DataStore):
-	print(data)
+	# print(data)
 	await storeKey(data.user_id, data.key, "app1Keys.db")
 	return { "key_management": "success" }
