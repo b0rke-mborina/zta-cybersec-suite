@@ -11,11 +11,11 @@ app = FastAPI()
 
 
 class Algorithm(str, Enum):
+	DES = "DES"
 	TripleDES = "TripleDES"
 	AES = "AES"
 	RSA = "RSA"
 	Blowfish = "Blowfish"
-	Twofish = "Twofish"
 
 class Data(BaseModel):
 	algorithm: Algorithm

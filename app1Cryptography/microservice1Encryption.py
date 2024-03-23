@@ -16,7 +16,6 @@ class Algorithm(str, Enum):
 	AES = "AES"
 	RSA = "RSA"
 	Blowfish = "Blowfish"
-	Twofish = "Twofish"
 
 class Data(BaseModel):
 	algorithm: Algorithm

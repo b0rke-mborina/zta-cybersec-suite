@@ -1,3 +1,7 @@
+from Crypto.Random import get_random_bytes
+from Crypto.Cipher import AES, DES, DES3, Blowfish
+from struct import pack
+from Crypto.PublicKey import RSA
 import aiohttp
 import asyncio
 import aiosqlite
@@ -53,35 +57,54 @@ async def storeKey(userId, key, dbName):
 def encrypt(algorithm, plaintext, key):
 	match algorithm:
 		case "DES":
-			return "ciphertext"
+			return encryptDES(plaintext)
 		case "TripleDES":
-			return "ciphertext"
+			return encryptTripleDES(plaintext)
 		case "AES":
-			return "ciphertext"
+			return encryptAES(plaintext)
 		case "RSA":
-			return "ciphertext"
+			return encryptRSA(plaintext)
 		case "Blowfish":
-			return "ciphertext"
-		case "Twofish":
-			return "ciphertext"
+			return encryptBlowfish(plaintext)
 
-def encryptDES():
-	pass
+def encryptDES(plaintext):
+	key = b'8Bkey_ph'
+	cipher = DES.new(key, DES.MODE_OFB)
+	ciphertext = cipher.iv + cipher.encrypt(plaintext.encode())
+	print(key)
+	return ciphertext
 
-def encryptTripleDES():
-	pass
+def encryptTripleDES(plaintext):
+	key = DES3.adjust_key_parity(get_random_bytes(24))
+	cipher = DES3.new(key, DES3.MODE_CFB)
+	ciphertext = cipher.iv + cipher.encrypt(plaintext.encode())
+	print(key)
+	return ciphertext
 
-def encryptAES():
-	pass
+def encryptAES(plaintext):
+	key = get_random_bytes(16)
+	cipher = AES.new(key, AES.MODE_EAX)
+	ciphertext, tag = cipher.encrypt_and_digest(plaintext.encode())
+	print(cipher.nonce)
+	print(key)
+	return ciphertext
 
-def encryptRSA():
-	pass
+def encryptRSA(plaintext):
+	key = RSA.generate(2048)
+	ciphertext = key.export_key(passphrase=plaintext, pkcs=8,protection="scryptAndAES128-CBC")
+	print(key)
+	return ciphertext
 
-def encryptBlowfish():
-	pass
-
-def encryptTwofish():
-	pass
+def encryptBlowfish(plaintext):
+	key = b'KEY_PLACEHOLDER'
+	bs = Blowfish.block_size
+	cipher = Blowfish.new(key, Blowfish.MODE_CBC)
+	plen = bs - len(plaintext.encode()) % bs
+	padding = [plen]*plen
+	padding = pack('b'*plen, *padding)
+	ciphertext = cipher.iv + cipher.encrypt(plaintext.encode() + padding)
+	print(key)
+	return ciphertext
 
 def decrypt(algorithm, ciphertext, key):
 	match algorithm:
@@ -94,8 +117,6 @@ def decrypt(algorithm, ciphertext, key):
 		case "RSA":
 			return "ciphertext"
 		case "Blowfish":
-			return "ciphertext"
-		case "Twofish":
 			return "ciphertext"
 
 def decryptDES():
@@ -111,7 +132,4 @@ def decryptRSA():
 	pass
 
 def decryptBlowfish():
-	pass
-
-def decryptTwofish():
 	pass
