@@ -54,70 +54,70 @@ async def storeKey(userId, key, dbName):
 		)
 		await db.commit()
 
-def encrypt(algorithm, plaintext, key):
+def encrypt(algorithm, plaintext, key = None, key_length = None):
 	match algorithm:
 		case "DES":
-			return encryptDES(plaintext)
+			return encryptDES(plaintext, key)
 		case "TripleDES":
-			return encryptTripleDES(plaintext)
+			return encryptTripleDES(plaintext, key)
 		case "AES":
-			return encryptAES(plaintext)
+			return encryptAES(plaintext, key)
 		case "RSA":
-			return encryptRSA(plaintext)
+			return encryptRSA(plaintext, key_length)
 		case "Blowfish":
-			return encryptBlowfish(plaintext)
+			return encryptBlowfish(plaintext, key)
 
-def encryptDES(plaintext):
-	key = b'8Bkey_ph'
+def encryptDES(plaintext, key):
+	key = key.encode()
 	cipher = DES.new(key, DES.MODE_OFB)
 	ciphertext = cipher.iv + cipher.encrypt(plaintext.encode())
 	print(key)
-	return ciphertext
+	return (ciphertext, None)
 
-def encryptTripleDES(plaintext):
-	key = DES3.adjust_key_parity(get_random_bytes(24))
+def encryptTripleDES(plaintext, key):
+	key = DES3.adjust_key_parity(key.encode())
 	cipher = DES3.new(key, DES3.MODE_CFB)
 	ciphertext = cipher.iv + cipher.encrypt(plaintext.encode())
 	print(key)
-	return ciphertext
+	return (ciphertext, None)
 
-def encryptAES(plaintext):
-	key = get_random_bytes(16)
+def encryptAES(plaintext, key):
+	key = key.encode()
 	cipher = AES.new(key, AES.MODE_EAX)
 	ciphertext, tag = cipher.encrypt_and_digest(plaintext.encode())
 	print(cipher.nonce)
 	print(key)
-	return ciphertext
+	return (ciphertext, None)
 
-def encryptRSA(plaintext):
-	key = RSA.generate(2048)
+def encryptRSA(plaintext, key_length):
+	key = RSA.generate(key_length)
 	ciphertext = key.export_key(passphrase=plaintext, pkcs=8,protection="scryptAndAES128-CBC")
 	print(key)
-	return ciphertext
+	return (ciphertext, key.decode())
 
-def encryptBlowfish(plaintext):
-	key = b'KEY_PLACEHOLDER'
+def encryptBlowfish(plaintext, key):
+	plaintext, key = plaintext.encode(), key.encode()
 	bs = Blowfish.block_size
 	cipher = Blowfish.new(key, Blowfish.MODE_CBC)
-	plen = bs - len(plaintext.encode()) % bs
+	plen = bs - len(plaintext) % bs
 	padding = [plen]*plen
 	padding = pack('b'*plen, *padding)
-	ciphertext = cipher.iv + cipher.encrypt(plaintext.encode() + padding)
+	ciphertext = cipher.iv + cipher.encrypt(plaintext + padding)
 	print(key)
-	return ciphertext
+	return (ciphertext, None)
 
 def decrypt(algorithm, ciphertext, key):
 	match algorithm:
 		case "DES":
-			return "ciphertext"
+			return decryptDES(ciphertext, key)
 		case "TripleDES":
-			return "ciphertext"
+			return decryptTripleDES(ciphertext, key)
 		case "AES":
-			return "ciphertext"
+			return decryptAES(ciphertext, key)
 		case "RSA":
-			return "ciphertext"
+			return decryptRSA(ciphertext, key)
 		case "Blowfish":
-			return "ciphertext"
+			return decryptBlowfish(ciphertext, key)
 
 def decryptDES():
 	pass
