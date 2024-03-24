@@ -119,17 +119,37 @@ def decrypt(algorithm, ciphertext, key):
 		case "Blowfish":
 			return decryptBlowfish(ciphertext, key)
 
-def decryptDES():
-	pass
+def decryptDES(ciphertext, key):
+	key = key.encode()
+	iv = ciphertext[:DES.block_size]
+	cipher = DES.new(key, DES.MODE_OFB, iv)
+	plaintext = cipher.decrypt(ciphertext[DES.block_size:])
+	return plaintext.decode()
 
-def decryptTripleDES():
-	pass
+def decryptTripleDES(ciphertext, key):
+	key = DES3.adjust_key_parity(key.encode())
+	iv = ciphertext[:DES3.block_size]
+	cipher = DES3.new(key, DES3.MODE_CFB, iv)
+	plaintext = cipher.decrypt(ciphertext[DES3.block_size:])
+	return plaintext.decode()
 
-def decryptAES():
-	pass
+def decryptAES(ciphertext, key):
+	key = key.encode()
+	nonce = ciphertext[:AES.block_size]
+	cipher = AES.new(key, AES.MODE_EAX, nonce)
+	plaintext = cipher.decrypt(ciphertext[AES.block_size:])
+	return plaintext.decode()
 
-def decryptRSA():
-	pass
+def decryptRSA(ciphertext, privateKey):
+	key = RSA.import_key(privateKey)
+	plaintext = key.decrypt(ciphertext, None)
+	return plaintext.decode()
 
-def decryptBlowfish():
-	pass
+def decryptBlowfish(ciphertext, key):
+	key = key.encode()
+	iv = ciphertext[:Blowfish.block_size]
+	cipher = Blowfish.new(key, Blowfish.MODE_CBC, iv)
+	plaintext = cipher.decrypt(ciphertext[Blowfish.block_size:])
+	padding_length = plaintext[-1]
+	plaintext = plaintext[:-padding_length]
+	return plaintext.decode()

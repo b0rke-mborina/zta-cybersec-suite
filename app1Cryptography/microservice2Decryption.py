@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from .utilityFunctions import sendRequest, decrypt
 import datetime
 from enum import Enum
@@ -20,7 +20,20 @@ class Algorithm(str, Enum):
 class Data(BaseModel):
 	algorithm: Algorithm
 	ciphertext: str
-	key: str = None
+	key: str
+
+	@validator('key')
+	def validate_key(cls, v, values, **kwargs):
+		algorithm = values.get('algorithm')
+		if algorithm == Algorithm.DES and len(v) != 8:
+			raise ValueError('Key must be 8 characters long for DES algorithm')
+		elif algorithm == Algorithm.TripleDES and len(v) != 24:
+			raise ValueError('Key must be 24 characters long for TripleDES algorithm')
+		elif algorithm == Algorithm.AES and len(v) != 16:
+			raise ValueError('Key must be 16 characters long for AES algorithm')
+		elif algorithm == Algorithm.RSA and len(v) not in [1024, 2048, 3072]:
+			raise ValueError('Key must be 1024, 2048, or 3072 characters long for RSA algorithm')
+		return v
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
