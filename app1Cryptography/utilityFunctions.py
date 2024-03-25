@@ -7,6 +7,7 @@ import asyncio
 import aiosqlite
 import json
 import os.path
+import base64
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
@@ -68,11 +69,18 @@ def encrypt(algorithm, plaintext, key = None, key_length = None):
 			return encryptBlowfish(plaintext, key)
 
 def encryptDES(plaintext, key):
-	key = key.encode()
+	# print(key)
+	# print(isinstance(plaintext, str))
+	key = key.encode("utf-8") # "utf-8" unicodedata.normalize('NFKD', key).encode('utf-8', "ignore")
+	plaintext = plaintext.encode("utf-8")
+	# print(key)
+	# print(isinstance(key, str))
+	# print(plaintext)
+	# print(isinstance(plaintext, str))
 	cipher = DES.new(key, DES.MODE_OFB)
-	ciphertext = cipher.iv + cipher.encrypt(plaintext.encode())
-	print(key)
-	return (ciphertext, None)
+	ciphertext = cipher.iv + cipher.encrypt(plaintext)
+	# print(key)
+	return (base64.b64encode(ciphertext).decode("utf-8"), None)
 
 def encryptTripleDES(plaintext, key):
 	key = DES3.adjust_key_parity(key.encode())
@@ -121,6 +129,7 @@ def decrypt(algorithm, ciphertext, key):
 
 def decryptDES(ciphertext, key):
 	key = key.encode()
+	ciphertext = base64.b64decode(ciphertext)
 	iv = ciphertext[:DES.block_size]
 	cipher = DES.new(key, DES.MODE_OFB, iv)
 	plaintext = cipher.decrypt(ciphertext[DES.block_size:])

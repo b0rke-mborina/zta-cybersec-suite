@@ -77,18 +77,18 @@ async def httpExceptionHandler(request, exc):
 async def encryption(data: Data):
 	# print(data)
 
-	link1 = "http://127.0.0.1:8004/cryptography/logging"
+	# link1 = "http://127.0.0.1:8004/cryptography/logging"
 	# link2 = "http://127.0.0.1:8003/cryptography/key/get"
 	# link3 = "http://127.0.0.1:8003/cryptography/key/store"
 
-	data1 = {
+	"""data1 = {
 		"timestamp": "2024-03-17",
 		"level": "INFO",
 		"logger_source": 1,
 		"user_id": 1,
 		"request": str(data),
 		"error_message": ""
-	}
+	}"""
 
 	"""data2 = {
 		"user_id": 11
@@ -99,12 +99,12 @@ async def encryption(data: Data):
 		"key": data.key
 	}"""
 
-	result1 = await sendRequest("post", link1, data1)
+	"""result1 = await sendRequest("post", link1, data1)
 	print("Res 1:")
 	print(result1)
 
 	if result1[0].get("logging") != "success":
-		raise HTTPException(500)
+		raise HTTPException(500)"""
 
 	"""result2 = await sendRequest("get", link2, data2)
 	print("Res 2:")
@@ -118,9 +118,30 @@ async def encryption(data: Data):
 	print(result3) # """"""
 
 	if result3[0].get("key_management") != "success":
-		raise HTTPException(500)"""
+		raise HTTPException(500) 'utf-8').strip()"""
 	
-	encryptionResult = encrypt(data.algorithm, data.plaintext, data.key, data.key_length)
+	# print(data.algorithm.value, data.plaintext, data.key, data.key_length)
+	encryptionResult = encrypt(data.algorithm.value, data.plaintext, data.key, data.key_length)
+	# print("HEREEEEEEEEEEEEEEEEEEEEE")
+	# print(encryptionResult)
+	# print(encryptionResult[0])
+
+	loggingResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8004/cryptography/logging",
+		{
+			"timestamp": "2024-03-17",
+			"level": "INFO",
+			"logger_source": 1,
+			"user_id": 1,
+			"request": str(data),
+			"error_message": ""
+		}
+	)
+	# print(loggingResult)
+
+	if loggingResult[0].get("logging") != "success":
+		raise HTTPException(500)
 
 	if data.algorithm == Algorithm.RSA:
 		return { "encryption": "success", "ciphertext": encryptionResult[0], "key": encryptionResult[1] }
