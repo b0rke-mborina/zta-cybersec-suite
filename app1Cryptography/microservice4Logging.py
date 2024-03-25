@@ -23,6 +23,7 @@ class Data(BaseModel):
 	logger_source: int
 	user_id: int
 	request: str
+	response: str = ""
 	error_message: str = ""
 
 	@validator("timestamp")

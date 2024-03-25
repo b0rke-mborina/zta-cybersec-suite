@@ -43,13 +43,14 @@ async def validation_exception_handler(request, exc):
 		"logger_source": 1,
 		"user_id": 1,
 		"request": str(request),
-		"error_message": "Unsuccessful request due to a Request Validation error."
+		"response": "",
+		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
 	}
 	await sendRequest("post", "http://127.0.0.1:8004/cryptography/logging", dataForLoggingUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 400,
-		content = { "encryption": "failure", "error_message": "Input invalid." },
+		content = { "decryption": "failure", "error_message": "Input invalid." },
 	)
 
 @app.exception_handler(HTTPException)
@@ -62,16 +63,21 @@ async def httpExceptionHandler(request, exc):
 @app.get("/cryptography/decrypt", status_code = 200)
 async def decryption(data: Data):
 	plaintext = decrypt(data.algorithm.value, data.ciphertext, data.key)
+	if plaintext is None:
+		raise RequestValidationError("Ciphertext not encoded in base64.")
 	
+	response = { "decryption": "success", "ciphertext": plaintext }
+
 	loggingResult = await sendRequest(
 		"post",
 		"http://127.0.0.1:8004/cryptography/logging",
 		{
-			"timestamp": "2024-03-17",
+			"timestamp": datetime.datetime.now().isoformat(),
 			"level": "INFO",
-			"logger_source": 1,
+			"logger_source": 2,
 			"user_id": 1,
 			"request": str(data),
+			"response": str(response),
 			"error_message": ""
 		}
 	)
@@ -79,4 +85,4 @@ async def decryption(data: Data):
 	if loggingResult[0].get("logging") != "success":
 		raise HTTPException(500)
 
-	return { "decryption": "success", "ciphertext": plaintext }
+	return response

@@ -23,31 +23,33 @@ class Data(BaseModel):
 	key: str = None
 	key_length: int = None
 
-	@validator('key')
-	def validate_key(cls, v, values, **kwargs):
-		algorithm = values.get('algorithm')
+	@validator("key")
+	def validatorKey(cls, v, values, **kwargs):
+		algorithm = values.get("algorithm")
 		if algorithm in [Algorithm.DES, Algorithm.TripleDES, Algorithm.AES, Algorithm.Blowfish] and v is None:
-			raise ValueError('Key is required for DES, TripleDES, AES or Blowfish algorithm')
+			raise RequestValidationError('Key is required for DES, TripleDES, AES or Blowfish algorithm')
 		
 		if algorithm == Algorithm.DES and len(v) != 8:
-			raise ValueError('Key must be 8 characters long for DES algorithm')
+			raise RequestValidationError('Key must be 8 characters long for DES algorithm')
 		elif algorithm == Algorithm.TripleDES and len(v) != 24:
-			raise ValueError('Key must be 24 characters long for TripleDES algorithm')
+			raise RequestValidationError('Key must be 24 characters long for TripleDES algorithm')
 		elif algorithm == Algorithm.AES and len(v) != 16:
-			raise ValueError('Key must be 16 characters long for AES algorithm')
-
-		if algorithm == Algorithm.RSA and v is not None:
-			raise ValueError('Key must not be provided for RSA algorithm')
+			raise RequestValidationError('Key must be 16 characters long for AES algorithm')
 		return v
 
-	@validator('key_length')
-	def validate_key_length(cls, v, values, **kwargs):
+	@validator("key_length")
+	def validatorKeyLength(cls, v, values, **kwargs):
 		algorithm = values.get('algorithm')
 		if algorithm == Algorithm.RSA and v not in [1024, 2048, 3072]:
-				raise ValueError('Acceptable values for key_length are 1024, 2048, 3072 for RSA algorithm')
-		elif algorithm in [Algorithm.DES, Algorithm.TripleDES, Algorithm.AES, Algorithm.Blowfish] and v is not None:
-			raise ValueError('Key_length must not be provided for DES, TripleDES, AES or Blowfish algorithm')
+			raise RequestValidationError('Acceptable values for key_length are 1024, 2048, 3072 for RSA algorithm')
 		return v
+
+def validateKeyAndKeyLength(data):
+	print(data.algorithm)
+	if data.algorithm in [Algorithm.DES, Algorithm.TripleDES, Algorithm.AES, Algorithm.Blowfish] and data.key is None:
+		raise RequestValidationError('Key is required for DES, TripleDES, AES or Blowfish algorithm')
+	if data.algorithm == Algorithm.RSA and data.key_length is None:
+		raise RequestValidationError('Value of key_length is requried for RSA algorithm')
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
@@ -57,7 +59,8 @@ async def validation_exception_handler(request, exc):
 		"logger_source": 1,
 		"user_id": 1,
 		"request": str(request),
-		"error_message": "Unsuccessful request due to a Request Validation error."
+		"response": "",
+		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
 	}
 	await sendRequest("post", "http://127.0.0.1:8004/cryptography/logging", dataForLoggingUnsuccessfulRequest)
 
@@ -75,17 +78,26 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/cryptography/encrypt", status_code = 200)
 async def encryption(data: Data):
+	validateKeyAndKeyLength(data)
+	
 	encryptionResult = encrypt(data.algorithm.value, data.plaintext, data.key, data.key_length)
+
+	response = {}
+	if data.algorithm == Algorithm.RSA:
+		response = { "encryption": "success", "ciphertext": encryptionResult[0], "key": encryptionResult[1] }
+	else:
+		response = { "encryption": "success", "ciphertext": encryptionResult[0] }
 
 	loggingResult = await sendRequest(
 		"post",
 		"http://127.0.0.1:8004/cryptography/logging",
 		{
-			"timestamp": "2024-03-17",
+			"timestamp": datetime.datetime.now().isoformat(),
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
 			"request": str(data),
+			"response": str(response),
 			"error_message": ""
 		}
 	)
@@ -93,7 +105,4 @@ async def encryption(data: Data):
 	if loggingResult[0].get("logging") != "success":
 		raise HTTPException(500)
 
-	if data.algorithm == Algorithm.RSA:
-		return { "encryption": "success", "ciphertext": encryptionResult[0], "key": encryptionResult[1] }
-	else:
-		return { "encryption": "success", "ciphertext": encryptionResult[0] }
+	return response

@@ -22,13 +22,14 @@ async def sendRequest(method, url, reqData):
 async def log(dataItem, dbName):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
 		await db.execute(
-			"INSERT INTO Log (timestamp, level, logger_source, user_id, request, error_message) VALUES (?, ?, ?, ?, ?, ?)",
+			"INSERT INTO Log (timestamp, level, logger_source, user_id, request, response, error_message) VALUES (?, ?, ?, ?, ?, ?, ?)",
 			(
 				dataItem.timestamp,
 				dataItem.level,
 				dataItem.logger_source,
 				dataItem.user_id,
 				dataItem.request,
+				dataItem.response,
 				dataItem.error_message
 			)
 		)
@@ -38,22 +39,6 @@ def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
-
-async def getKey(userId, dbName):
-	async with aiosqlite.connect(getDbPath(dbName)) as db:
-		cursor = await db.cursor()
-		await cursor.execute("SELECT * FROM Key WHERE user_id = ?", (userId, ))
-		results = await cursor.fetchall()
-		print("numberOfKeys", len(results))
-		return results[0].key if len(results) == 1 else ""
-
-async def storeKey(userId, key, dbName):
-	async with aiosqlite.connect(getDbPath(dbName)) as db:
-		await db.execute(
-			"INSERT INTO Key (user_id, key) VALUES (?, ?)",
-			(userId, key)
-		)
-		await db.commit()
 
 def encrypt(algorithm, plaintext, key = None, key_length = None):
 	match algorithm:
@@ -122,7 +107,10 @@ def decrypt(algorithm, ciphertext, key):
 
 def decryptDES(ciphertext, key):
 	key = key.encode()
-	ciphertext = base64.b64decode(ciphertext)
+	try:
+		ciphertext = base64.b64decode(ciphertext)
+	except:
+		return None
 	iv = ciphertext[:DES.block_size]
 	cipher = DES.new(key, DES.MODE_OFB, iv)
 	plaintext = cipher.decrypt(ciphertext[DES.block_size:])
