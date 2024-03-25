@@ -69,17 +69,10 @@ def encrypt(algorithm, plaintext, key = None, key_length = None):
 			return encryptBlowfish(plaintext, key)
 
 def encryptDES(plaintext, key):
-	# print(key)
-	# print(isinstance(plaintext, str))
-	key = key.encode("utf-8") # "utf-8" unicodedata.normalize('NFKD', key).encode('utf-8', "ignore")
+	key = key.encode("utf-8")
 	plaintext = plaintext.encode("utf-8")
-	# print(key)
-	# print(isinstance(key, str))
-	# print(plaintext)
-	# print(isinstance(plaintext, str))
 	cipher = DES.new(key, DES.MODE_OFB)
 	ciphertext = cipher.iv + cipher.encrypt(plaintext)
-	# print(key)
 	return (base64.b64encode(ciphertext).decode("utf-8"), None)
 
 def encryptTripleDES(plaintext, key):

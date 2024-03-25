@@ -61,51 +61,6 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/cryptography/decrypt", status_code = 200)
 async def decryption(data: Data):
-	# print(data)
-
-	# link1 = "http://127.0.0.1:8004/cryptography/logging"
-	# link2 = "http://127.0.0.1:8003/cryptography/key/get"
-	# link3 = "http://127.0.0.1:8003/cryptography/key/store"
-
-	"""data1 = {
-		"timestamp": "2024-03-17",
-		"level": "INFO",
-		"logger_source": 1,
-		"user_id": 1,
-		"request": str(data),
-		"error_message": ""
-	}"""
-
-	"""data2 = {
-		"user_id": 11
-	}
-
-	data3 = {
-		"user_id": 11,
-		"key": data.key
-	}"""
-
-	"""result1 = await sendRequest("post", link1, data1)
-	print("Res 1:")
-	print(result1)
-
-	if result1[0].get("logging") != "success":
-		raise HTTPException(500)"""
-
-	"""result2 = await sendRequest("get", link2, data2)
-	print("Res 2:")
-	print(result2)
-
-	if result2[0].get("key_management") != "success":
-		raise HTTPException(500)
-
-	result3 = await sendRequest("post", link3, data3)
-	print("Res 2:")
-	print(result3) # """"""
-
-	if result3[0].get("key_management") != "success":
-		raise HTTPException(500)"""
-	
 	plaintext = decrypt(data.algorithm.value, data.ciphertext, data.key)
 	
 	loggingResult = await sendRequest(
@@ -120,7 +75,6 @@ async def decryption(data: Data):
 			"error_message": ""
 		}
 	)
-	# print(loggingResult)
 
 	if loggingResult[0].get("logging") != "success":
 		raise HTTPException(500)

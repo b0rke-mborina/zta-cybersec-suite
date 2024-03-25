@@ -36,7 +36,7 @@ class Data(BaseModel):
 	@model_validator(mode='before')
 	@classmethod
 	def to_py_dict(cls, data):
-		return json.loads(data) # """"""
+		return json.loads(data)
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
@@ -47,6 +47,5 @@ async def exceptionHandler(request, exc):
 
 @app.post("/cryptography/logging", status_code = 200)
 async def logging(data: Data):
-	# print(data)
 	await log(data, "app1Logs.db")
 	return {"logging": "success"}
