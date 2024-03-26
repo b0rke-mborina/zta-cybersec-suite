@@ -62,7 +62,7 @@ async def validation_exception_handler(request, exc):
 		"response": "",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
 	}
-	await sendRequest("post", "http://127.0.0.1:8004/cryptography/logging", dataForLoggingUnsuccessfulRequest)
+	await sendRequest("post", "http://127.0.0.1:8003/cryptography/logging", dataForLoggingUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 400,
@@ -85,12 +85,14 @@ async def encryption(data: Data):
 	response = {}
 	if data.algorithm == Algorithm.RSA:
 		response = { "encryption": "success", "ciphertext": encryptionResult[0], "key": encryptionResult[1] }
+	elif data.algorithm == Algorithm.AES:
+		response = { "encryption": "success", "ciphertext": encryptionResult[0], "tag": encryptionResult[1], "nonce": encryptionResult[1] }
 	else:
 		response = { "encryption": "success", "ciphertext": encryptionResult[0] }
 
 	loggingResult = await sendRequest(
 		"post",
-		"http://127.0.0.1:8004/cryptography/logging",
+		"http://127.0.0.1:8003/cryptography/logging",
 		{
 			"timestamp": datetime.datetime.now().isoformat(),
 			"level": "INFO",

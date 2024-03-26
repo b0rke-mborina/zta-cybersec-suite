@@ -21,6 +21,8 @@ class Data(BaseModel):
 	algorithm: Algorithm
 	ciphertext: str
 	key: str
+	tag: str = None
+	nonce: str = None
 
 	@validator('key')
 	def validate_key(cls, v, values, **kwargs):
@@ -35,6 +37,12 @@ class Data(BaseModel):
 			raise ValueError('Key must be 1024, 2048, or 3072 characters long for RSA algorithm')
 		return v
 
+def validateTagAndNonce(data):
+	if data.algorithm == Algorithm.AES and data.tag is None:
+		raise RequestValidationError('Tag is required for AES algorithm')
+	if data.algorithm == Algorithm.AES and data.nonce is None:
+		raise RequestValidationError('Nonce is required for AES algorithm')
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
@@ -46,7 +54,7 @@ async def validation_exception_handler(request, exc):
 		"response": "",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
 	}
-	await sendRequest("post", "http://127.0.0.1:8004/cryptography/logging", dataForLoggingUnsuccessfulRequest)
+	await sendRequest("post", "http://127.0.0.1:8003/cryptography/logging", dataForLoggingUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 400,
@@ -62,7 +70,11 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/cryptography/decrypt", status_code = 200)
 async def decryption(data: Data):
-	plaintext = decrypt(data.algorithm.value, data.ciphertext, data.key)
+	validateTagAndNonce(data)
+
+	plaintext = decrypt(data.algorithm.value, data.ciphertext, data.key, data.tag, data.nonce)
+	print("plaintext")
+	print(plaintext)
 	if plaintext is None:
 		raise RequestValidationError("Ciphertext not encoded in base64.")
 	
@@ -70,7 +82,7 @@ async def decryption(data: Data):
 
 	loggingResult = await sendRequest(
 		"post",
-		"http://127.0.0.1:8004/cryptography/logging",
+		"http://127.0.0.1:8003/cryptography/logging",
 		{
 			"timestamp": datetime.datetime.now().isoformat(),
 			"level": "INFO",
