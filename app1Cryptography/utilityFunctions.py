@@ -71,20 +71,12 @@ def encryptTripleDES(plaintext, key):
 def encryptAES(plaintext, key):
 	key = key.encode("utf-8")
 	cipher = AES.new(key, AES.MODE_EAX)
-	# cipher.update(b"header")
 	ciphertext, tag = cipher.encrypt_and_digest(plaintext.encode("utf-8"))
-	print(cipher.nonce)
-	print(tag)
-	print(key)
-	"""
-	{
-	"algorithm": "AES",
-	"plaintext": "neki tekst",
-	"key": "aaaabbbbccccdddd",
-	"key_length": 2048
-	}
-	"""
-	return (base64.b64encode(ciphertext).decode("utf-8"), base64.b64encode(tag).decode("utf-8"), base64.b64encode(cipher.nonce).decode("utf-8"))
+	return (
+		base64.b64encode(ciphertext).decode("utf-8"),
+		base64.b64encode(tag).decode("utf-8"),
+		base64.b64encode(cipher.nonce).decode("utf-8")
+	)
 
 def encryptRSA(plaintext, publicKey):
 	key = RSA.import_key(publicKey)
@@ -130,7 +122,7 @@ def decryptDES(ciphertext, key):
 		plaintext = cipher.decrypt(ciphertext[DES.block_size:])
 		return plaintext.decode()
 	except:
-		return None
+		return ""
 
 def decryptTripleDES(ciphertext, key):
 	try:
@@ -141,40 +133,20 @@ def decryptTripleDES(ciphertext, key):
 		plaintext = cipher.decrypt(ciphertext[DES3.block_size:])
 		return plaintext.decode()
 	except:
-		return None
+		return ""
 
 def decryptAES(ciphertext, key, tag, nonce):
 	try:
 		ciphertext = base64.b64decode(ciphertext)
 		key = key.encode("utf-8")
 		print("tag", tag)
-		tag = base64.b64decode(tag) # base64.b64decode(tag) tag.encode("utf-8")
-		nonce = base64.b64decode(nonce) # base64.b64decode(nonce) nonce.encode("utf-8")
-		# nonce = ciphertext[:AES.block_size]
-		# iv = ciphertext[:AES.block_size]
-		cipher = AES.new(key, AES.MODE_EAX, nonce = nonce) # , mac_len=iv
-		# cipher.update(b"header")
-		# print("ciphertext", ciphertext)
-		# print("key", key)
-		# print("nonce", nonce)
-		# print("cipher", cipher)
-		# print("HEREEEEEEEEEEEEEEEEEEE")
-		plaintext = cipher.decrypt_and_verify(ciphertext, tag) # ciphertext[AES.block_size:]
-		# print("HEREEEEEEEEEEEEEEEEEEE")
-		# print("plaintext", plaintext)
-		"""
-		{
-		"algorithm": "AES",
-		"ciphertext": "76GqirefBGET2w==",
-		"key": "aaaabbbbccccdddd",
-		"tag": "hk3gTn7UWM6/TtYAyc/Vsg==",
-		"nonce": "hk3gTn7UWM6/TtYAyc/Vsg=="
-		}
-		"""
+		tag = base64.b64decode(tag)
+		nonce = base64.b64decode(nonce)
+		cipher = AES.new(key, AES.MODE_EAX, nonce = nonce)
+		plaintext = cipher.decrypt_and_verify(ciphertext, tag)
 		return plaintext.decode()
-	except Exception as e:
-		print("e", e)
-		return None
+	except:
+		return ""
 
 def decryptRSA(ciphertext, privateKey):
 	print("hereeeeeeeeeeeeeeee")
@@ -199,4 +171,4 @@ def decryptBlowfish(ciphertext, key):
 		plaintext = plaintext[:-padding_length]
 		return plaintext.decode()
 	except:
-		return None
+		return ""

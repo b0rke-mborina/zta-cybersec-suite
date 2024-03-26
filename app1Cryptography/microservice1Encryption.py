@@ -86,7 +86,7 @@ async def encryption(data: Data):
 	if data.algorithm == Algorithm.RSA:
 		response = { "encryption": "success", "ciphertext": encryptionResult[0], "key": encryptionResult[1] }
 	elif data.algorithm == Algorithm.AES:
-		response = { "encryption": "success", "ciphertext": encryptionResult[0], "tag": encryptionResult[1], "nonce": encryptionResult[1] }
+		response = { "encryption": "success", "ciphertext": encryptionResult[0], "tag": encryptionResult[1], "nonce": encryptionResult[2] }
 	else:
 		response = { "encryption": "success", "ciphertext": encryptionResult[0] }
 

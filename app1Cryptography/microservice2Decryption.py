@@ -73,10 +73,8 @@ async def decryption(data: Data):
 	validateTagAndNonce(data)
 
 	plaintext = decrypt(data.algorithm.value, data.ciphertext, data.key, data.tag, data.nonce)
-	print("plaintext")
-	print(plaintext)
-	if plaintext is None:
-		raise RequestValidationError("Ciphertext not encoded in base64.")
+	if len(plaintext) == 0:
+		raise RequestValidationError("Decryption not successful.")
 	
 	response = { "decryption": "success", "ciphertext": plaintext }
 
