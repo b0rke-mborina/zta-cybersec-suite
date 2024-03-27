@@ -33,8 +33,6 @@ class Data(BaseModel):
 			raise ValueError('Key must be 24 characters long for TripleDES algorithm')
 		elif algorithm == Algorithm.AES and len(v) != 16:
 			raise ValueError('Key must be 16 characters long for AES algorithm')
-		elif algorithm == Algorithm.RSA and len(v) not in [1024, 2048, 3072]:
-			raise ValueError('Key must be 1024, 2048, or 3072 characters long for RSA algorithm')
 		return v
 
 def validateTagAndNonce(data):

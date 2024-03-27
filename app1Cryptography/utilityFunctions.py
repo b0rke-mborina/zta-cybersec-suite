@@ -1,4 +1,3 @@
-from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES, DES, DES3, Blowfish
 from struct import pack
 from Crypto.PublicKey import RSA
@@ -50,7 +49,7 @@ def encrypt(algorithm, plaintext, key = None, key_length = None):
 		case "AES":
 			return encryptAES(plaintext, key)
 		case "RSA":
-			return encryptRSA(plaintext, key) # key_length
+			return encryptRSA(plaintext, key_length)
 		case "Blowfish":
 			return encryptBlowfish(plaintext, key)
 
@@ -78,16 +77,18 @@ def encryptAES(plaintext, key):
 		base64.b64encode(cipher.nonce).decode("utf-8")
 	)
 
-def encryptRSA(plaintext, publicKey):
-	key = RSA.import_key(publicKey)
-	cipher_rsa = PKCS1_OAEP.new(key)
-	ciphertext = cipher_rsa.encrypt(plaintext.encode("utf-8"))
-	return base64.b64encode(ciphertext).decode("utf-8")
-	"""key = RSA.generate(key_length)
-	ciphertext = key.export_key(passphrase=plaintext, pkcs=8, protection="scryptAndAES128-CBC")
-	print(ciphertext)
-	print(key)
-	return (ciphertext.decode(), key, None)"""
+def encryptRSA(plaintext, keyLength):
+	key = RSA.generate(keyLength)
+	privateKeyStr = key.export_key().decode().replace("-----BEGIN RSA PRIVATE KEY-----\n", "").replace("\n-----END RSA PRIVATE KEY-----", "")
+	print("private:\n" + privateKeyStr)
+	publicKeyStr = key.publickey().export_key().decode().replace("-----BEGIN PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----", "")
+	print("public:\n" + publicKeyStr)
+
+	publicKeyBytes = base64.b64decode(publicKeyStr)
+	publicKey = RSA.import_key(publicKeyBytes)
+	cipher = PKCS1_OAEP.new(publicKey)
+	ciphertext = cipher.encrypt(plaintext.encode('utf-8'))
+	return (base64.b64encode(ciphertext).decode('utf-8'), privateKeyStr, publicKeyStr)
 
 def encryptBlowfish(plaintext, key):
 	plaintext, key = plaintext.encode("utf-8"), key.encode("utf-8")
@@ -149,16 +150,14 @@ def decryptAES(ciphertext, key, tag, nonce):
 		return ""
 
 def decryptRSA(ciphertext, privateKey):
-	print("hereeeeeeeeeeeeeeee")
-	ciphertext = base64.b64decode(ciphertext)
-	privateKey = privateKey.encode() # base64.b64decode(privateKey)
-	key = RSA.import_key(privateKey)
-	cipher_rsa = PKCS1_OAEP.new(key)
-	decrypted_message = cipher_rsa.decrypt(base64.b64decode(ciphertext))
-	return decrypted_message.decode()
-	"""key = RSA.import_key(privateKey)
-	plaintext = key.decrypt(ciphertext, None)
-	return plaintext.decode()"""
+	try:
+		privateKeyBytes = base64.b64decode(privateKey)
+		privateBey = RSA.import_key(privateKeyBytes)
+		cipher = PKCS1_OAEP.new(privateBey)
+		plaintext = cipher.decrypt(base64.b64decode(ciphertext))
+		return plaintext.decode('utf-8')
+	except:
+		return ""
 
 def decryptBlowfish(ciphertext, key):
 	try:
