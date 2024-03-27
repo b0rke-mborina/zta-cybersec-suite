@@ -3,7 +3,7 @@ from fastapi import FastAPI
 app = FastAPI()
 
 
-@app.get("/")
-def read_root():
+@app.get("/auth-generator/generate")
+async def read_root():
 	return {"status": "OK"}
 
