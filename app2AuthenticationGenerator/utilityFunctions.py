@@ -1,7 +1,11 @@
 import aiohttp
 import asyncio
 import aiosqlite
+import jwt
 import json
+import datetime
+import secrets
+import string
 import os.path
 
 async def request(session, method, url, data):
@@ -36,23 +40,31 @@ def getDbPath(dbFilename):
 	return dbPath
 
 def generateAPIKey():
-	pass
+	alphabet = string.ascii_letters + string.digits
+	return ''.join(secrets.choice(alphabet) for _ in range(32))
 
-def generateOAuth():
-	pass
+def generateOAuth2():
+	return secrets.token_urlsafe(32)
 
 def generateJWT():
-	pass
+	payload = { "data": { "user_id": 1, "expires": "2024-07-07" } }
+	secretKey = "SECRET_KEY_PLACEHOLDER"
+	expiration_time_hours = 24
+	expiration_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=expiration_time_hours)
+	token = jwt.encode({'data': payload, 'exp': expiration_time}, secretKey, algorithm='HS256')
+	return token
 
-def verifyApiKey():
-	pass
+def verifyAPIKey():
+	return True
 
-def verifyOAuth():
-	pass
+def verifyOAuth2():
+	return True
 
 def verifyJWT():
+	return True
+
+async def getData():
+	return {}
+
+async def saveData():
 	pass
-
-
-
-

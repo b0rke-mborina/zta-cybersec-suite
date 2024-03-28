@@ -48,5 +48,5 @@ async def exceptionHandler(request, exc):
 
 @app.post("/auth-generator/logging", status_code = 200)
 async def logging(data: Data):
-	await log(data, "app1Logs.db")
+	await log(data, "app2Logs.db")
 	return {"logging": "success"}
