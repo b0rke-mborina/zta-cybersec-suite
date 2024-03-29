@@ -36,10 +36,10 @@ class DataNew(BaseModel):
 			raise ValueError("Timestamp must be in ISO 8601 format")
 		return v
 	
-	"""@model_validator(mode='before')
+	@model_validator(mode='before')
 	@classmethod
 	def to_py_dict(cls, data):
-		return json.loads(data)"""
+		return json.loads(data)
 
 def validateInfoUserId(data):
 	print(data.auth_type)
@@ -67,7 +67,7 @@ async def dataGet(data: DataInfo):
 	authData = await getData(data.auth_type.value, data.token_key, data.user_id)
 	return { "getting_info": "success", "info": authData }
 
-@app.get("/auth-generator/data-new")
+@app.post("/auth-generator/data-new")
 async def dataSave(data: DataNew):
 	validateSaveUserIdAndSecret(data)
 
