@@ -39,38 +39,55 @@ def getDbPath(dbFilename):
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
 
-async def getData():
-	return {}
+async def getData(userId, authType, value):
+	print(userId, authType, value)
+	match authType:
+		case "api_key":
+			return await getAPIKeyInfo("app2Data.db", value)
+		case "oauth2_token":
+			return await getOAuth2TokenInfo("app2Data.db", value, userId)
+		case "jwt":
+			return await getJWTInfo("app2Data.db", value, userId)
 
 async def getAPIKeyInfo(dbName, key):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
-		result = await conn.execute(
+		cursor = await conn.execute(
 			"SELECT * FROM APIKey WHERE key = ?",
 			(key, )
 		)
+		result = await cursor.fetchall()
 		print(result)
 		return result
 
 async def getOAuth2TokenInfo(dbName, token, userId):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
-		result = await conn.execute(
+		cursor = await conn.execute(
 			"SELECT * FROM OAuth2Token WHERE token = ? AND user_id = ?",
 			(token, userId)
 		)
+		result = await cursor.fetchall()
 		print(result)
 		return result
 
 async def getJWTInfo(dbName, token, userId):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
-		result = await conn.execute(
-			"SELECT * FROM OAuth2Token WHERE token = ? AND user_id = ?",
+		cursor = await conn.execute(
+			"SELECT * FROM JWT WHERE token = ? AND user_id = ?",
 			(token, userId)
 		)
+		result = await cursor.fetchall()
 		print(result)
 		return result
 
-async def saveData():
-	pass
+async def saveData(userId, authType, value, expires, secret):
+	print(userId, authType, value)
+	match authType:
+		case "api_key":
+			return await storeAPIKey("app2Data.db", value, expires)
+		case "oauth2_token":
+			return await storeOAuth2Token("app2Data.db", value, expires, userId)
+		case "jwt":
+			return await storeJWT("app2Data.db", value, expires, userId, secret)
 
 async def storeAPIKey(dbName, key, expires):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
@@ -83,7 +100,7 @@ async def storeAPIKey(dbName, key, expires):
 async def storeOAuth2Token(dbName, token, expires, userId):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
 		await db.execute(
-			"INSERT INTO APIKey (token, expires, user_id) VALUES (?, ?, ?)",
+			"INSERT INTO OAuth2Token (token, expires, user_id) VALUES (?, ?, ?)",
 			(token, expires, userId)
 		)
 		await db.commit()
@@ -91,7 +108,7 @@ async def storeOAuth2Token(dbName, token, expires, userId):
 async def storeJWT(dbName, token, expires, userId, secret):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
 		await db.execute(
-			"INSERT INTO APIKey (token, expires, user_id, secret) VALUES (?, ?, ?, ?)",
+			"INSERT INTO JWT (token, expires, user_id, secret) VALUES (?, ?, ?, ?)",
 			(token, expires, userId, secret)
 		)
 		await db.commit()
