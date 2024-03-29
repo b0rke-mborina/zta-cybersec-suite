@@ -39,6 +39,63 @@ def getDbPath(dbFilename):
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
 
+async def getData():
+	return {}
+
+async def getAPIKeyInfo(dbName, key):
+	async with aiosqlite.connect(getDbPath(dbName)) as conn:
+		result = await conn.execute(
+			"SELECT * FROM APIKey WHERE key = ?",
+			(key, )
+		)
+		print(result)
+		return result
+
+async def getOAuth2TokenInfo(dbName, token, userId):
+	async with aiosqlite.connect(getDbPath(dbName)) as conn:
+		result = await conn.execute(
+			"SELECT * FROM OAuth2Token WHERE token = ? AND user_id = ?",
+			(token, userId)
+		)
+		print(result)
+		return result
+
+async def getJWTInfo(dbName, token, userId):
+	async with aiosqlite.connect(getDbPath(dbName)) as conn:
+		result = await conn.execute(
+			"SELECT * FROM OAuth2Token WHERE token = ? AND user_id = ?",
+			(token, userId)
+		)
+		print(result)
+		return result
+
+async def saveData():
+	pass
+
+async def storeAPIKey(dbName, key, expires):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute(
+			"INSERT INTO APIKey (key, expires) VALUES (?, ?)",
+			(key, expires)
+		)
+		await db.commit()
+
+async def storeOAuth2Token(dbName, token, expires, userId):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute(
+			"INSERT INTO APIKey (token, expires, user_id) VALUES (?, ?, ?)",
+			(token, expires, userId)
+		)
+		await db.commit()
+
+async def storeJWT(dbName, token, expires, userId, secret):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute(
+			"INSERT INTO APIKey (token, expires, user_id, secret) VALUES (?, ?, ?, ?)",
+			(token, expires, userId, secret)
+		)
+		await db.commit()
+
 def generateAPIKey():
 	alphabet = string.ascii_letters + string.digits
 	return ''.join(secrets.choice(alphabet) for _ in range(32))
@@ -62,9 +119,3 @@ def verifyOAuth2():
 
 def verifyJWT():
 	return True
-
-async def getData():
-	return {}
-
-async def saveData():
-	pass
