@@ -39,8 +39,8 @@ def getDbPath(dbFilename):
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
 
-async def getData(userId, authType, value):
-	print(userId, authType, value)
+async def getData(authType, value, userId = None):
+	print(authType, value, userId)
 	match authType:
 		case "api_key":
 			return await getAPIKeyInfo("app2Data.db", value)
@@ -79,8 +79,8 @@ async def getJWTInfo(dbName, token, userId):
 		print(result)
 		return result
 
-async def saveData(userId, authType, value, expires, secret):
-	print(userId, authType, value)
+async def saveData(authType, value, expires, userId = None, secret = None):
+	print(authType, value, expires, userId, secret)
 	match authType:
 		case "api_key":
 			return await storeAPIKey("app2Data.db", value, expires)
