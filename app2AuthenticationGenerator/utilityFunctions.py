@@ -128,8 +128,13 @@ def generateJWT():
 	token = jwt.encode({'data': payload, 'exp': expiration_time}, secretKey, algorithm='HS256')
 	return token
 
-def verifyAPIKey():
-	return True
+async def verifyAPIKey(dataFromDb):
+	if len(dataFromDb) == 0:
+		return False
+	
+	datetimeFromDb = datetime.datetime.fromisoformat(dataFromDb[0][1]).replace(tzinfo=datetime.timezone.utc)
+	currentDatetime = datetime.datetime.now(datetime.timezone.utc)
+	return datetimeFromDb > currentDatetime
 
 def verifyOAuth2():
 	return True

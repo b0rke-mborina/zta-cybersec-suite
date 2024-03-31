@@ -20,6 +20,11 @@ class DataInfo(BaseModel):
 	auth_type: AuthType
 	token_key: str
 	user_id: int = None
+	
+	@model_validator(mode='before')
+	@classmethod
+	def to_py_dict(cls, data):
+		return json.loads(data)
 
 class DataNew(BaseModel):
 	auth_type: AuthType
@@ -57,7 +62,7 @@ def validateSaveUserIdAndSecret(data):
 async def exceptionHandler(request, exc):
 	return JSONResponse(
 		status_code = 500,
-		content = { "logging": "failure", "error_message": "Unexpected error occured." },
+		content = { "access_storage": "failure", "error_message": "Unexpected error occured." },
 	)
 
 @app.get("/auth-generator/data-info")
