@@ -97,13 +97,13 @@ async def generatorOAuth2():
 async def generatorJWT():
 	jwToken = generateJWT()
 	print(jwToken)
-	currentTime = datetime.datetime.now()
+	currentTime = datetime.datetime.now(datetime.timezone.utc)
 	oauth2TokenData = {
 		"auth_type": "jwt",
 		"token_key": jwToken,
 		"expires": (currentTime + datetime.timedelta(days=14)).isoformat(),
 		"user_id": 1,
-		"secret": "SECRET_PLACEHOLDER"
+		"secret": "SECRET_KEY_PLACEHOLDER"
 	}
 
 	response = { "generation": "success", "oauth2_token": jwToken }

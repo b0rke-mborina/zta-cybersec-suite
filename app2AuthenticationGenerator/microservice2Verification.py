@@ -81,12 +81,76 @@ async def verificatorAPIKey(data: DataAPIKey):
 
 @app.get("/auth-generator/verify/oauth2")
 async def verificatorOAuth2(data: DataOAuth2Token):
-	verificationResult = "valid" if verifyOAuth2() else "invalid"
+	currentTime = datetime.datetime.now(datetime.timezone.utc)
+	tokenResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8012/auth-generator/data-info",
+		{
+			"auth_type": "oauth2_token",
+			"token_key": data.oauth2_token,
+			"user_id": 1
+		}
+	)
+	if tokenResult[0].get("getting_info") != "success":
+		raise HTTPException(500)
+
+	verificationResult = "valid" if verifyOAuth2(tokenResult[0].get("info"), currentTime, 1) else "invalid"
 	print(verificationResult)
-	return { "generation": "success", "result": verificationResult }
+
+	response = { "verification": "success", "result": verificationResult }
+	
+	loggingResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8013/auth-generator/logging",
+		{
+			"timestamp": currentTime.isoformat(),
+			"level": "INFO",
+			"logger_source": 1,
+			"user_id": 1,
+			"request": str(data),
+			"response": str(response),
+			"error_message": ""
+		}
+	)
+	if loggingResult[0].get("logging") != "success":
+		raise HTTPException(500)
+	
+	return response
 
 @app.get("/auth-generator/verify/jwt")
 async def verificatorJWT(data: DataJWT):
-	verificationResult = "valid" if verifyJWT() else "invalid"
+	currentTime = datetime.datetime.now(datetime.timezone.utc)
+	tokenResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8012/auth-generator/data-info",
+		{
+			"auth_type": "jwt",
+			"token_key": data.jwt,
+			"user_id": 1
+		}
+	)
+	if tokenResult[0].get("getting_info") != "success":
+		raise HTTPException(500)
+	
+	verificationResult = "valid" if verifyJWT(data.jwt, tokenResult[0].get("info"), currentTime, 1) else "invalid"
 	print(verificationResult)
-	return { "generation": "success", "result": verificationResult }
+	
+	response = { "verification": "success", "result": verificationResult }
+	
+	loggingResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8013/auth-generator/logging",
+		{
+			"timestamp": currentTime.isoformat(),
+			"level": "INFO",
+			"logger_source": 1,
+			"user_id": 1,
+			"request": str(data),
+			"response": str(response),
+			"error_message": ""
+		}
+	)
+	if loggingResult[0].get("logging") != "success":
+		raise HTTPException(500)
+	
+	return response

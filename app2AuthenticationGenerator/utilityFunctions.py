@@ -1,3 +1,4 @@
+import base64
 import aiohttp
 import asyncio
 import aiosqlite
@@ -121,11 +122,9 @@ def generateOAuth2():
 	return secrets.token_urlsafe(32)
 
 def generateJWT():
-	payload = { "data": { "user_id": 1, "expires": "2024-07-07" } }
 	secretKey = "SECRET_KEY_PLACEHOLDER"
-	expiration_time_hours = 24
-	expiration_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=expiration_time_hours)
-	token = jwt.encode({'data': payload, 'exp': expiration_time}, secretKey, algorithm='HS256')
+	expiration_time = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=14)).isoformat()
+	token = jwt.encode({ "user_id": 1, "expires": expiration_time }, secretKey, algorithm='HS256')
 	return token
 
 async def verifyAPIKey(dataFromDb, currentDatetime):
@@ -135,8 +134,33 @@ async def verifyAPIKey(dataFromDb, currentDatetime):
 	datetimeFromDb = datetime.datetime.fromisoformat(dataFromDb[0][1]).replace(tzinfo=datetime.timezone.utc)
 	return datetimeFromDb > currentDatetime
 
-def verifyOAuth2():
-	return True
+def verifyOAuth2(dataFromDb, currentDatetime, userId):
+	if len(dataFromDb) == 0:
+		return False
 
-def verifyJWT():
-	return True
+	datetimeFromDb = datetime.datetime.fromisoformat(dataFromDb[0][1]).replace(tzinfo=datetime.timezone.utc)
+	userIdFromDb = dataFromDb[0][2]
+
+	return datetimeFromDb > currentDatetime and userId == userIdFromDb
+
+def verifyJWT(token, dataFromDb, currentDatetime, userId):
+	if len(dataFromDb) == 0:
+		return False
+
+	datetimeFromDb = datetime.datetime.fromisoformat(dataFromDb[0][1]).replace(tzinfo=datetime.timezone.utc)
+	userIdFromDb = dataFromDb[0][2]
+	# secretFromDb = dataFromDb[0][3]
+	
+	try:
+		decodedPayload = jwt.decode(token, "SECRET_KEY_PLACEHOLDER", algorithms=['HS256']) # base64.b64decode(secretFromDb)
+		print(decodedPayload)
+
+		datetimeFromPayload = datetime.datetime.fromisoformat(decodedPayload.get("expires")).replace(tzinfo=datetime.timezone.utc)
+		userIdFromPayload = decodedPayload.get("user_id")
+
+		isDatetimeOk = datetimeFromDb == datetimeFromPayload and datetimeFromPayload > currentDatetime
+		isUserIdOk = userIdFromDb == userIdFromPayload and userIdFromPayload == userId
+
+		return isDatetimeOk and isUserIdOk
+	except:
+		return False
