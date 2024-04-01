@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from .utilityFunctions import sendRequest, verifyAPIKey, verifyOAuth2, verifyJWT
 import datetime
@@ -16,8 +18,34 @@ class DataOAuth2Token(BaseModel):
 class DataJWT(BaseModel):
 	jwt: str
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+	dataForLoggingUnsuccessfulRequest = {
+		"timestamp": datetime.datetime.now().isoformat(),
+		"level": "INFO",
+		"logger_source": 1,
+		"user_id": 1,
+		"request": str(request),
+		"response": "",
+		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
+	}
+	await sendRequest("post", "http://127.0.0.1:8013/auth-generator/logging", dataForLoggingUnsuccessfulRequest)
+
+	return JSONResponse(
+		status_code = 400,
+		content = { "encryption": "failure", "error_message": "Input invalid." },
+	)
+
+@app.exception_handler(HTTPException)
+async def httpExceptionHandler(request, exc):
+	return JSONResponse(
+		status_code = 500,
+		content = { "generation": "failure", "error_message": "Unexpected error occured." },
+	)
+
 @app.get("/auth-generator/verify/api-key")
 async def verificatorAPIKey(data: DataAPIKey):
+	currentTime = datetime.datetime.now(datetime.timezone.utc)
 	keyResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8012/auth-generator/data-info",
@@ -29,7 +57,7 @@ async def verificatorAPIKey(data: DataAPIKey):
 	if keyResult[0].get("getting_info") != "success":
 		raise HTTPException(500)
 
-	verificationResult = "valid" if await verifyAPIKey(keyResult[0].get("info")) else "invalid"
+	verificationResult = "valid" if await verifyAPIKey(keyResult[0].get("info"), currentTime) else "invalid"
 
 	response = { "verification": "success", "result": verificationResult }
 	
@@ -37,7 +65,7 @@ async def verificatorAPIKey(data: DataAPIKey):
 		"post",
 		"http://127.0.0.1:8013/auth-generator/logging",
 		{
-			"timestamp": datetime.datetime.now().isoformat(),
+			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
