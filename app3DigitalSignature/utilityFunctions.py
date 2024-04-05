@@ -2,10 +2,13 @@ import aiohttp
 import asyncio
 import aiosqlite
 import json
-import datetime
-import secrets
-import string
+import base64
 import os.path
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import serialization
+from cryptography.exceptions import InvalidSignature
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
@@ -37,3 +40,30 @@ def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
+
+def verifySignature(publicKeyBase64, signatureBase64, message, hashType):
+	(publicKeyBytes, signatureBytes, messageBytes, hasher) = handleParams(publicKeyBase64, signatureBase64, message, hashType)
+
+	publicKey = serialization.load_pem_public_key(publicKeyBytes, backend=default_backend())
+
+	try:
+		publicKey.verify(
+			signatureBytes,
+			messageBytes,
+			padding.PKCS1v15(),
+			hasher
+		)
+		return "valid"
+	except InvalidSignature:
+		return "invalid"
+
+def handleParams(publicKeyBase64, signatureBase64, message, hashType):
+	messageBytes = message.encode("utf-8")
+	hasher = hashes.SHA256() if hashType == 'sha256' else hashes.SHA512()
+	
+	try:
+		publicKeyBytes = base64.b64decode(publicKeyBase64)
+		signatureBytes = base64.b64decode(signatureBase64)
+		return (publicKeyBytes, signatureBytes, messageBytes, hasher)
+	except:
+		return "invalid"
