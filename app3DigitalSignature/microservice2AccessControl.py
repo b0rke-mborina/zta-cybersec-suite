@@ -14,7 +14,7 @@ class Role(str, Enum):
 	ADMIN = "admin"
 
 class Data(BaseModel):
-	user_id: str
+	user_id: int
 	role: Role
 	
 	@model_validator(mode='before')
@@ -32,5 +32,5 @@ async def exceptionHandler(request, exc):
 @app.get("/digital-signature/access-control")
 async def accessControler(data: Data):
 	print(data)
-	isAllowed = checkIfUserAllowed(data.user_id, data.role)
-	return { "access_control": "success", "allowed": isAllowed }
+	isAllowed = await checkIfUserAllowed("app3ACL.db", data.user_id, data.role.value)
+	return { "access_control": "success", "is_allowed": isAllowed }

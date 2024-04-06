@@ -40,8 +40,28 @@ def getDbPath(dbFilename):
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
 
-def checkIfUserAllowed():
-	return 1
+async def checkIfUserAllowed(dbName, userId, role):
+	tasks = [isRoleAllowed(dbName, role), isUserAllowed(dbName, userId)]
+	results = await asyncio.gather(*tasks)
+	return 1 if results[0] and results[1] else 0
+
+async def isRoleAllowed(dbName, role):
+	async with aiosqlite.connect(getDbPath(dbName)) as conn:
+		cursor = await conn.execute(
+			"SELECT * FROM ACL WHERE role = ?",
+			(role, )
+		)
+		result = await cursor.fetchone()
+		return result[2] == 1
+
+async def isUserAllowed(dbName, userId):
+	async with aiosqlite.connect(getDbPath(dbName)) as conn:
+		cursor = await conn.execute(
+			"SELECT * FROM ACL WHERE user_id = ?",
+			(userId, )
+		)
+		result = await cursor.fetchall()
+		return len(result) == 0
 
 def verifySignature(publicKeyBase64, signatureBase64, message, hashType):
 	try:
