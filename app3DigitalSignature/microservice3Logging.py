@@ -46,7 +46,7 @@ async def exceptionHandler(request, exc):
 		content = { "logging": "failure", "error_message": "Unexpected error occured." },
 	)
 
-@app.get("/digital-signature/logging", status_code = 200)
+@app.post("/digital-signature/logging", status_code = 200)
 async def logging(data: Data):
 	await log(data, "app3Logs.db")
 	return { "logging": "success" }
