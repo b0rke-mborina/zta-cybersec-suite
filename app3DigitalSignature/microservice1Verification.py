@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from enum import Enum
+from .utilityFunctions import verifySignature
 
 
 app = FastAPI()
@@ -18,6 +19,7 @@ class Data(BaseModel):
 
 @app.get("/digital-signature/verify")
 async def digitalSignatureVerificator(data: Data):
-	print(data)
-	return {"status": "OK"}
+	# print(data)
+	result = verifySignature(data.public_key, data.digital_signature, data.message, data.hash_function)
+	return { "verification": "success", "result": result }
 

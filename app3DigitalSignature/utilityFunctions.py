@@ -8,7 +8,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import serialization
-from cryptography.exceptions import InvalidSignature
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
@@ -41,12 +40,15 @@ def getDbPath(dbFilename):
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
 
+def checkIfUserAllowed():
+	return 1
+
 def verifySignature(publicKeyBase64, signatureBase64, message, hashType):
-	(publicKeyBytes, signatureBytes, messageBytes, hasher) = handleParams(publicKeyBase64, signatureBase64, message, hashType)
-
-	publicKey = serialization.load_pem_public_key(publicKeyBytes, backend=default_backend())
-
 	try:
+		(publicKeyBytes, signatureBytes, messageBytes, hasher) = handleParams(publicKeyBase64, signatureBase64, message, hashType)
+
+		publicKey = serialization.load_pem_public_key(publicKeyBytes, backend=default_backend())
+
 		publicKey.verify(
 			signatureBytes,
 			messageBytes,
@@ -54,16 +56,16 @@ def verifySignature(publicKeyBase64, signatureBase64, message, hashType):
 			hasher
 		)
 		return "valid"
-	except InvalidSignature:
+	except Exception as e:
+		print("Error:", e)
 		return "invalid"
 
 def handleParams(publicKeyBase64, signatureBase64, message, hashType):
-	messageBytes = message.encode("utf-8")
-	hasher = hashes.SHA256() if hashType == 'sha256' else hashes.SHA512()
-	
 	try:
 		publicKeyBytes = base64.b64decode(publicKeyBase64)
 		signatureBytes = base64.b64decode(signatureBase64)
+		messageBytes = message.encode("utf-8")
+		hasher = hashes.SHA256() if hashType == 'sha256' else hashes.SHA512()
 		return (publicKeyBytes, signatureBytes, messageBytes, hasher)
 	except:
-		return "invalid"
+		return (None, None, None, None)

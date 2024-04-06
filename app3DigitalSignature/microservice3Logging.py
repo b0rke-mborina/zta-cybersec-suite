@@ -50,4 +50,3 @@ async def exceptionHandler(request, exc):
 async def logging(data: Data):
 	await log(data, "app3Logs.db")
 	return { "logging": "success" }
-
