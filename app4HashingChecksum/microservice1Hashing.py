@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 
+
 app = FastAPI()
 
 
-@app.get("/")
-def read_root():
+@app.get("/hashing")
+async def hashing():
 	return {"status": "OK"}
-
