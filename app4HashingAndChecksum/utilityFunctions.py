@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 import aiosqlite
+import hashlib
 import json
 import os.path
 
@@ -34,3 +35,14 @@ def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
+
+def hashData(data, algorithm):
+	match algorithm:
+		case "MD5":
+			return hashlib.md5(data.encode()).hexdigest()
+		case "SHA-1":
+			return hashlib.sha1(data.encode()).hexdigest()
+		case "SHA-256":
+			return hashlib.sha256(data.encode()).hexdigest()
+		case "SHA-512":
+			return hashlib.sha512(data.encode()).hexdigest()
