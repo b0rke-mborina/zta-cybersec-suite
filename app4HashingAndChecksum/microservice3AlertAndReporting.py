@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator, validator
 import datetime
 import json
@@ -28,6 +29,13 @@ class Data(BaseModel):
 	@classmethod
 	def to_py_dict(cls, data):
 		return json.loads(data)
+
+@app.exception_handler(Exception)
+async def exceptionHandler(request, exc):
+	return JSONResponse(
+		status_code = 500,
+		content = { "reporting": "failure", "error_message": "Unexpected error occured." },
+	)
 
 @app.post("/hashing/reporting", status_code = 200)
 async def reporting(data: Data):
