@@ -46,3 +46,14 @@ def hashData(data, algorithm):
 			return hashlib.sha256(data.encode()).hexdigest()
 		case "SHA-512":
 			return hashlib.sha512(data.encode()).hexdigest()
+
+def verifyChecksum(data, algorithm, checksum):
+	match algorithm:
+		case "MD5":
+			return hashlib.md5(data.encode()).hexdigest() == checksum
+		case "SHA-1":
+			return hashlib.sha1(data.encode()).hexdigest() == checksum
+		case "SHA-256":
+			return hashlib.sha256(data.encode()).hexdigest() == checksum
+		case "SHA-512":
+			return hashlib.sha512(data.encode()).hexdigest() == checksum
