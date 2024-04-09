@@ -31,6 +31,21 @@ async def log(dataItem, dbName):
 		)
 		await db.commit()
 
+async def storeReport(dataItem, dbName):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute(
+			"INSERT INTO Report (timestamp, logger_source, user_id, data, checksum, error_message) VALUES (?, ?, ?, ?, ?, ?)",
+			(
+				dataItem.timestamp,
+				dataItem.logger_source,
+				dataItem.user_id,
+				dataItem.data,
+				dataItem.checksum,
+				f"Data integrity issue. {dataItem.error_message}"
+			)
+		)
+		await db.commit()
+
 def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
