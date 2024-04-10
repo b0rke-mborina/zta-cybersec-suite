@@ -39,5 +39,8 @@ async def exceptionHandler(request, exc):
 
 @app.post("/hashing/reporting", status_code = 200)
 async def reporting(data: Data):
+	# make report to ZTA
+
+
 	await storeReport(data, "app4Reports.db")
 	return { "reporting": "success" }

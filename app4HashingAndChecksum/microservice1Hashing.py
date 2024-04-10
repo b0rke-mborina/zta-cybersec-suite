@@ -48,4 +48,22 @@ async def httpExceptionHandler(request, exc):
 @app.get("/hashing/hash", status_code = 200)
 async def hashing(data: Data):
 	hash = hashData(data.data, data.algorithm.value)
-	return { "hashing": "success", "hash": hash }
+	response = { "hashing": "success", "hash": hash }
+
+	loggingResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8033/hashing/logging",
+		{
+			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+			"level": "INFO",
+			"logger_source": 1,
+			"user_id": 1,
+			"request": "",
+			"response": str(response),
+			"error_message": ""
+		}
+	)
+	if loggingResult[0].get("logging") != "success":
+		raise HTTPException(500)
+
+	return response

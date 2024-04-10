@@ -26,7 +26,7 @@ async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
 		"timestamp": datetime.datetime.now().isoformat(),
 		"level": "INFO",
-		"logger_source": 1,
+		"logger_source": 2,
 		"user_id": 1,
 		"request": str(request),
 		"response": "",
@@ -36,17 +36,52 @@ async def validation_exception_handler(request, exc):
 
 	return JSONResponse(
 		status_code = 400,
-		content = { "hashing": "failure", "error_message": "Input invalid." },
+		content = { "verification": "failure", "error_message": "Input invalid." },
 	)
 
 @app.exception_handler(HTTPException)
 async def httpExceptionHandler(request, exc):
 	return JSONResponse(
 		status_code = 500,
-		content = { "hashing": "failure", "error_message": "Unexpected error occured." },
+		content = { "verification": "failure", "error_message": "Unexpected error occured." },
 	)
 
 @app.get("/hashing/verify", status_code = 200)
 async def verification(data: Data):
 	isHashValid = verifyChecksum(data.data, data.algorithm.value, data.checksum)
-	return { "verification": "success", "is_checksum_valid": 1 if isHashValid else 0 }
+	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
+	response = { "verification": "success", "is_checksum_valid": 1 if isHashValid else 0 }
+
+	if not isHashValid:
+		reportingResult = await sendRequest(
+			"post",
+			"http://127.0.0.1:8032/hashing/reporting",
+			{
+				"timestamp": currentTime,
+				"logger_source": 2,
+				"user_id": 1,
+				"data": data.data,
+				"checksum": data.checksum,
+				"error_message": "Hash Is not valid."
+			}
+		)
+		if reportingResult[0].get("reporting") != "success":
+			raise HTTPException(500)
+
+	loggingResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8033/hashing/logging",
+		{
+			"timestamp": currentTime,
+			"level": "INFO",
+			"logger_source": 1,
+			"user_id": 1,
+			"request": "",
+			"response": str(response),
+			"error_message": ""
+		}
+	)
+	if loggingResult[0].get("logging") != "success":
+		raise HTTPException(500)
+
+	return response
