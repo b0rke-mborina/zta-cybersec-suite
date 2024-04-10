@@ -52,7 +52,7 @@ async def hashing(data: Data):
 
 	loggingResult = await sendRequest(
 		"post",
-		"http://127.0.0.1:8033/hashing/logging",
+		"http://127.0.0.1:8034/hashing/logging",
 		{
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "INFO",

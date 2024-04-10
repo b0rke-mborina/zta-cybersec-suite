@@ -70,11 +70,11 @@ async def verification(data: Data):
 
 	loggingResult = await sendRequest(
 		"post",
-		"http://127.0.0.1:8033/hashing/logging",
+		"http://127.0.0.1:8034/hashing/logging",
 		{
 			"timestamp": currentTime,
 			"level": "INFO",
-			"logger_source": 1,
+			"logger_source": 2,
 			"user_id": 1,
 			"request": "",
 			"response": str(response),

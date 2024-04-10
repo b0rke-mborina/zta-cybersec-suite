@@ -72,3 +72,32 @@ def verifyChecksum(data, algorithm, checksum):
 			return hashlib.sha256(data.encode()).hexdigest() == checksum
 		case "SHA-512":
 			return hashlib.sha512(data.encode()).hexdigest() == checksum
+
+def validatePassword(password):
+	passwordPolicies = {
+		'minLength': 8,
+		'requireUppercase': True,
+		'requireLowercase': True,
+		'requireDigits': True,
+		'requireSpecialCharacters': True,
+		'specialCharacters': "!@#$%^&*()_-+=<>?/"
+	}
+	brokenPolicies = []
+
+	if len(password) < passwordPolicies.get('min_length', 8):
+		brokenPolicies.append("Password length should be at least {} characters.".format(passwordPolicies.get('min_length', 8)))
+
+	if passwordPolicies.get('require_uppercase', False) and not any(char.isupper() for char in password):
+		brokenPolicies.append("Password should contain at least one uppercase letter.")
+
+	if passwordPolicies.get('require_lowercase', False) and not any(char.islower() for char in password):
+		brokenPolicies.append("Password should contain at least one lowercase letter.")
+
+	if passwordPolicies.get('require_digits', False) and not any(char.isdigit() for char in password):
+		brokenPolicies.append("Password should contain at least one digit.")
+
+	special_characters = passwordPolicies.get('special_characters', "!@#$%^&*()_-+=<>?/")
+	if passwordPolicies.get('require_special_characters', False) and not any(char in special_characters for char in password):
+		brokenPolicies.append("Password should contain at least one special character.")
+	
+	return len(brokenPolicies) == 0
