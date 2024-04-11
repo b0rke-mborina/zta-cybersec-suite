@@ -4,7 +4,7 @@ from fastapi import FastAPI
 app = FastAPI()
 
 
-@app.get("/password/store")
-async def storage():
+@app.get("/password/verify")
+async def verification():
 	return {"status": "OK"}
 
