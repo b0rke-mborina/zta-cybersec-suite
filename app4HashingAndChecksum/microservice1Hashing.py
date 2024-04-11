@@ -19,6 +19,7 @@ class Algorithm(str, Enum):
 class Data(BaseModel):
 	data: str
 	algorithm: Algorithm
+	password: bool
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
@@ -47,6 +48,20 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/hashing/hash", status_code = 200)
 async def hashing(data: Data):
+	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+	policyResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8033/hashing/policy",
+		{
+			"data": data.data
+		}
+	)
+	if policyResult[0].get("policy_management") != "success":
+		raise HTTPException(500)
+	if policyResult[0].get("is_data_ok") != 1:
+		raise RequestValidationError("Password requirements not fulfilled.")
+
 	hash = hashData(data.data, data.algorithm.value)
 	response = { "hashing": "success", "hash": hash }
 
@@ -54,11 +69,11 @@ async def hashing(data: Data):
 		"post",
 		"http://127.0.0.1:8034/hashing/logging",
 		{
-			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+			"timestamp": currentTime,
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": "",
+			"request": str(data),
 			"response": str(response),
 			"error_message": ""
 		}

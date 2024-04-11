@@ -84,20 +84,20 @@ def validatePassword(password):
 	}
 	brokenPolicies = []
 
-	if len(password) < passwordPolicies.get('min_length', 8):
-		brokenPolicies.append("Password length should be at least {} characters.".format(passwordPolicies.get('min_length', 8)))
+	if len(password) < passwordPolicies.get('minLength', 8):
+		brokenPolicies.append("Password length should be at least {} characters.".format(passwordPolicies.get('minLength', 8)))
 
-	if passwordPolicies.get('require_uppercase', False) and not any(char.isupper() for char in password):
+	if passwordPolicies.get('requireUppercase', False) and not any(char.isupper() for char in password):
 		brokenPolicies.append("Password should contain at least one uppercase letter.")
 
-	if passwordPolicies.get('require_lowercase', False) and not any(char.islower() for char in password):
+	if passwordPolicies.get('requireLowercase', False) and not any(char.islower() for char in password):
 		brokenPolicies.append("Password should contain at least one lowercase letter.")
 
-	if passwordPolicies.get('require_digits', False) and not any(char.isdigit() for char in password):
+	if passwordPolicies.get('requireDigits', False) and not any(char.isdigit() for char in password):
 		brokenPolicies.append("Password should contain at least one digit.")
 
-	special_characters = passwordPolicies.get('special_characters', "!@#$%^&*()_-+=<>?/")
-	if passwordPolicies.get('require_special_characters', False) and not any(char in special_characters for char in password):
+	special_characters = passwordPolicies.get('specialCharacters', "!@#$%^&*()_-+=<>?/")
+	if passwordPolicies.get('requireSpecialCharacters', False) and not any(char in special_characters for char in password):
 		brokenPolicies.append("Password should contain at least one special character.")
 	
 	return len(brokenPolicies) == 0

@@ -23,7 +23,7 @@ async def exceptionHandler(request, exc):
 		content = { "policy_management": "failure", "error_message": "Unexpected error occured." },
 	)
 
-@app.post("/hashing/policy", status_code = 200)
+@app.get("/hashing/policy", status_code = 200)
 async def reporting(data: Data):
 	isPasswordValid = validatePassword(data.data)
 	return { "policy_management": "success", "is_data_ok": 1 if isPasswordValid else 0 }
