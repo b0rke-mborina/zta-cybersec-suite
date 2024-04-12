@@ -3,6 +3,7 @@ import asyncio
 import aiosqlite
 import json
 import os.path
+import bcrypt
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
@@ -30,10 +31,40 @@ async def log(dataItem, dbName):
 		)
 		await db.commit()
 
+async def storePassword(dbName, userId, username, passwordHash, salt, algorithm):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute(
+			"INSERT INTO Report (user_id, username, password_hash, salt, algorithm) VALUES (?, ?, ?, ?, ?)",
+			(
+				userId,
+				username,
+				passwordHash,
+				salt,
+				algorithm
+			)
+		)
+		await db.commit()
+
+async def getPasswordInfo(dbName, userId, username, passwordHash):
+	async with aiosqlite.connect(getDbPath(dbName)) as conn:
+		cursor = await conn.execute(
+			"SELECT * FROM PasswordHash WHERE user_id = ? AND username = ? AND password_hash = ?",
+			(userId, username, passwordHash)
+		)
+		result = await cursor.fetchall()
+		print(result)
+		return result
+
 def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
+
+def hashPassword(password):
+	algorithm = "bcrypt"
+	salt = bcrypt.gensalt()
+	passwordHash = bcrypt.hashpw(password.encode('utf-8'), salt)
+	return (passwordHash, salt, algorithm)
 
 def validatePassword(password):
 	passwordPolicies = {
