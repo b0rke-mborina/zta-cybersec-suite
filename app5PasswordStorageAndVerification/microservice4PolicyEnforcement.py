@@ -1,10 +1,29 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, model_validator
+import json
+from .utilityFunctions import validatePassword
 
 
 app = FastAPI()
 
 
-@app.get("/password/policy")
-async def policy():
-	return {"status": "OK"}
+class Data(BaseModel):
+	data: str
+	
+	@model_validator(mode='before')
+	@classmethod
+	def to_py_dict(cls, data):
+		return json.loads(data)
 
+@app.exception_handler(Exception)
+async def exceptionHandler(request, exc):
+	return JSONResponse(
+		status_code = 500,
+		content = { "policy": "failure", "error_message": "Unexpected error occured." },
+	)
+
+@app.get("/password/policy", status_code = 200)
+async def policy(data: Data):
+	isPasswordValid = validatePassword(data.data)
+	return { "policy": "success", "is_data_ok": 1 if isPasswordValid else 0 }
