@@ -1,4 +1,6 @@
+from http.client import HTTPException
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from .utilityFunctions import storePassword, getPasswordInfo, hashPassword
 
@@ -9,6 +11,13 @@ app = FastAPI()
 class Data(BaseModel):
 	username: str
 	password: str
+
+@app.exception_handler(HTTPException)
+async def httpExceptionHandler(request, exc):
+	return JSONResponse(
+		status_code = 500,
+		content = { "hashing": "failure", "error_message": "Unexpected error occured." },
+	)
 
 @app.post("/password/store")
 async def storage(data: Data):
