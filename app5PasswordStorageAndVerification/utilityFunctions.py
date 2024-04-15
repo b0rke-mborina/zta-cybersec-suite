@@ -4,6 +4,7 @@ import aiosqlite
 import json
 import os.path
 import bcrypt
+from fastapi.exceptions import RequestValidationError
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
@@ -32,18 +33,21 @@ async def log(dataItem, dbName):
 		await db.commit()
 
 async def storePasswordHash(dbName, userId, username, passwordHash, salt, algorithm):
-	async with aiosqlite.connect(getDbPath(dbName)) as db:
-		await db.execute(
-			"INSERT INTO PasswordHash (user_id, username, password_hash, salt, algorithm) VALUES (?, ?, ?, ?, ?)",
-			(
-				userId,
-				username,
-				passwordHash,
-				salt,
-				algorithm
+	try:
+		async with aiosqlite.connect(getDbPath(dbName)) as db:
+			await db.execute(
+				"INSERT INTO PasswordHash (user_id, username, password_hash, salt, algorithm) VALUES (?, ?, ?, ?, ?)",
+				(
+					userId,
+					username,
+					passwordHash,
+					salt,
+					algorithm
+				)
 			)
-		)
-		await db.commit()
+			await db.commit()
+	except:
+		raise RequestValidationError("Username must be unique.")
 
 async def getPasswordHashInfo(dbName, userId, username, passwordHash):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
