@@ -28,7 +28,7 @@ class DataUpdate(BaseModel):
 async def httpExceptionHandler(request, exc):
 	return JSONResponse(
 		status_code = 500,
-		content = { "hashing": "failure", "error_message": "Unexpected error occured." },
+		content = { "storage": "failure", "error_message": "Unexpected error occured." },
 	)
 
 @app.post("/password/store")
