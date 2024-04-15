@@ -1,7 +1,7 @@
-from http.client import HTTPException
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
+import json
 from .utilityFunctions import storePasswordHash, getPasswordHashInfo, updatePasswordHash, hashPassword
 
 
@@ -16,6 +16,11 @@ class DataRetrieve(BaseModel):
 	user_id: str
 	username: str
 	password_hash: str
+	
+	@model_validator(mode='before')
+	@classmethod
+	def to_py_dict(cls, data):
+		return json.loads(data)
 
 class DataUpdate(BaseModel):
 	user_id: str
@@ -23,6 +28,11 @@ class DataUpdate(BaseModel):
 	password_hash: str
 	salt: str
 	algorithm: str
+	
+	@model_validator(mode='before')
+	@classmethod
+	def to_py_dict(cls, data):
+		return json.loads(data)
 
 @app.exception_handler(HTTPException)
 async def httpExceptionHandler(request, exc):

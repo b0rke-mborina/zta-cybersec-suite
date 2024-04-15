@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from .utilityFunctions import hashPassword
@@ -12,7 +12,7 @@ class Data(BaseModel):
 	current_password: str
 	new_password: str
 
-@app.exception_handler(Exception)
+@app.exception_handler(HTTPException)
 async def exceptionHandler(request, exc):
 	return JSONResponse(
 		status_code = 500,
