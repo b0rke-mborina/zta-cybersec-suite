@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from .utilityFunctions import hashPassword
 
 
 app = FastAPI()
@@ -11,4 +12,12 @@ class Data(BaseModel):
 
 @app.get("/password/verify")
 async def verification(data: Data):
-	return {"status": "OK"}
+	(passwordHash, _, _) = hashPassword(data.password)
+	response = { "verification": "success", "is_valid": True }
+
+	retrievalResponse = {}
+	retrievalResponseInfo = retrievalResponse.get("info")
+	if len(retrievalResponseInfo) == 0:
+		response["is_valid"] = False
+	
+	return response

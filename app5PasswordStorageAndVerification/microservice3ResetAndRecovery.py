@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from .utilityFunctions import hashPassword
 
 
 app = FastAPI()
@@ -12,4 +13,8 @@ class Data(BaseModel):
 
 @app.get("/password/reset")
 async def reset(data: Data):
-	return {"status": "OK"}
+	response = { "reset": "success" }
+
+	(newPasswordHash, salt, algorithm) = hashPassword(data.new_password)
+
+	return response

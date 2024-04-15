@@ -31,10 +31,10 @@ async def log(dataItem, dbName):
 		)
 		await db.commit()
 
-async def storePassword(dbName, userId, username, passwordHash, salt, algorithm):
+async def storePasswordHash(dbName, userId, username, passwordHash, salt, algorithm):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
 		await db.execute(
-			"INSERT INTO Report (user_id, username, password_hash, salt, algorithm) VALUES (?, ?, ?, ?, ?)",
+			"INSERT INTO PasswordHash (user_id, username, password_hash, salt, algorithm) VALUES (?, ?, ?, ?, ?)",
 			(
 				userId,
 				username,
@@ -45,7 +45,7 @@ async def storePassword(dbName, userId, username, passwordHash, salt, algorithm)
 		)
 		await db.commit()
 
-async def getPasswordInfo(dbName, userId, username, passwordHash):
+async def getPasswordHashInfo(dbName, userId, username, passwordHash):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
 		cursor = await conn.execute(
 			"SELECT * FROM PasswordHash WHERE user_id = ? AND username = ? AND password_hash = ?",
@@ -54,6 +54,20 @@ async def getPasswordInfo(dbName, userId, username, passwordHash):
 		result = await cursor.fetchall()
 		print(result)
 		return result
+
+async def updatePasswordHash(dbName, userId, username, passwordHash, salt, algorithm):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute(
+			"UPDATE PasswordHash SET password_hash = ?, salt = ?, algorithm = ? WHERE user_id = ? AND username = ?",
+			(
+				passwordHash,
+				salt,
+				algorithm,
+				userId,
+				username
+			)
+		)
+		await db.commit()
 
 def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
