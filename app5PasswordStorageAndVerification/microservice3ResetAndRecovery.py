@@ -41,9 +41,64 @@ async def exceptionHandler(request, exc):
 
 @app.post("/password/reset")
 async def reset(data: Data):
+	policyResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8043/password/policy",
+		{
+			"data": data.new_password
+		}
+	)
+	if policyResult[0].get("policy_management") != "success":
+		raise HTTPException(500)
+	if not policyResult[0].get("is_data_ok"):
+		raise RequestValidationError("Password requirements not fulfilled.")
+	
+	(currentPasswordHash, _, _) = hashPassword(data.current_password)
+	(newPasswordHash, salt, algorithm) = hashPassword(data.new_password)
 	response = { "reset": "success" }
 
-	(currentPasswordHash, salt, algorithm) = hashPassword(data.current_password)
-	(newPasswordHash, salt, algorithm) = hashPassword(data.new_password)
+	retrievalResult = sendRequest(
+		"get",
+		"http://127.0.0.1:8040/password/retrieve",
+		{
+			"user_id": 1,
+			"username": data.username,
+			"password_hash": currentPasswordHash
+		}
+	)
+	if retrievalResult[0].get("retrieval") != "success":
+		raise HTTPException(500)
+	if len(retrievalResult[0].get("info")) == 0:
+		raise RequestValidationError("Wrong password to change.")
+	
+	updateResult = sendRequest(
+		"post",
+		"http://127.0.0.1:8040/password/update",
+		{
+			"user_id": 1,
+			"username": data.username,
+			"password_hash": newPasswordHash,
+			"salt": salt,
+			"algorithm": algorithm
+		}
+	)
+	if updateResult[0].get("update") != "success":
+		raise HTTPException(500)
 
+	loggingResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8044/password/logging",
+		{
+			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+			"level": "INFO",
+			"logger_source": 1,
+			"user_id": 1,
+			"request": str(data),
+			"response": str(response),
+			"error_message": ""
+		}
+	)
+	if loggingResult[0].get("logging") != "success":
+		raise HTTPException(500)
+	
 	return response

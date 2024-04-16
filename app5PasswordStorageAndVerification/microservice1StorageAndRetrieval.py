@@ -63,9 +63,39 @@ async def httpExceptionHandler(request, exc):
 
 @app.post("/password/store")
 async def storage(data: DataStore):
+	policyResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8043/password/policy",
+		{
+			"data": data.password
+		}
+	)
+	if policyResult[0].get("policy_management") != "success":
+		raise HTTPException(500)
+	if not policyResult[0].get("is_data_ok"):
+		raise RequestValidationError("Password requirements not fulfilled.")
+
 	(passwordHash, salt, algorithm) = hashPassword(data.password)
 	await storePasswordHash("app5Data.db", 1, data.username, passwordHash, salt, algorithm)
-	return { "storage": "success" }
+	response = { "storage": "success" }
+
+	loggingResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8044/password/logging",
+		{
+			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+			"level": "INFO",
+			"logger_source": 1,
+			"user_id": 1,
+			"request": str(data),
+			"response": str(response),
+			"error_message": ""
+		}
+	)
+	if loggingResult[0].get("logging") != "success":
+		raise HTTPException(500)
+
+	return response
 
 @app.get("/password/retrieve")
 async def retrieval(data: DataRetrieve):

@@ -26,4 +26,4 @@ async def exceptionHandler(request, exc):
 @app.get("/password/policy", status_code = 200)
 async def policy(data: Data):
 	isPasswordValid = validatePassword(data.data)
-	return { "policy": "success", "is_data_ok": 1 if isPasswordValid else 0 }
+	return { "policy": "success", "is_data_ok": isPasswordValid }
