@@ -49,11 +49,11 @@ async def storePasswordHash(dbName, userId, username, passwordHash, salt, algori
 	except:
 		raise RequestValidationError("Username must be unique.")
 
-async def getPasswordHashInfo(dbName, userId, username, passwordHash):
+async def getPasswordHashInfo(dbName, userId, username):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
 		cursor = await conn.execute(
-			"SELECT * FROM PasswordHash WHERE user_id = ? AND username = ? AND password_hash = ?",
-			(userId, username, passwordHash)
+			"SELECT * FROM PasswordHash WHERE user_id = ? AND username = ?",
+			(userId, username)
 		)
 		result = await cursor.fetchall()
 		print(result)
@@ -82,6 +82,11 @@ def hashPassword(password):
 	algorithm = "bcrypt"
 	salt = bcrypt.gensalt()
 	passwordHash = bcrypt.hashpw(password.encode('utf-8'), salt)
+	return (passwordHash, salt, algorithm)
+
+def hashPasswordWithSalt(password, salt):
+	algorithm = "bcrypt"
+	passwordHash = bcrypt.hashpw(password.encode('utf-8'), salt.encode("utf-8"))
 	return (passwordHash, salt, algorithm)
 
 def validatePassword(password):

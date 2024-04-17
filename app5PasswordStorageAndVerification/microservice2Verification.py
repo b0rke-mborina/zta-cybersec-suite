@@ -3,7 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
-from .utilityFunctions import hashPassword, sendRequest
+from .utilityFunctions import hashPassword, hashPasswordWithSalt, sendRequest
 
 
 app = FastAPI()
@@ -40,25 +40,30 @@ async def exceptionHandler(request, exc):
 
 @app.get("/password/verify")
 async def verification(data: Data):
-	(passwordHash, _, _) = hashPassword(data.password)
 	response = { "verification": "success", "is_valid": True }
 
-	retrievalResult = sendRequest(
+	retrievalResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8040/password/retrieve",
 		{
 			"user_id": 1,
-			"username": data.username,
-			"password_hash": passwordHash
+			"username": data.username
 		}
 	)
 	if retrievalResult[0].get("retrieval") != "success":
 		raise HTTPException(500)
-
+	
 	retrievalResultInfo = retrievalResult[0].get("info")
 	if len(retrievalResultInfo) == 0:
 		response["is_valid"] = False
 	
+	passwordFromDbString = retrievalResultInfo[0][2]
+	saltFromDbString = retrievalResultInfo[0][3]
+	(passwordHash, _, _) = hashPasswordWithSalt(data.password, saltFromDbString)
+	passwordHashString = passwordHash.decode("utf-8")
+	if passwordHashString != passwordFromDbString:
+		response["is_valid"] = False
+
 	loggingResult = await sendRequest(
 		"post",
 		"http://127.0.0.1:8044/password/logging",

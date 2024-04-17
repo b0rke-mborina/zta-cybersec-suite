@@ -3,7 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
-from .utilityFunctions import hashPassword, sendRequest
+from .utilityFunctions import hashPassword, hashPasswordWithSalt, sendRequest
 
 
 app = FastAPI()
@@ -48,22 +48,17 @@ async def reset(data: Data):
 			"data": data.new_password
 		}
 	)
-	if policyResult[0].get("policy_management") != "success":
+	if policyResult[0].get("policy") != "success":
 		raise HTTPException(500)
 	if not policyResult[0].get("is_data_ok"):
 		raise RequestValidationError("Password requirements not fulfilled.")
-	
-	(currentPasswordHash, _, _) = hashPassword(data.current_password)
-	(newPasswordHash, salt, algorithm) = hashPassword(data.new_password)
-	response = { "reset": "success" }
 
-	retrievalResult = sendRequest(
+	retrievalResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8040/password/retrieve",
 		{
 			"user_id": 1,
-			"username": data.username,
-			"password_hash": currentPasswordHash
+			"username": data.username
 		}
 	)
 	if retrievalResult[0].get("retrieval") != "success":
@@ -71,13 +66,25 @@ async def reset(data: Data):
 	if len(retrievalResult[0].get("info")) == 0:
 		raise RequestValidationError("Wrong password to change.")
 	
-	updateResult = sendRequest(
+	response = { "reset": "success" }
+	
+	passwordFromDbString = retrievalResult[0].get("info")[0][2]
+	saltFromDbString = retrievalResult[0].get("info")[0][3]
+	(currentPasswordHash, _, _) = hashPasswordWithSalt(data.current_password, saltFromDbString)
+	currentPasswordHashString = currentPasswordHash.decode("utf-8")
+	(newPasswordHash, salt, algorithm) = hashPasswordWithSalt(data.new_password, saltFromDbString)
+	newPasswordHashString = newPasswordHash.decode("utf-8")
+
+	if currentPasswordHashString != passwordFromDbString:
+		raise RequestValidationError("Current password invalid.")
+
+	updateResult = await sendRequest(
 		"post",
 		"http://127.0.0.1:8040/password/update",
 		{
 			"user_id": 1,
 			"username": data.username,
-			"password_hash": newPasswordHash,
+			"password_hash": newPasswordHashString,
 			"salt": salt,
 			"algorithm": algorithm
 		}

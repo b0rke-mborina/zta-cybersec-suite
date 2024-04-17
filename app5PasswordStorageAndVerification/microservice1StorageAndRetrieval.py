@@ -15,9 +15,8 @@ class DataStore(BaseModel):
 	password: str
 
 class DataRetrieve(BaseModel):
-	user_id: str
+	user_id: int
 	username: str
-	password_hash: str
 	
 	@model_validator(mode='before')
 	@classmethod
@@ -25,7 +24,7 @@ class DataRetrieve(BaseModel):
 		return json.loads(data)
 
 class DataUpdate(BaseModel):
-	user_id: str
+	user_id: int
 	username: str
 	password_hash: str
 	salt: str
@@ -70,13 +69,15 @@ async def storage(data: DataStore):
 			"data": data.password
 		}
 	)
-	if policyResult[0].get("policy_management") != "success":
+	if policyResult[0].get("policy") != "success":
 		raise HTTPException(500)
 	if not policyResult[0].get("is_data_ok"):
 		raise RequestValidationError("Password requirements not fulfilled.")
 
 	(passwordHash, salt, algorithm) = hashPassword(data.password)
-	await storePasswordHash("app5Data.db", 1, data.username, passwordHash, salt, algorithm)
+	passwordHashString = passwordHash.decode("utf-8")
+	saltString = salt.decode("utf-8")
+	await storePasswordHash("app5Data.db", 1, data.username, passwordHashString, saltString, algorithm)
 	response = { "storage": "success" }
 
 	loggingResult = await sendRequest(
@@ -99,7 +100,7 @@ async def storage(data: DataStore):
 
 @app.get("/password/retrieve")
 async def retrieval(data: DataRetrieve):
-	passwordInfo = await getPasswordHashInfo("app5Data.db", data.user_id, data.username, data.password_hash)
+	passwordInfo = await getPasswordHashInfo("app5Data.db", data.user_id, data.username)
 	return { "retrieval": "success", "info": passwordInfo }
 
 @app.post("/password/update")
