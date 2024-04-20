@@ -26,11 +26,11 @@ async def exceptionHandler(request, exc):
 		content = { "sharing": "failure", "error_message": "Unexpected error occured." },
 	)
 
-@app.get("/file/store")
+@app.post("/file/store")
 async def storage(data: DataStore):
 	return { "storage": "success" }
 
 @app.get("/file/retrieve")
 async def retrieval(data: DataRetrieve):
 	file = ""
-	return { "file": file }
+	return { "storage": "success", "file": file }

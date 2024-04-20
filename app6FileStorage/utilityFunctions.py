@@ -34,3 +34,9 @@ def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
+
+async def storeFile(userId, format, filename, file):
+	pass
+
+async def getFile(userId, filename):
+	pass
