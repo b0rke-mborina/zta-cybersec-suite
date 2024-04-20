@@ -40,3 +40,9 @@ async def storeFile(userId, format, filename, file):
 
 async def getFile(userId, filename):
 	pass
+
+async def encryptFile(file):
+	pass
+
+async def decryptFile(file):
+	pass
