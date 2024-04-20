@@ -1,13 +1,36 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from enum import Enum
 
 
 app = FastAPI()
 
 
+class Format(str, Enum):
+	TXT = "txt"
+	BASE64 = "base64"
+
+class DataStore(BaseModel):
+	format: Format
+	filename: str
+	file: str
+
+class DataRetrieve(BaseModel):
+	filename: str
+
+@app.exception_handler(HTTPException)
+async def exceptionHandler(request, exc):
+	return JSONResponse(
+		status_code = 500,
+		content = { "sharing": "failure", "error_message": "Unexpected error occured." },
+	)
+
 @app.get("/file/store")
-async def storage():
-	return {"status": "OK"}
+async def storage(data: DataStore):
+	return { "storage": "success" }
 
 @app.get("/file/retrieve")
-async def retrieval():
-	return {"status": "OK"}
+async def retrieval(data: DataRetrieve):
+	file = ""
+	return { "file": file }
