@@ -31,7 +31,7 @@ async def exceptionHandler(request, exc):
 
 @app.post("/file/storage")
 async def storage(data: DataStore):
-	await storeFile(data.user_id, data.format, data.filename, data.file)
+	await storeFile(data.user_id, data.format.value, data.filename, data.file)
 	return { "storage": "success" }
 
 @app.get("/file/retrieval")

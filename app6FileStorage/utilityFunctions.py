@@ -30,6 +30,29 @@ async def log(dataItem, dbName):
 		)
 		await db.commit()
 
+async def checkIfUserAllowed(dbName, userId, role):
+	tasks = [isRoleAllowed(dbName, role), isUserAllowed(dbName, userId)]
+	results = await asyncio.gather(*tasks)
+	return results[0] and results[1]
+
+async def isRoleAllowed(dbName, role):
+	async with aiosqlite.connect(getDbPath(dbName)) as conn:
+		cursor = await conn.execute(
+			"SELECT * FROM ACL WHERE role = ?",
+			(role, )
+		)
+		result = await cursor.fetchone()
+		return result[2] == 1
+
+async def isUserAllowed(dbName, userId):
+	async with aiosqlite.connect(getDbPath(dbName)) as conn:
+		cursor = await conn.execute(
+			"SELECT * FROM ACL WHERE user_id = ?",
+			(userId, )
+		)
+		result = await cursor.fetchall()
+		return len(result) == 0
+
 def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
