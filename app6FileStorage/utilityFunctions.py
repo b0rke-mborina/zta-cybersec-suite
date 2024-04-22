@@ -3,6 +3,7 @@ import asyncio
 import aiosqlite
 import json
 import os.path
+from fastapi.exceptions import RequestValidationError
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
@@ -58,11 +59,31 @@ def getDbPath(dbFilename):
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
 
-async def storeFile(userId, format, filename, file):
-	pass
+async def storeFile(dbName, userId, filename, format, file):
+	try:
+		async with aiosqlite.connect(getDbPath(dbName)) as db:
+			await db.execute(
+				"INSERT INTO File (user_id, filename, format, file) VALUES (?, ?, ?, ?)",
+				(
+					userId,
+					filename,
+					format,
+					file
+				)
+			)
+			await db.commit()
+	except:
+		raise RequestValidationError("Username must be unique.")
 
-async def getFile(userId, filename):
-	pass
+async def getFile(dbName, userId, filename):
+	async with aiosqlite.connect(getDbPath(dbName)) as conn:
+		cursor = await conn.execute(
+			"SELECT * FROM File WHERE user_id = ? AND filename = ?",
+			(userId, filename)
+		)
+		result = await cursor.fetchall()
+		print(result)
+		return result
 
 async def encryptFile(file):
 	pass
