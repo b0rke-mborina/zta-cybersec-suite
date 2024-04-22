@@ -48,5 +48,5 @@ async def exceptionHandler(request, exc):
 
 @app.post("/file/logging", status_code = 200)
 async def logging(data: Data):
-	await log(data, "app5Logs.db")
+	await log(data, "app6Logs.db")
 	return { "logging": "success" }

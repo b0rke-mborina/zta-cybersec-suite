@@ -61,16 +61,19 @@ def getDbPath(dbFilename):
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
 
-async def storeFile(dbName, userId, filename, format, file):
+async def storeFile(dbName, userId, filename, format, file, key, tag, nonce):
 	try:
 		async with aiosqlite.connect(getDbPath(dbName)) as db:
 			await db.execute(
-				"INSERT INTO File (user_id, filename, format, file) VALUES (?, ?, ?, ?)",
+				"INSERT INTO File (user_id, filename, format, file, key, tag, nonce) VALUES (?, ?, ?, ?, ?, ?, ?)",
 				(
 					userId,
 					filename,
 					format,
-					file
+					file,
+					key,
+					tag,
+					nonce
 				)
 			)
 			await db.commit()
@@ -98,9 +101,9 @@ async def encryptFile(file):
 		base64.b64encode(cipher.nonce).decode("utf-8")
 	)
 
-async def decryptFile(file):
+async def decryptFile(file, key, tag, nonce):
 	file = base64.b64decode(file)
-	key = "key_placeholder1".encode("utf-8") # must be 16 chars
+	key = key.encode("utf-8")
 	tag = base64.b64decode(tag)
 	nonce = base64.b64decode(nonce)
 	cipher = AES.new(key, AES.MODE_EAX, nonce = nonce)
