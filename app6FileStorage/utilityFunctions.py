@@ -1,3 +1,5 @@
+import base64
+from Crypto.Cipher import AES
 import aiohttp
 import asyncio
 import aiosqlite
@@ -86,7 +88,21 @@ async def getFile(dbName, userId, filename):
 		return result
 
 async def encryptFile(file):
-	pass
+	key = "key_placeholder1" # must be 16 chars
+	cipher = AES.new(key.encode("utf-8"), AES.MODE_EAX)
+	ciphertext, tag = cipher.encrypt_and_digest(file.encode("utf-8"))
+	return (
+		base64.b64encode(ciphertext).decode("utf-8"),
+		key,
+		base64.b64encode(tag).decode("utf-8"),
+		base64.b64encode(cipher.nonce).decode("utf-8")
+	)
 
 async def decryptFile(file):
-	pass
+	file = base64.b64decode(file)
+	key = "key_placeholder1".encode("utf-8") # must be 16 chars
+	tag = base64.b64decode(tag)
+	nonce = base64.b64decode(nonce)
+	cipher = AES.new(key, AES.MODE_EAX, nonce = nonce)
+	plaintext = cipher.decrypt_and_verify(file, tag)
+	return plaintext.decode()

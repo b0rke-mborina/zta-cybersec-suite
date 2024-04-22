@@ -19,8 +19,8 @@ async def exceptionHandler(request, exc):
 
 @app.get("/file/encrypt")
 async def encryption(data: Data):
-	encryptedFile = await encryptFile(data.file)
-	return { "encryption": "success", "file": encryptedFile }
+	(encryptedFile, key, tag, nonce) = await encryptFile(data.file)
+	return { "encryption": "success", "file": encryptedFile } # , "key": key, "tag": tag, "nonce": nonce
 
 @app.get("/file/decrypt")
 async def decryption(data: Data):
