@@ -1,9 +1,13 @@
 from fastapi import FastAPI
 
+
 app = FastAPI()
 
 
-@app.get("/")
-def read_root():
-	return {"status": "OK"}
+@app.get("/data/mask")
+def masking():
+	return { "masking": "success" }
 
+@app.get("/data/unmask")
+def unmasking():
+	return { "unmasking": "success" }
