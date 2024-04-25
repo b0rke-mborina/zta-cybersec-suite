@@ -4,6 +4,7 @@ import aiosqlite
 import json
 import os.path
 from fastapi.exceptions import RequestValidationError
+from faker import Faker
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
@@ -72,3 +73,31 @@ def checkData(data):
 	for sublist in data:
 		if not all(isinstance(item, (str, int, float, bool, type(None))) for item in sublist):
 			raise RequestValidationError("Lists inside the provided data list don't include only basic types.")
+
+def storeData(data):
+	pass
+
+def retrieveData(data):
+	pass
+
+def maskData(data):
+	print(data)
+	fake = Faker()
+	maskedData = data.copy()
+	for i in range(len(maskedData)):
+		for j in range(len(maskedData[i])):
+			print(maskedData[i][j])
+			print(isinstance(maskedData[i][j], bool))
+			if maskedData[i][j] is None:
+				maskedData[i][j] = "MASKED"
+			elif isinstance(maskedData[i][j], bool):
+				maskedData[i][j] = fake.boolean()
+			elif isinstance(maskedData[i][j], int):
+				maskedData[i][j] = fake.random_int()
+			elif isinstance(maskedData[i][j], float):
+				maskedData[i][j] = fake.random_number()
+			elif isinstance(maskedData[i][j], str):
+				maskedData[i][j] = fake.word()
+			else:
+				maskedData[i][j] = "MASKED"
+	return maskedData

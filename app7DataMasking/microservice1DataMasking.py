@@ -3,7 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
-from .utilityFunctions import sendRequest, checkData
+from .utilityFunctions import maskData, sendRequest, checkData
 
 
 app = FastAPI()
@@ -44,6 +44,7 @@ async def exceptionHandler(request, exc):
 @app.get("/data/mask")
 async def masking(data: DataMask):
 	checkData(data.data)
+	print(maskData(data.data))
 	return { "masking": "success" }
 
 @app.get("/data/unmask")
