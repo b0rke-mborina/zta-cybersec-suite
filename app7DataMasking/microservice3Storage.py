@@ -5,9 +5,9 @@ app = FastAPI()
 
 
 @app.post("/data/store")
-def storage():
+async def storage():
 	return { "storage": "success" }
 
 @app.get("/data/retrieve")
-def retrieval():
+async def retrieval():
 	return { "retrieval": "success" }

@@ -5,5 +5,5 @@ app = FastAPI()
 
 
 @app.get("/data/retrieval")
-def retrieval():
+async def retrieval():
 	return { "retrieval": "success" }

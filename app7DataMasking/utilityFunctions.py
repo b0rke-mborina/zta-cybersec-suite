@@ -3,6 +3,7 @@ import asyncio
 import aiosqlite
 import json
 import os.path
+from fastapi.exceptions import RequestValidationError
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
@@ -57,3 +58,17 @@ def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
+
+def checkData(data):
+	if not isinstance(data, list):
+		raise RequestValidationError("Data is not a list.")
+    
+	if not all(isinstance(sublist, list) for sublist in data):
+		raise RequestValidationError("Data is not a list of lists.")
+	
+	if len(set(len(sublist) for sublist in data)) != 1:
+		raise RequestValidationError("Lists inside the provided data list are not of equal length.")
+	
+	for sublist in data:
+		if not all(isinstance(item, (str, int, float, bool, type(None))) for item in sublist):
+			raise RequestValidationError("Lists inside the provided data list don't include only basic types.")
