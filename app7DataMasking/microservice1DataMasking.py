@@ -27,7 +27,7 @@ async def validation_exception_handler(request, exc):
 		"response": "",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
 	}
-	await sendRequest("post", "http://127.0.0.1:8064/data/logging", dataForLoggingUnsuccessfulRequest)
+	await sendRequest("post", "http://127.0.0.1:8063/data/logging", dataForLoggingUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 400,
