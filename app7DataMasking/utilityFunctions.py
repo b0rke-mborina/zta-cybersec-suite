@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 import aiosqlite
+import copy
 import json
 import os.path
 from fastapi.exceptions import RequestValidationError
@@ -75,17 +76,20 @@ def checkData(data):
 			raise RequestValidationError("Lists inside the provided data list don't include only basic types.")
 
 async def storeData(dbName, userId, dataset, originalData, maskedData):
-	async with aiosqlite.connect(getDbPath(dbName)) as db:
-		await db.execute(
-			"INSERT INTO Data (user_id, dataset, data_original, data_masked) VALUES (?, ?, ?, ?)",
-			(
-				userId,
-				dataset,
-				json.dumps(originalData),
-				json.dumps(maskedData)
+	try:
+		async with aiosqlite.connect(getDbPath(dbName)) as db:
+			await db.execute(
+				"INSERT INTO Data (user_id, dataset, data_original, data_masked) VALUES (?, ?, ?, ?)",
+				(
+					userId,
+					dataset,
+					json.dumps(originalData),
+					json.dumps(maskedData)
+				)
 			)
-		)
-		await db.commit()
+			await db.commit()
+	except:
+		raise RequestValidationError("Dataset name must be unique.")
 
 async def retrieveData(dbName, userId, dataset):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
@@ -99,11 +103,9 @@ async def retrieveData(dbName, userId, dataset):
 def maskData(data):
 	print(data)
 	fake = Faker()
-	maskedData = data.copy()
+	maskedData = copy.deepcopy(data)
 	for i in range(len(maskedData)):
 		for j in range(len(maskedData[i])):
-			print(maskedData[i][j])
-			print(isinstance(maskedData[i][j], bool))
 			if maskedData[i][j] is None:
 				maskedData[i][j] = "MASKED"
 			elif isinstance(maskedData[i][j], bool):

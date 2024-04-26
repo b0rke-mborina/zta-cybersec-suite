@@ -44,11 +44,90 @@ async def exceptionHandler(request, exc):
 @app.get("/data/mask")
 async def masking(data: DataMask):
 	checkData(data.data)
+	accessControlResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8062/data/access-control",
+		{
+			"user_id": 1,
+			"role": "user"
+		}
+	)
+	if accessControlResult[0].get("access_control") != "success" or not accessControlResult[0].get("is_allowed"):
+		raise HTTPException(500)
+
 	maskedData = maskData(data.data)
 	print(maskedData)
-	return { "masking": "success", "data": maskedData }
+	response = { "masking": "success", "data": maskedData }
+
+	storageResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8061/data/store",
+		{
+			"dataset": data.dataset,
+			"data_original": data.data,
+			"data_masked": maskedData
+		}
+	)
+	if storageResult[0].get("storage") != "success":
+		raise HTTPException(500)
+	
+	loggingResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8063/data/logging",
+		{
+			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+			"level": "INFO",
+			"logger_source": 1,
+			"user_id": 1,
+			"request": str(data),
+			"response": str(response),
+			"error_message": ""
+		}
+	)
+	if loggingResult[0].get("logging") != "success":
+		raise HTTPException(500)
+	
+	return response
 
 @app.get("/data/unmask")
 async def unmasking(data: DataUnmask):
-	data = []
-	return { "unmasking": "success", "data": data }
+	accessControlResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8062/data/access-control",
+		{
+			"user_id": 1,
+			"role": "user"
+		}
+	)
+	if accessControlResult[0].get("access_control") != "success" or not accessControlResult[0].get("is_allowed"):
+		raise HTTPException(500)
+
+	storageResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8061/data/retrieve",
+		{
+			"dataset": data.dataset
+		}
+	)
+	if storageResult[0].get("retrieval") != "success":
+		raise HTTPException(500)
+	data = storageResult[0].get("data")
+	response = { "unmasking": "success", "data": data }
+	
+	loggingResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8063/data/logging",
+		{
+			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+			"level": "INFO",
+			"logger_source": 1,
+			"user_id": 1,
+			"request": str(data),
+			"response": str(response),
+			"error_message": ""
+		}
+	)
+	if loggingResult[0].get("logging") != "success":
+		raise HTTPException(500)
+	
+	return response
