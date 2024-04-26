@@ -31,22 +31,24 @@ async def validation_exception_handler(request, exc):
 
 	return JSONResponse(
 		status_code = 400,
-		content = { "storage": "failure", "error_message": "Input invalid." },
+		content = { "data_masking": "failure", "error_message": "Input invalid." },
 	)
 
 @app.exception_handler(HTTPException)
 async def exceptionHandler(request, exc):
 	return JSONResponse(
 		status_code = 500,
-		content = { "sharing": "failure", "error_message": "Unexpected error occured." },
+		content = { "data_masking": "failure", "error_message": "Unexpected error occured." },
 	)
 
 @app.get("/data/mask")
 async def masking(data: DataMask):
 	checkData(data.data)
-	print(maskData(data.data))
-	return { "masking": "success" }
+	maskedData = maskData(data.data)
+	print(maskedData)
+	return { "masking": "success", "data": maskedData }
 
 @app.get("/data/unmask")
 async def unmasking(data: DataUnmask):
-	return { "unmasking": "success" }
+	data = []
+	return { "unmasking": "success", "data": data }

@@ -74,11 +74,27 @@ def checkData(data):
 		if not all(isinstance(item, (str, int, float, bool, type(None))) for item in sublist):
 			raise RequestValidationError("Lists inside the provided data list don't include only basic types.")
 
-def storeData(data):
-	pass
+async def storeData(dbName, userId, dataset, originalData, maskedData):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute(
+			"INSERT INTO Data (user_id, dataset, data_original, data_masked) VALUES (?, ?, ?, ?)",
+			(
+				userId,
+				dataset,
+				json.dumps(originalData),
+				json.dumps(maskedData)
+			)
+		)
+		await db.commit()
 
-def retrieveData(data):
-	pass
+async def retrieveData(dbName, userId, dataset):
+	async with aiosqlite.connect(getDbPath(dbName)) as conn:
+		cursor = await conn.execute(
+			"SELECT * FROM Data WHERE user_id = ? AND dataset = ?",
+			(userId, dataset)
+		)
+		result = await cursor.fetchone()
+		return json.loads(result[2])
 
 def maskData(data):
 	print(data)
