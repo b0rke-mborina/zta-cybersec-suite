@@ -63,6 +63,6 @@ async def exceptionHandler(request, exc):
 
 @app.get("/intelligence/threats", status_code = 200)
 async def threats(data: Data):
-	validateThreatRequest(data)
+	validateThreatRequest(data.time_from, data.time_to)
 	threatsData = []
 	return { "threats": "success", "data": threatsData }

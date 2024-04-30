@@ -1,9 +1,10 @@
-import datetime
 import aiohttp
 import asyncio
 import aiosqlite
+import datetime
 import json
 import os.path
+from fastapi.exceptions import RequestValidationError
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
@@ -65,8 +66,8 @@ async def getThreats(dbName, timeFrom, timeTo, severity):
 		data = await cursor.fetchall()
 		results = []
 		for dataItem in data:
-			datetimeofThreat = datetime.datetime.fromisoformat(dataItem[1]).replace(tzinfo=datetime.timezone.utc)
-			if datetimeofThreat > timeFrom and datetimeofThreat < timeTo:
+			datetimeOfThreat = datetime.datetime.fromisoformat(dataItem[1]).replace(tzinfo=datetime.timezone.utc)
+			if datetimeOfThreat > timeFrom and datetimeOfThreat < timeTo:
 				results.append(loadThreat(dataItem))
 		return results
 
@@ -85,11 +86,35 @@ def loadThreat(threat):
 	}
 	return loadedThreat
 
-async def validateIncidentData(data):
-	pass
+def validateIncidentData(data):
+	if not isinstance(data, dict):
+		raise RequestValidationError("Request not valid.")
 
-async def validateThreatRequest(data):
-	pass
+	fieldsToValidate = [
+		"affected_assets",
+		"attack_vectors",
+		"malicious_code",
+		"compromised_data",
+		"indicators_of_compromise",
+		"user_accounts_involved",
+		"logs",
+		"actions"
+	]
 
-async def checkIfIncidentIncludesThisSystem(data):
+	for field in fieldsToValidate:
+		if field == "attack_vectors":
+			if not all(isinstance(item, list) for item in data[field]):
+				raise RequestValidationError("Request not valid.")
+		else:
+			if not all(isinstance(item, str) for item in data[field]):
+				raise RequestValidationError("Request not valid.")
+
+
+def validateThreatRequest(timeFrom, timeTo):
+	datetimeFrom = datetime.datetime.fromisoformat(timeFrom).replace(tzinfo=datetime.timezone.utc)
+	datetimeTo = datetime.datetime.fromisoformat(timeTo).replace(tzinfo=datetime.timezone.utc)
+	if not datetimeFrom < datetimeTo:
+		raise RequestValidationError("Request not valid.")
+
+def checkIfIncidentIncludesThisSystem(data):
 	pass

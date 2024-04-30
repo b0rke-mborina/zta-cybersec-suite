@@ -65,5 +65,5 @@ async def exceptionHandler(request, exc):
 
 @app.get("/intelligence/incident", status_code = 200)
 async def incidents(data: Data):
-	validateIncidentData(data)
+	validateIncidentData(data.incident)
 	return { "incident": "success" }
