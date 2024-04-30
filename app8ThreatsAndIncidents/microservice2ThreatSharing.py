@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 import datetime
 from enum import Enum
-from .utilityFunctions import sendRequest
+from .utilityFunctions import sendRequest, validateThreatRequest
 
 
 app = FastAPI()
@@ -63,4 +63,6 @@ async def exceptionHandler(request, exc):
 
 @app.get("/intelligence/threats", status_code = 200)
 async def threats(data: Data):
-	return { "threats": "success" }
+	validateThreatRequest(data)
+	threatsData = []
+	return { "threats": "success", "data": threatsData }

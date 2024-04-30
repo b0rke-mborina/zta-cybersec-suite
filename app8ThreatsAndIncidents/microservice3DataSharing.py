@@ -4,6 +4,7 @@ from pydantic import BaseModel, model_validator, validator
 import datetime
 import json
 from enum import Enum
+from .utilityFunctions import getThreats, storeThreat
 
 
 app = FastAPI()
@@ -74,8 +75,10 @@ async def exceptionHandler(request, exc):
 
 @app.post("/intelligence/report", status_code = 200)
 async def reporting(data: DataReport):
+	await storeThreat("app8Data.db", 1, data)
 	return { "reporting": "success" }
 
 @app.get("/intelligence/retrieve", status_code = 200)
 async def retrieval(data: DataRetrieve):
-	return { "retrieval": "success" }
+	threats = await getThreats("app8Data.db", data.time_from, data.time_to, data.severity)
+	return { "retrieval": "success", "data": threats }
