@@ -35,29 +35,8 @@ class Incident(BaseModel):
 			raise ValueError("Timestamp must be in ISO 8601 format")
 		return v
 
-class DataReport(BaseModel):
+class Data(BaseModel):
 	incident: Incident
-
-class DataRetrieve(BaseModel):
-	time_from: str
-	time_to: str
-	severity: Severity
-
-	@validator("time_from")
-	def validateISO8601Timestamp(cls, v):
-		try:
-			datetime.datetime.fromisoformat(v)
-		except ValueError:
-			raise ValueError("Value of time_from must be in ISO 8601 format")
-		return v
-
-	@validator("time_to")
-	def validateISO8601Timestamp(cls, v):
-		try:
-			datetime.datetime.fromisoformat(v)
-		except ValueError:
-			raise ValueError("Value of time_to must be in ISO 8601 format")
-		return v
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
@@ -74,20 +53,16 @@ async def validation_exception_handler(request, exc):
 
 	return JSONResponse(
 		status_code = 400,
-		content = { "intelligence": "failure", "error_message": "Input invalid." },
+		content = { "incident": "failure", "error_message": "Input invalid." },
 	)
 
 @app.exception_handler(HTTPException)
 async def exceptionHandler(request, exc):
 	return JSONResponse(
 		status_code = 500,
-		content = { "intelligence": "failure", "error_message": "Unexpected error occured." },
+		content = { "incident": "failure", "error_message": "Unexpected error occured." },
 	)
 
-@app.post("/intelligence/report", status_code = 200)
-async def reporting(data: DataReport):
-	return { "reporting": "success" }
-
-@app.get("/intelligence/retrieve", status_code = 200)
-async def retrieval(data: DataRetrieve):
-	return { "retrieval": "success" }
+@app.get("/intelligence/incident", status_code = 200)
+async def incidents(data: Data):
+	return { "incident": "success" }

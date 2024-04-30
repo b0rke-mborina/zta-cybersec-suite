@@ -14,7 +14,7 @@ class Severity(str, Enum):
 	MEDIUM = "medium"
 	HIGH = "high"
 
-class Incident(BaseModel):
+class Data(BaseModel):
 	timestamp: str
 	affected_assets: list
 	compromised_data: list
@@ -28,9 +28,6 @@ class Incident(BaseModel):
 		except ValueError:
 			raise ValueError("Timestamp must be in ISO 8601 format")
 		return v
-
-class Data(BaseModel):
-	incident: Incident
 	
 	@model_validator(mode='before')
 	@classmethod
