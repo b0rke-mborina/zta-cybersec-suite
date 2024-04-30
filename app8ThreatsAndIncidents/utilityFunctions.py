@@ -34,3 +34,12 @@ def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
+
+async def getThreats():
+	pass
+
+async def storeThreat():
+	pass
+
+async def checkIfIncidentIncludesThisSystem():
+	pass

@@ -49,6 +49,6 @@ async def exceptionHandler(request, exc):
 		content = { "incidents": "failure", "error_message": "Unexpected error occured." },
 	)
 
-@app.get("/intelligence/incidents")
+@app.get("/intelligence/incident", status_code = 200)
 async def incidents(data: Data):
 	return { "incidents": "success" }

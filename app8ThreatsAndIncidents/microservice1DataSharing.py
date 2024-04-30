@@ -84,10 +84,10 @@ async def exceptionHandler(request, exc):
 		content = { "intelligence": "failure", "error_message": "Unexpected error occured." },
 	)
 
-@app.post("/intelligence/report")
+@app.post("/intelligence/report", status_code = 200)
 async def reporting(data: DataReport):
 	return { "reporting": "success" }
 
-@app.get("/intelligence/retrieve")
+@app.get("/intelligence/retrieve", status_code = 200)
 async def retrieval(data: DataRetrieve):
 	return { "retrieval": "success" }
