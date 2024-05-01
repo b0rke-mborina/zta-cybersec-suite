@@ -4,6 +4,7 @@ from pydantic import BaseModel, model_validator, validator
 import datetime
 import json
 from enum import Enum
+from .utilityFunctions import incidentIncludesThisSystem
 
 
 app = FastAPI()
@@ -43,4 +44,5 @@ async def exceptionHandler(request, exc):
 
 @app.get("/intelligence/analysis", status_code = 200)
 async def analysis(data: Data):
+	result = incidentIncludesThisSystem(data)
 	return { "analysis": "success" }

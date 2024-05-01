@@ -116,5 +116,15 @@ def validateThreatRequest(timeFrom, timeTo):
 	if not datetimeFrom < datetimeTo:
 		raise RequestValidationError("Request not valid.")
 
-def checkIfIncidentIncludesThisSystem(data):
-	pass
+def incidentIncludesThisSystem(data):
+	assets = {"CyberSecSuite", "you", "me", "this system"}
+	affectedAssets = data.get("affected_assets", [])
+	if any(asset in assets for asset in affectedAssets):
+		return True
+	
+	accounts = {1, "user1"}
+	userAccounts = data.get("user_accounts_involved", [])
+	if any(account in accounts for account in userAccounts):
+		return True
+	
+	return False
