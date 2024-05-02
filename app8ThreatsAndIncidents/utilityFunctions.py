@@ -60,36 +60,35 @@ async def storeThreat(dbName, userId, dataItem):
 async def getThreats(dbName, timeFrom, timeTo, severity):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
 		cursor = await conn.execute(
-			"SELECT * FROM Data WHERE AND severity = ?",
-			(severity)
+			"SELECT * FROM Threat WHERE severity = ?",
+			(severity, )
 		)
 		data = await cursor.fetchall()
 		results = []
 		for dataItem in data:
 			datetimeOfThreat = datetime.datetime.fromisoformat(dataItem[1]).replace(tzinfo=datetime.timezone.utc)
-			if datetimeOfThreat > timeFrom and datetimeOfThreat < timeTo:
+			datetimeFrom = datetime.datetime.fromisoformat(timeFrom).replace(tzinfo=datetime.timezone.utc)
+			datetimeTo = datetime.datetime.fromisoformat(timeTo).replace(tzinfo=datetime.timezone.utc)
+			if datetimeOfThreat > datetimeFrom and datetimeOfThreat < datetimeTo:
 				results.append(loadThreat(dataItem))
 		return results
 
 def loadThreat(threat):
 	loadedThreat = {
-		"timestamp": threat.timestamp,
-		"affected_assets": json.loads(threat.affected_assets),
-		"attack_vectors": json.loads(threat.attack_vectors),
-		"malicious_code": json.loads(threat.malicious_code),
-		"compromised_data": json.loads(threat.compromised_data),
-		"indicators_of_compromise": json.loads(threat.indicators_of_compromise),
-		"severity": threat.severity,
-		"user_accounts_involved": json.loads(threat.user_accounts_involved),
-		"logs": json.loads(threat.logs),
-		"actions": json.loads(threat.actions)
+		"timestamp": threat[1],
+		"affected_assets": json.loads(threat[2]),
+		"attack_vectors": json.loads(threat[3]),
+		"malicious_code": json.loads(threat[4]),
+		"compromised_data": json.loads(threat[5]),
+		"indicators_of_compromise": json.loads(threat[6]),
+		"severity": threat[7],
+		"user_accounts_involved": json.loads(threat[8]),
+		"logs": json.loads(threat[9]),
+		"actions": json.loads(threat[10])
 	}
 	return loadedThreat
 
 def validateIncidentData(data):
-	if not isinstance(data, dict):
-		raise RequestValidationError("Request not valid.")
-
 	fieldsToValidate = [
 		"affected_assets",
 		"attack_vectors",
@@ -103,10 +102,10 @@ def validateIncidentData(data):
 
 	for field in fieldsToValidate:
 		if field == "attack_vectors":
-			if not all(isinstance(item, list) for item in data[field]):
+			if not all(isinstance(item, list) for item in getattr(data, field)):
 				raise RequestValidationError("Request not valid.")
 		else:
-			if not all(isinstance(item, str) for item in data[field]):
+			if not all(isinstance(item, str) for item in getattr(data, field)):
 				raise RequestValidationError("Request not valid.")
 
 
@@ -118,12 +117,12 @@ def validateThreatRequest(timeFrom, timeTo):
 
 def incidentIncludesThisSystem(data):
 	assets = {"CyberSecSuite", "you", "me", "this system"}
-	affectedAssets = data.get("affected_assets", [])
+	affectedAssets = getattr(data, "affected_assets", [])
 	if any(asset in assets for asset in affectedAssets):
 		return True
 	
 	accounts = {1, "user1"}
-	userAccounts = data.get("user_accounts_involved", [])
+	userAccounts = getattr(data, "user_accounts_involved", [])
 	if any(account in accounts for account in userAccounts):
 		return True
 	
