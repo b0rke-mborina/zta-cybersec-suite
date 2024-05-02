@@ -44,5 +44,6 @@ async def exceptionHandler(request, exc):
 
 @app.get("/intelligence/analysis", status_code = 200)
 async def analysis(data: Data):
-	result = incidentIncludesThisSystem(data)
-	return { "analysis": "success" }
+	resultOfCheck = incidentIncludesThisSystem(data)
+	result = "OK" if resultOfCheck else "NOT OK"
+	return { "analysis": "success", "result": result }

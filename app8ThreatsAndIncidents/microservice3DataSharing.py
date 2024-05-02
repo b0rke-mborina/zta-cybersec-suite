@@ -1,10 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator, validator
 import datetime
 import json
 from enum import Enum
-from .utilityFunctions import getThreats, storeThreat
+from .utilityFunctions import getThreats, sendRequest, storeThreat
 
 
 app = FastAPI()
@@ -15,7 +15,7 @@ class Severity(str, Enum):
 	MEDIUM = "medium"
 	HIGH = "high"
 
-class DataReport(BaseModel):
+class DataIncident(BaseModel):
 	timestamp: str
 	affected_assets: list
 	attack_vectors: list
@@ -40,7 +40,7 @@ class DataReport(BaseModel):
 	def to_py_dict(cls, data):
 		return json.loads(data)
 
-class DataRetrieve(BaseModel):
+class DataThreats(BaseModel):
 	time_from: str
 	time_to: str
 	severity: Severity
@@ -73,12 +73,26 @@ async def exceptionHandler(request, exc):
 		content = { "data_sharing": "failure", "error_message": "Unexpected error occured." },
 	)
 
-@app.post("/intelligence/report", status_code = 200)
-async def reporting(data: DataReport):
+@app.post("/intelligence/incident", status_code = 200)
+async def incident(data: DataIncident):
+	analysisResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8073/intelligence/analysis",
+		{
+			"timestamp": data.timestamp,
+			"affected_assets": data.affected_assets,
+			"compromised_data": data.compromised_data,
+			"severity": data.severity.value,
+			"user_accounts_involved": data.user_accounts_involved
+		}
+	)
+	if analysisResult[0].get("analysis") != "success" or analysisResult[0].get("result") != "OK":
+		raise HTTPException(500)
+	
 	await storeThreat("app8Data.db", 1, data)
-	return { "reporting": "success" }
+	return { "incident": "success" }
 
-@app.get("/intelligence/retrieve", status_code = 200)
-async def retrieval(data: DataRetrieve):
-	threats = await getThreats("app8Data.db", data.time_from, data.time_to, data.severity)
-	return { "retrieval": "success", "data": threats }
+@app.get("/intelligence/threats", status_code = 200)
+async def threats(data: DataThreats):
+	threats = await getThreats("app8Data.db", data.time_from, data.time_to, data.severity.value)
+	return { "threats": "success", "data": threats }

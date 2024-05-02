@@ -53,17 +53,54 @@ async def validation_exception_handler(request, exc):
 
 	return JSONResponse(
 		status_code = 400,
-		content = { "incident": "failure", "error_message": "Input invalid." },
+		content = { "reporting": "failure", "error_message": "Input invalid." },
 	)
 
 @app.exception_handler(HTTPException)
 async def exceptionHandler(request, exc):
 	return JSONResponse(
 		status_code = 500,
-		content = { "incident": "failure", "error_message": "Unexpected error occured." },
+		content = { "reporting": "failure", "error_message": "Unexpected error occured." },
 	)
 
-@app.get("/intelligence/incident", status_code = 200)
-async def incidents(data: Data):
+@app.post("/intelligence/report", status_code = 200)
+async def reporting(data: Data):
 	validateIncidentData(data.incident)
-	return { "incident": "success" }
+	response = { "reporting": "success" }
+
+	dataSharingResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8072/intelligence/incident",
+		{
+			"timestamp": data.incident.timestamp,
+			"affected_assets": data.incident.affected_assets,
+			"attack_vectors": data.incident.attack_vectors,
+			"malicious_code": data.incident.malicious_code,
+			"compromised_data": data.incident.compromised_data,
+			"indicators_of_compromise": data.incident.indicators_of_compromise,
+			"severity": data.incident.severity.value,
+			"user_accounts_involved": data.incident.user_accounts_involved,
+			"logs": data.incident.logs,
+			"actions": data.incident.actions
+		}
+	)
+	if dataSharingResult[0].get("incident") != "success":
+		raise HTTPException(500)
+
+	loggingResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8074/intelligence/logging",
+		{
+			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+			"level": "INFO",
+			"logger_source": 1,
+			"user_id": 1,
+			"request": str(data),
+			"response": str(response),
+			"error_message": ""
+		}
+	)
+	if loggingResult[0].get("logging") != "success":
+		raise HTTPException(500)
+
+	return response
