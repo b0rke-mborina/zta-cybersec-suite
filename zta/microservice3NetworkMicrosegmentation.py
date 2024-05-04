@@ -1,9 +1,22 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, model_validator
+import json
 
 
 app = FastAPI()
 
+
+class Data(BaseModel):
+	user_id: int
+	user_authorized: bool
+	logger_source: int
+	possible_breach: bool
+	
+	@model_validator(mode='before')
+	@classmethod
+	def to_py_dict(cls, data):
+		return json.loads(data)
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
@@ -13,5 +26,5 @@ async def exceptionHandler(request, exc):
 	)
 
 @app.get("/zta/network")
-async def network():
+async def network(data: Data):
 	return { "network": "success" }
