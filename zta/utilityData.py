@@ -28,29 +28,23 @@ microservices = {
 				"network": "http://localhost:8082/zta/network"
 			}
 		},
-		"microservice3": {
+		"microservice4": {
 			"microserviceId": 4,
 			"urls": {
-				"policy": "http://localhost:8083/zta/policy"
-			}
-		},
-		"microservice4": {
-			"microserviceId": 5,
-			"urls": {
-				"tunnelling": "http://localhost:8084/zta/tunnelling"
+				"tunnelling": "http://localhost:8083/zta/tunnelling"
 			}
 		},
 		"microservice5": {
-			"microserviceId": 6,
+			"microserviceId": 5,
 			"urls": {
-				"orchestration": "http://localhost:8085/zta/orchestration",
-				"automation": "http://localhost:8085/zta/automation"
+				"orchestration": "http://localhost:8084/zta/orchestration",
+				"automation": "http://localhost:8084/zta/automation"
 			}
 		},
 		"microservice6": {
-			"microserviceId": 7,
+			"microserviceId": 6,
 			"urls": {
-				"monitoring": "http://localhost:8086/zta/monitoring"
+				"monitoring": "http://localhost:8085/zta/monitoring"
 			}
 		}
 	}
