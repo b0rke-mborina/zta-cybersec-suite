@@ -33,7 +33,7 @@ async def exceptionHandler(request, exc):
 		content = { "governance": "failure", "error_message": "Unexpected error occured." },
 	)
 
-@app.get("/zta/governance")
+@app.post("/zta/governance")
 async def governance(data: Data):
 	handleProblem(data.problem.value)
 	return { "governance": "success" }

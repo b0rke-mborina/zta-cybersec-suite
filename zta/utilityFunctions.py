@@ -72,3 +72,19 @@ def handlePartialSystemFailure():
 
 def handleTotalSystemFailure():
 	pass
+
+def handleUserAuthentication(data):
+	match data.auth_method.value:
+		case "username_and_password":
+			handleSecurityBreach()
+		case "jwt":
+			handleDosAttack()
+
+def authenticateUserWithUsernameAndPassword():
+	pass
+
+def authenticateUserWithJwt():
+	pass
+
+async def updateUserNetworkSegment(data):
+	pass

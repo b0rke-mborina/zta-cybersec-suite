@@ -2,15 +2,23 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
 import json
+from enum import Enum
+from .utilityFunctions import handleUserAuthentication
 
 
 app = FastAPI()
 
 
+class AuthMethod(str, Enum):
+	USERNAME_AND_PASSWORD = "username_and_password"
+	JWT = "jwt"
+
 class Data(BaseModel):
-	user_id: int
-	auth_method: str
-	logger_source: int
+	auth_method: AuthMethod
+	auth_source: int
+	username: str = ""
+	passwordHash: str = ""
+	jwt: str = ""
 	
 	@model_validator(mode='before')
 	@classmethod
@@ -25,5 +33,6 @@ async def exceptionHandler(request, exc):
 	)
 
 @app.get("/zta/iam")
-async def identityAndAccessManagement(data: Data):
-	return { "iam": "success" }
+async def identityManagement(data: Data):
+	(isUserAuthenticated, userId) = handleUserAuthentication(data)
+	return { "iam": "success", "is_authenticated": isUserAuthenticated, "user_id": userId }
