@@ -4,6 +4,7 @@ from pydantic import BaseModel, model_validator, validator
 import datetime
 import json
 from enum import Enum
+from .utilityFunctions import log
 
 
 app = FastAPI()
@@ -47,4 +48,5 @@ async def exceptionHandler(request, exc):
 
 @app.get("/zta/monitoring")
 async def identityAndAccessManagement(data: Data):
+	await log("ztaLogs.db", data)
 	return { "monitoring": "success" }
