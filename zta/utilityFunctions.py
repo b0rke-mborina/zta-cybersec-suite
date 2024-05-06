@@ -34,3 +34,41 @@ def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
+
+def handleProblem(problem):
+	match problem:
+		case "security_breach":
+			handleSecurityBreach()
+		case "dos_attack":
+			handleDosAttack()
+		case "data_inconsistency":
+			handleDataInconsistency()
+		case "data_compromise":
+			handleDataCompromise()
+		case "infrastructure_integrity_violation":
+			handleInfrastructureIntegrityViolation()
+		case "partial_system_failure":
+			handlePartialSystemFailure()
+		case "total_system_failure":
+			handleTotalSystemFailure()
+
+def handleSecurityBreach():
+	pass
+
+def handleDosAttack():
+	pass
+
+def handleDataInconsistency():
+	pass
+
+def handleDataCompromise():
+	pass
+
+def handleInfrastructureIntegrityViolation():
+	pass
+
+def handlePartialSystemFailure():
+	pass
+
+def handleTotalSystemFailure():
+	pass
