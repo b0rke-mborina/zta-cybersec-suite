@@ -2,13 +2,13 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
 import json
+from .utilityFunctions import checkIfPossibleDosAtack, getAuthData, handleAuthorization
 
 
 app = FastAPI()
 
 
 class Data(BaseModel):
-	user_id: int
 	headers: dict
 	
 	@model_validator(mode='before')
@@ -25,4 +25,7 @@ async def exceptionHandler(request, exc):
 
 @app.get("/zta/tunnelling")
 async def tunnelling(data: Data):
-	return { "tunnelling": "success" }
+	(authType, authData) = getAuthData(data.headers)
+	isAuthorized = await handleAuthorization(authType, authData)
+	isPossibleDosAtack = await checkIfPossibleDosAtack()
+	return { "tunnelling": "success", "is_authorized": isAuthorized and not isPossibleDosAtack }

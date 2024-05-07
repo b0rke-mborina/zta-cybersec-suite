@@ -88,3 +88,21 @@ def authenticateUserWithJwt():
 
 async def updateUserNetworkSegment(data):
 	pass
+
+async def getAuthData():
+	pass
+
+async def handleAuthorization():
+	pass
+
+async def checkIfPossibleDosAtack():
+	pass
+
+def encryptData(data):
+	pass
+
+def decryptData(data):
+	pass
+
+async def reportToAdmin():
+	pass

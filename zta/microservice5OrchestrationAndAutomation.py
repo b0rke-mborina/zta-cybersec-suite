@@ -2,13 +2,14 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
 import json
+from .utilityFunctions import decryptData, encryptData
 
 
 app = FastAPI()
 
 
 class Data(BaseModel):
-	incident: str
+	data: dict
 	
 	@model_validator(mode='before')
 	@classmethod
@@ -22,10 +23,12 @@ async def exceptionHandler(request, exc):
 		content = { "orchestration_automation": "failure", "error_message": "Unexpected error occured." },
 	)
 
-@app.get("/zta/orchestration")
-async def orchestration(data: Data):
-	return { "orchestration": "success" }
+@app.get("/zta/encrypt")
+async def encryption(data: Data):
+	encryptedData = encryptData(data.data)
+	return { "encryption": "success", "data": encryptedData }
 
-@app.get("/zta/automation")
-async def automation(data: Data):
-	return { "automation": "success" }
+@app.get("/zta/decrypt")
+async def decryption(data: Data):
+	decryptedData = decryptData(data.data)
+	return { "decryption": "success", "data": decryptedData }

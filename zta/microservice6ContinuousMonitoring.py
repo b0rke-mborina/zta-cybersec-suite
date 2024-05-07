@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator, validator
+import asyncio
 import datetime
 import json
 from enum import Enum
-from .utilityFunctions import log
+from .utilityFunctions import log, reportToAdmin
 
 
 app = FastAPI()
@@ -48,5 +49,6 @@ async def exceptionHandler(request, exc):
 
 @app.get("/zta/monitoring")
 async def identityAndAccessManagement(data: Data):
-	await log("ztaLogs.db", data)
+	tasks = [log("ztaLogs.db", data), reportToAdmin()]
+	await asyncio.gather(*tasks)
 	return { "monitoring": "success" }
