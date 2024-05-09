@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
 import json
-from .utilityFunctions import updateUserNetworkSegment
+from .utilityFunctions import checkUserNetworkSegment
 
 
 app = FastAPI()
@@ -11,7 +11,7 @@ app = FastAPI()
 class Data(BaseModel):
 	is_user_authenticated: bool
 	user_id: int
-	auth_source: int
+	auth_source_app_id: int
 	possible_breach: bool
 	
 	@model_validator(mode='before')
@@ -28,5 +28,5 @@ async def exceptionHandler(request, exc):
 
 @app.get("/zta/network")
 async def network(data: Data):
-	isUserAlowed = await updateUserNetworkSegment(data)
-	return { "network": "success", "is_allowed": isUserAlowed }
+	isUserAuthprized = await checkUserNetworkSegment("ztaNetwork.db", data)
+	return { "network": "success", "is_allowed": isUserAuthprized }

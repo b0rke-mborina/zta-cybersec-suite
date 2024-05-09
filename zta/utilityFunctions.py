@@ -1,4 +1,5 @@
 import base64
+import datetime
 import aiohttp
 import asyncio
 import aiosqlite
@@ -109,11 +110,51 @@ async def authenticateUserWithJwt(dbName, data):
 			result[1] = dataFromDb[1]
 	return result
 
-async def updateUserNetworkSegment(data):
-	pass
+async def checkUserNetworkSegment(dbName, data):
+	result = False
+	async with aiosqlite.connect(getDbPath(dbName)) as conn:
+		cursor = await conn.execute(
+			"SELECT * FROM Network WHERE user_id = ?",
+			(data.user_id, )
+		)
+		dataFromDb = await cursor.fetchone()
 
-async def getAuthData():
-	pass
+		currentDatetime = datetime.datetime.now(datetime.timezone.utc)
+		lastAuthenticated = datetime.datetime.fromisoformat(dataFromDb[0][3]).replace(tzinfo=datetime.timezone.utc)
+		lastAuthenticationExpires = lastAuthenticated + datetime.timedelta(hours=1)
+		if (data.auth_source_app_id == dataFromDb[0][2] and currentDatetime < lastAuthenticationExpires) or data.is_user_authenticated:
+			result = True
+
+	if data.is_user_authenticated:
+		await updateUserNetworkSegment(dbName, data, currentDatetime)
+	
+	return result
+
+async def updateUserNetworkSegment(dbName, data, currentDatetime):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute(
+			"UPDATE Network (current_app_id, last_authenticated) VALUES (?, ?) WHERE user_id = ?",
+			(
+				data.auth_source_app_id,
+				currentDatetime.isoformat(),
+				data.user_id
+			)
+		)
+		await db.commit()
+
+async def getAuthData(headers):
+	result = (None, {})
+	jwt = headers.get("jwt")
+	username = headers.get("username")
+	password = headers.get("password")
+	if jwt is not None:
+		result[0] = "jwt"
+		result[1]["jwt"] = jwt
+	elif username is not None and password is not None:
+		result[0] = "username_and_password"
+		result[1]["username"] = username
+		result[1]["password"] = password
+	return result
 
 async def handleAuthorization():
 	pass
