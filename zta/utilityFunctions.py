@@ -1,8 +1,11 @@
+import base64
 import aiohttp
 import asyncio
 import aiosqlite
 import json
 import os.path
+from Crypto.Cipher import Blowfish
+from struct import pack
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
@@ -99,10 +102,40 @@ async def checkIfPossibleDosAtack():
 	pass
 
 def encryptData(data):
-	pass
+	result = {}
+	for key, value in data.items():
+		(result[key], _, _) = encryptBlowfish(value)
+	return result
+
+def encryptBlowfish(plaintext):
+	plaintext, key = plaintext.encode("utf-8"), "KEY_PLACEHOLDER".encode("utf-8")
+	bs = Blowfish.block_size
+	cipher = Blowfish.new(key, Blowfish.MODE_CBC)
+	plen = bs - len(plaintext) % bs
+	padding = [plen]*plen
+	padding = pack('b'*plen, *padding)
+	ciphertext = cipher.iv + cipher.encrypt(plaintext + padding)
+	print(key)
+	return (base64.b64encode(ciphertext).decode("utf-8"), None, None)
 
 def decryptData(data):
-	pass
+	result = {}
+	for key, value in data.items():
+		(result[key], _, _) = decryptBlowfish(value)
+	return result
+
+def decryptBlowfish(ciphertext):
+	try:
+		ciphertext = base64.b64decode(ciphertext)
+		key = "KEY_PLACEHOLDER".encode("utf-8")
+		iv = ciphertext[:Blowfish.block_size]
+		cipher = Blowfish.new(key, Blowfish.MODE_CBC, iv)
+		plaintext = cipher.decrypt(ciphertext[Blowfish.block_size:])
+		padding_length = plaintext[-1]
+		plaintext = plaintext[:-padding_length]
+		return plaintext.decode()
+	except:
+		return ""
 
 async def reportToAdmin():
 	pass
