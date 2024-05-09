@@ -76,18 +76,38 @@ def handlePartialSystemFailure():
 def handleTotalSystemFailure():
 	pass
 
-def handleUserAuthentication(data):
+async def handleUserAuthentication(dbName, data):
 	match data.auth_method.value:
 		case "username_and_password":
-			handleSecurityBreach()
+			return authenticateUserWithUsernameAndPassword(dbName, data)
 		case "jwt":
-			handleDosAttack()
+			return authenticateUserWithJwt(dbName, data)
 
-def authenticateUserWithUsernameAndPassword():
-	pass
+async def authenticateUserWithUsernameAndPassword(dbName, data):
+	result = (False, 0)
+	async with aiosqlite.connect(getDbPath(dbName)) as conn:
+		cursor = await conn.execute(
+			"SELECT * FROM User WHERE username = ? AND password_hash = ?",
+			(data.username, data.passwordHash)
+		)
+		dataFromDb = await cursor.fetchone()
+		if len(dataFromDb) == 1:
+			result[0] = True
+			result[1] = dataFromDb[1]
+	return result
 
-def authenticateUserWithJwt():
-	pass
+async def authenticateUserWithJwt(dbName, data):
+	result = (False, 0)
+	async with aiosqlite.connect(getDbPath(dbName)) as conn:
+		cursor = await conn.execute(
+			"SELECT * FROM User WHERE jwt = ?",
+			(data.jwt, )
+		)
+		dataFromDb = await cursor.fetchone()
+		if len(dataFromDb) == 1:
+			result[0] = True
+			result[1] = dataFromDb[1]
+	return result
 
 async def updateUserNetworkSegment(data):
 	pass
