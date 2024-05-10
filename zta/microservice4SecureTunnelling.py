@@ -26,6 +26,7 @@ async def exceptionHandler(request, exc):
 @app.get("/zta/tunnelling")
 async def tunnelling(data: Data):
 	(authType, authData) = getAuthData(data.headers)
-	isAuthorized = await handleAuthorization(authType, authData)
-	isPossibleDosAtack = await checkIfPossibleDosAtack()
+
+	isAuthorized = await handleAuthorization("ztaACL.db", 1, "user")
+	isPossibleDosAtack = await checkIfPossibleDosAtack("ztaACL.db", 1)
 	return { "tunnelling": "success", "is_authorized": isAuthorized and not isPossibleDosAtack }

@@ -28,5 +28,5 @@ async def exceptionHandler(request, exc):
 
 @app.get("/zta/network")
 async def network(data: Data):
-	isUserAuthprized = await checkUserNetworkSegment("ztaNetwork.db", data)
-	return { "network": "success", "is_allowed": isUserAuthprized }
+	isUserAuthorized = await checkUserNetworkSegment("ztaNetwork.db", data)
+	return { "network": "success", "is_allowed": isUserAuthorized }
