@@ -35,5 +35,5 @@ async def exceptionHandler(request, exc):
 
 @app.post("/zta/governance")
 async def governance(data: Data):
-	handleProblem(data.problem.value)
+	await handleProblem(data.problem.value)
 	return { "governance": "success" }

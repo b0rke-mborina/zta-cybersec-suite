@@ -39,50 +39,43 @@ def getDbPath(dbFilename):
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
 
-def handleProblem(problem):
-	match problem:
-		case "security_breach":
-			handleSecurityBreach()
-		case "dos_attack":
-			handleDosAttack()
-		case "data_inconsistency":
-			handleDataInconsistency()
-		case "data_compromise":
-			handleDataCompromise()
-		case "infrastructure_integrity_violation":
-			handleInfrastructureIntegrityViolation()
-		case "partial_system_failure":
-			handlePartialSystemFailure()
-		case "total_system_failure":
-			handleTotalSystemFailure()
+async def handleProblem(problem):
+	if problem in ["security_breach", "infrastructure_integrity_violation"]:
+		await denyAccessToAll()
+	elif problem in ["data_inconsistency", "partial_system_failure", "total_system_failure"]:
+		await denyAccessToUsers()
+	elif problem == "dos_attack":
+		await denyAccessToUser()
+	
+	await reportToAdmin(problem)
 
-def handleSecurityBreach():
-	pass
+async def denyAccessToUser(dbName, userId):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute(
+			"UPDATE ACL SET isAllowed = 0 WHERE user_id = ?", # (user_id, role, isAllowed, request_timestamp, request_count)
+			(userId, )
+		)
+		await db.commit()
 
-def handleDosAttack():
-	pass
+async def denyAccessToUsers(dbName):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute("UPDATE ACL SET isAllowed = 0 WHERE role = 'user'")
+		await db.commit()
 
-def handleDataInconsistency():
-	pass
+async def denyAccessToAll(dbName):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute("UPDATE ACL SET isAllowed = 0 WHERE role = 'user' OR role = 'admin'")
+		await db.commit()
 
-def handleDataCompromise():
-	pass
-
-def handleInfrastructureIntegrityViolation():
-	pass
-
-def handlePartialSystemFailure():
-	pass
-
-def handleTotalSystemFailure():
+async def reportToAdmin():
 	pass
 
 async def handleUserAuthentication(dbName, data):
 	match data.auth_method.value:
 		case "username_and_password":
-			return authenticateUserWithUsernameAndPassword(dbName, data)
+			return await authenticateUserWithUsernameAndPassword(dbName, data)
 		case "jwt":
-			return authenticateUserWithJwt(dbName, data)
+			return await authenticateUserWithJwt(dbName, data)
 
 async def authenticateUserWithUsernameAndPassword(dbName, data):
 	result = (False, 0, "user")
@@ -137,7 +130,7 @@ async def checkUserNetworkSegment(dbName, data):
 async def updateUserNetworkSegment(dbName, data, currentDatetime):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
 		await db.execute(
-			"UPDATE Network (current_app_id, last_authenticated) VALUES (?, ?) WHERE user_id = ?",
+			"UPDATE Network SET current_app_id = ?, last_authenticated = ? WHERE user_id = ?",
 			(
 				data.auth_source_app_id,
 				currentDatetime.isoformat(),
@@ -227,6 +220,3 @@ def decryptBlowfish(ciphertext):
 		return plaintext.decode()
 	except:
 		return ""
-
-async def reportToAdmin():
-	pass
