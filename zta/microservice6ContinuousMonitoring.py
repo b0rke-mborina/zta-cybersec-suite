@@ -47,7 +47,7 @@ async def exceptionHandler(request, exc):
 		content = { "monitoring": "failure", "error_message": "Unexpected error occured." },
 	)
 
-@app.get("/zta/monitoring")
+@app.post("/zta/monitoring")
 async def identityAndAccessManagement(data: Data):
 	tasks = [log("ztaLogs.db", data), reportToAdmin()]
 	await asyncio.gather(*tasks)
