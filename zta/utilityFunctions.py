@@ -139,19 +139,20 @@ async def updateUserNetworkSegment(dbName, data, currentDatetime):
 		)
 		await db.commit()
 
-async def getAuthData(headers):
-	result = (None, {})
+def getAuthData(headers):
+	authType, authData = None, {}
+
 	jwt = headers.get("jwt")
 	username = headers.get("username")
 	password = headers.get("password")
-	if jwt is not None:
-		result[0] = "jwt"
-		result[1]["jwt"] = jwt
-	elif username is not None and password is not None:
-		result[0] = "username_and_password"
-		result[1]["username"] = username
-		result[1]["password"] = password
-	return result
+	if jwt is not None and jwt != "":
+		authType = "jwt"
+		authData["jwt"] = jwt
+	elif username is not None and username != "" and password is not None and password != "":
+		authType = "username_and_password"
+		authData["username"] = username
+		authData["password"] = password
+	return (authType, authData)
 
 async def handleAuthorization(dbName, userId, userRole):
 	tasks = [isRoleAllowed(dbName, userRole), isUserAllowed(dbName, userId)]
@@ -173,8 +174,8 @@ async def isUserAllowed(dbName, userId):
 			"SELECT * FROM ACL WHERE user_id = ?",
 			(userId, )
 		)
-		result = await cursor.fetchall()
-		return len(result) == 0
+		result = await cursor.fetchone()
+		return result[2] == 1
 
 async def checkIfPossibleDosAtack(dbName, userId):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
@@ -183,7 +184,29 @@ async def checkIfPossibleDosAtack(dbName, userId):
 			(userId, )
 		)
 		result = await cursor.fetchone()
-		return False if result[5] < 100 else True
+
+		currentDatetime = datetime.datetime.now(datetime.timezone.utc)
+		requestsStarted = datetime.datetime.fromisoformat(result[3]).replace(tzinfo=datetime.timezone.utc)
+		requestsExpire = requestsStarted + datetime.timedelta(hours=1)
+
+		isRequestsTimestampValid = requestsExpire > currentDatetime
+		isNumberOfRequestsHigh = result[4] > 100
+
+		if not isRequestsTimestampValid:
+			await resetRequestData(dbName, userId, currentDatetime)
+		
+		return isRequestsTimestampValid and isNumberOfRequestsHigh
+
+async def resetRequestData(dbName, userId, datetime):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute(
+			"UPDATE ACL SET request_timestamp = ?, request_count = 1 WHERE user_id = ?",
+			(
+				datetime.isoformat(),
+	 			userId
+			)
+		)
+		await db.commit()
 
 def encryptData(data):
 	result = {}

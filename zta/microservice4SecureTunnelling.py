@@ -12,10 +12,10 @@ app = FastAPI()
 class Data(BaseModel):
 	headers: dict
 	
-	@model_validator(mode='before')
+	"""@model_validator(mode='before')
 	@classmethod
 	def to_py_dict(cls, data):
-		return json.loads(data)
+		return json.loads(data)"""
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
