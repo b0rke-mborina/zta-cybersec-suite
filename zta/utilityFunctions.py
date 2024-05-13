@@ -78,34 +78,34 @@ async def handleUserAuthentication(dbName, data):
 			return await authenticateUserWithJwt(dbName, data)
 
 async def authenticateUserWithUsernameAndPassword(dbName, data):
-	result = (False, 0, "user")
+	isAuthenticated, userId, userRole = False, 0, "user"
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
 		cursor = await conn.execute(
 			"SELECT * FROM User WHERE username = ? AND password_hash = ?",
 			(data.username, data.passwordHash)
 		)
 		dataFromDb = await cursor.fetchone()
-		if len(dataFromDb) == 1:
-			result[0] = True
-			result[1] = dataFromDb[1]
-			if dataFromDb[2] != "user":
-				result[2] = dataFromDb[2]
-	return result
+		if dataFromDb is not None:
+			isAuthenticated = True
+			userId = dataFromDb[0]
+			if dataFromDb[1] != "user":
+				userRole = dataFromDb[1]
+	return (isAuthenticated, userId, userRole)
 
 async def authenticateUserWithJwt(dbName, data):
-	result = (False, 0, "user")
+	isAuthenticated, userId, userRole = False, 0, "user"
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
 		cursor = await conn.execute(
 			"SELECT * FROM User WHERE jwt = ?",
 			(data.jwt, )
 		)
 		dataFromDb = await cursor.fetchone()
-		if len(dataFromDb) == 1:
-			result[0] = True
-			result[1] = dataFromDb[1]
-			if dataFromDb[2] != "user":
-				result[2] = dataFromDb[2]
-	return result
+		if dataFromDb is not None:
+			isAuthenticated = True
+			userId = dataFromDb[0]
+			if dataFromDb[1] != "user":
+				userRole = dataFromDb[1]
+	return (isAuthenticated, userId, userRole)
 
 async def checkUserNetworkSegment(dbName, data):
 	result = False
@@ -117,9 +117,9 @@ async def checkUserNetworkSegment(dbName, data):
 		dataFromDb = await cursor.fetchone()
 
 		currentDatetime = datetime.datetime.now(datetime.timezone.utc)
-		lastAuthenticated = datetime.datetime.fromisoformat(dataFromDb[0][3]).replace(tzinfo=datetime.timezone.utc)
+		lastAuthenticated = datetime.datetime.fromisoformat(dataFromDb[2]).replace(tzinfo=datetime.timezone.utc)
 		lastAuthenticationExpires = lastAuthenticated + datetime.timedelta(hours=1)
-		if (data.auth_source_app_id == dataFromDb[0][2] and currentDatetime < lastAuthenticationExpires) or data.is_user_authenticated:
+		if (data.auth_source_app_id == dataFromDb[1] and currentDatetime < lastAuthenticationExpires) or data.is_user_authenticated:
 			result = True
 
 	if data.is_user_authenticated:

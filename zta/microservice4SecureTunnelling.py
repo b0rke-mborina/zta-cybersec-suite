@@ -1,5 +1,5 @@
 import datetime
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
 import json
@@ -11,6 +11,7 @@ app = FastAPI()
 
 class Data(BaseModel):
 	headers: dict
+	auth_source: int
 	
 	"""@model_validator(mode='before')
 	@classmethod
@@ -39,6 +40,39 @@ async def exceptionHandler(request, exc):
 async def tunnelling(data: Data):
 	(authType, authData) = getAuthData(data.headers)
 
-	isAuthorized = await handleAuthorization("ztaACL.db", 1, "user")
+	authenticationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8081/zta/iam",
+		{
+			"auth_method": authType,
+			"auth_source": data.auth_source,
+			"username": authData.get("username") if authData.get("username") is not None else "",
+			"passwordHash": authData.get("password") if authData.get("password") is not None else "",
+			"jwt": authData.get("jwt") if authData.get("jwt") is not None else ""
+		}
+	)
+	if authenticationResult[0].get("iam") != "success":
+		raise HTTPException(500)
+	
+	isAuthenticated = authenticationResult[0].get("is_authenticated")
+	userId = authenticationResult[0].get("user_id")
+	userRole = authenticationResult[0].get("user_role")
+
+	networkResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8082/zta/network",
+		{
+			"is_user_authenticated": isAuthenticated,
+			"user_id": userId,
+			"auth_source_app_id": data.auth_source,
+			"possible_breach": False
+		}
+	)
+	if networkResult[0].get("network") != "success":
+		raise HTTPException(500)
+
+	isUserAllowed = networkResult[0].get("is_allowed")
+
+	isAuthorized = await handleAuthorization("ztaACL.db", userId, userRole)
 	isPossibleDosAtack = await checkIfPossibleDosAtack("ztaACL.db", 1)
-	return { "tunnelling": "success", "is_authorized": isAuthorized and not isPossibleDosAtack }
+	return { "tunnelling": "success", "is_authorized": isUserAllowed and isAuthorized and not isPossibleDosAtack }

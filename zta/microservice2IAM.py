@@ -46,5 +46,5 @@ async def exceptionHandler(request, exc):
 
 @app.get("/zta/iam")
 async def identityManagement(data: Data):
-	(isUserAuthenticated, userId, userRole) = handleUserAuthentication("ztaUsers.db", data)
+	(isUserAuthenticated, userId, userRole) = await handleUserAuthentication("ztaUsers.db", data)
 	return { "iam": "success", "is_authenticated": isUserAuthenticated, "user_id": userId, "user_role": userRole }
