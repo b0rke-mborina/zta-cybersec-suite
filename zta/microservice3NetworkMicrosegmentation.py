@@ -31,7 +31,7 @@ async def exceptionHandler(request, exc):
 		"response": "",
 		"error_message": f"ZTA error. {exc}"
 	}
-	await sendRequest("post", "http://127.0.0.1:8084/zta/monitoring", dataForMonitoringUnsuccessfulRequest)
+	await sendRequest("post", "http://127.0.0.1:8086/zta/monitoring", dataForMonitoringUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 500,
