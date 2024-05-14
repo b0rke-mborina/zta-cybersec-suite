@@ -75,4 +75,34 @@ async def tunnelling(data: Data):
 
 	isAuthorized = await handleAuthorization("ztaACL.db", userId, userRole)
 	isPossibleDosAtack = await checkIfPossibleDosAtack("ztaACL.db", 1)
-	return { "tunnelling": "success", "is_authorized": isUserAllowed and isAuthorized and not isPossibleDosAtack }
+
+	response = { "tunnelling": "success", "is_authorized": isUserAllowed and isAuthorized and not isPossibleDosAtack }
+
+	if isPossibleDosAtack:
+		governancekResult = await sendRequest(
+			"post",
+			"http://127.0.0.1:8080/zta/governance",
+			{
+				"problem": "dos_attack"
+			}
+		)
+		if governancekResult[0].get("governance") != "success":
+			raise HTTPException(500)
+
+	monitoringResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8086/zta/monitoring",
+		{
+			"timestamp": datetime.datetime.now().isoformat(),
+			"level": "INFO",
+			"logger_source": 4,
+			"user_id": 1,
+			"request": str(data),
+			"response": str(response),
+			"error_message": ""
+		}
+	)
+	if monitoringResult[0].get("monitoring") != "success":
+		raise HTTPException(500)
+
+	return response

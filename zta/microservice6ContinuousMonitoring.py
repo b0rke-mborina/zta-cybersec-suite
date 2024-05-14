@@ -51,6 +51,6 @@ async def exceptionHandler(request, exc):
 
 @app.post("/zta/monitoring")
 async def identityAndAccessManagement(data: Data):
-	tasks = [log("ztaLogs.db", data), reportToAdmin()]
+	tasks = [log(data, "ztaLogs.db"), reportToAdmin()]
 	await asyncio.gather(*tasks)
 	return { "monitoring": "success" }
