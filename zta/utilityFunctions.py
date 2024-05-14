@@ -39,22 +39,64 @@ def getDbPath(dbFilename):
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
 
-async def handleProblem(problem):
-	if problem in ["security_breach", "infrastructure_integrity_violation"]:
-		await denyAccessToAll()
-	elif problem in ["data_inconsistency", "partial_system_failure", "total_system_failure"]:
-		await denyAccessToUsers()
-	elif problem == "dos_attack":
-		await denyAccessToUser()
+async def handleProblem(data):
+	tasks = [reportToAdmin(data.problem.value)]
 	
-	await reportToAdmin(problem)
-
-async def denyAccessToUser(dbName, userId):
-	async with aiosqlite.connect(getDbPath(dbName)) as db:
-		await db.execute(
-			"UPDATE ACL SET isAllowed = 0 WHERE user_id = ?", # (user_id, role, isAllowed, request_timestamp, request_count)
-			(userId, )
+	if data.problem.value in ["security_breach", "infrastructure_integrity_violation"]:
+		tasks.append(
+			sendRequest(
+				"get",
+				"http://127.0.0.1:8083/zta/acl",
+				{
+					"task": "deny_access_to_all"
+				}
+			)
 		)
+	elif data.problem.value in ["data_inconsistency", "partial_system_failure", "total_system_failure"]:
+		tasks.append(
+			sendRequest(
+				"get",
+				"http://127.0.0.1:8083/zta/acl",
+				{
+					"task": "deny_access_to_users"
+				}
+			)
+		)
+	elif data.problem.value == "dos_attack":
+		tasks.append(
+			sendRequest(
+				"get",
+				"http://127.0.0.1:8083/zta/acl",
+				{
+					"task": "deny_access_to_user",
+					"user_id": data.user_id
+				}
+			)
+		)
+	
+	await asyncio.gather(*tasks)
+
+async def reportToAdmin(problem):
+	pass
+
+async def handleACLTask(dbName, data):
+	match data.task.value:
+		case "authorize":
+			tasks = [handleAuthorization(dbName, data.user_id, data.user_role.value), checkIfPossibleDosAtack("ztaACL.db", data.user_id)]
+			return await asyncio.gather(*tasks)
+		case "deny_access_to_all":
+			await denyAccessToAll(dbName)
+			return ["", ""]
+		case "deny_access_to_users":
+			await denyAccessToUsers(dbName)
+			return ["", ""]
+		case "deny_access_to_user":
+			await denyAccessToUser(dbName, data.user_id)
+			return ["", ""]
+
+async def denyAccessToAll(dbName):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute("UPDATE ACL SET isAllowed = 0 WHERE role = 'user' OR role = 'admin'")
 		await db.commit()
 
 async def denyAccessToUsers(dbName):
@@ -62,13 +104,13 @@ async def denyAccessToUsers(dbName):
 		await db.execute("UPDATE ACL SET isAllowed = 0 WHERE role = 'user'")
 		await db.commit()
 
-async def denyAccessToAll(dbName):
+async def denyAccessToUser(dbName, userId):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
-		await db.execute("UPDATE ACL SET isAllowed = 0 WHERE role = 'user' OR role = 'admin'")
+		await db.execute(
+			"UPDATE ACL SET isAllowed = 0 WHERE user_id = ?",
+			(userId, )
+		)
 		await db.commit()
-
-async def reportToAdmin():
-	pass
 
 async def handleUserAuthentication(dbName, data):
 	match data.auth_method.value:

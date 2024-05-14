@@ -77,6 +77,7 @@ async def tunnelling(data: Data):
 		"get",
 		"http://127.0.0.1:8083/zta/acl",
 		{
+			"task": "authorize",
 			"user_id": userId,
 			"user_role": userRole
 		}
@@ -93,7 +94,8 @@ async def tunnelling(data: Data):
 			"post",
 			"http://127.0.0.1:8080/zta/governance",
 			{
-				"problem": "dos_attack"
+				"problem": "dos_attack",
+				"user_id": userId
 			}
 		)
 		if governancekResult[0].get("governance") != "success":

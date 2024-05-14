@@ -42,7 +42,7 @@ class Data(BaseModel):
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
-	reportToAdmin()
+	reportToAdmin("Fatal error.")
 
 	return JSONResponse(
 		status_code = 500,
@@ -51,6 +51,6 @@ async def exceptionHandler(request, exc):
 
 @app.post("/zta/monitoring")
 async def identityAndAccessManagement(data: Data):
-	tasks = [log(data, "ztaLogs.db"), reportToAdmin()]
+	tasks = [log(data, "ztaLogs.db"), reportToAdmin("Fatal error.")]
 	await asyncio.gather(*tasks)
 	return { "monitoring": "success" }

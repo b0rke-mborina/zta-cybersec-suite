@@ -5,19 +5,26 @@ import asyncio
 import datetime
 import json
 from enum import Enum
-from .utilityFunctions import checkIfPossibleDosAtack, getAuthData, handleAuthorization, sendRequest
+from .utilityFunctions import handleACLTask, sendRequest
 
 
 app = FastAPI()
 
+
+class Task(str, Enum):
+	AUTHORIZE = "authorize"
+	DENY_ACCESS_TO_ALL = "deny_access_to_all"
+	DENY_ACCESS_TO_USERS = "deny_access_to_users"
+	DENY_ACCESS_TO_USER = "deny_access_to_user"
 
 class Role(str, Enum):
 	USER = "user"
 	ADMIN = "admin"
 
 class Data(BaseModel):
-	user_id: int
-	user_role: Role
+	task: Task
+	user_id: int = 0
+	user_role: Role = "user"
 	
 	@model_validator(mode='before')
 	@classmethod
@@ -44,6 +51,5 @@ async def exceptionHandler(request, exc):
 
 @app.get("/zta/acl")
 async def tunnelling(data: Data):
-	tasks = [handleAuthorization("ztaACL.db", data.user_id, data.user_role.value), checkIfPossibleDosAtack("ztaACL.db", 1)]
-	[isAuthorized, isPossibleDosAtack] = await asyncio.gather(*tasks)
+	[isAuthorized, isPossibleDosAtack] = await handleACLTask("ztaACL.db", data)
 	return { "acl": "success", "is_authorized": isAuthorized, "is_possible_dos_atack": isPossibleDosAtack }

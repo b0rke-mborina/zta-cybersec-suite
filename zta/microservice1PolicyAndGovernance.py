@@ -21,6 +21,7 @@ class Problem(str, Enum):
 
 class Data(BaseModel):
 	problem: Problem
+	user_id: int = 0
 	
 	@model_validator(mode='before')
 	@classmethod
@@ -47,5 +48,5 @@ async def exceptionHandler(request, exc):
 
 @app.post("/zta/governance")
 async def governance(data: Data):
-	await handleProblem(data.problem.value)
+	await handleProblem(data)
 	return { "governance": "success" }
