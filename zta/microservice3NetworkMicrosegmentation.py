@@ -1,7 +1,7 @@
-import datetime
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
+import datetime
 import json
 from .utilityFunctions import checkUserNetworkSegment, sendRequest
 

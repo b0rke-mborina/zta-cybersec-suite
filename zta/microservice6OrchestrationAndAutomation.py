@@ -1,16 +1,24 @@
-import datetime
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
+import datetime
 import json
-from .utilityFunctions import decryptData, encryptData, sendRequest
+from .utilityFunctions import decryptData, encryptData, hashData, sendRequest
 
 
 app = FastAPI()
 
 
-class Data(BaseModel):
+class DataCryptography(BaseModel):
 	data: dict
+	
+	@model_validator(mode='before')
+	@classmethod
+	def to_py_dict(cls, data):
+		return json.loads(data)
+
+class DataHashing(BaseModel):
+	data: str
 	
 	@model_validator(mode='before')
 	@classmethod
@@ -36,11 +44,16 @@ async def exceptionHandler(request, exc):
 	)
 
 @app.get("/zta/encrypt")
-async def encryption(data: Data):
+async def encryption(data: DataCryptography):
 	encryptedData = encryptData(data.data)
 	return { "encryption": "success", "data": encryptedData }
 
 @app.get("/zta/decrypt")
-async def decryption(data: Data):
+async def decryption(data: DataCryptography):
 	decryptedData = decryptData(data.data)
 	return { "decryption": "success", "data": decryptedData }
+
+@app.get("/zta/hash")
+async def decryption(data: DataHashing):
+	hashedData = hashData(data.data)
+	return { "hashing": "success", "data": hashedData }

@@ -1,9 +1,10 @@
-import base64
-import datetime
 import aiohttp
 import asyncio
 import aiosqlite
+import datetime
 import json
+import hashlib
+import base64
 import os.path
 from Crypto.Cipher import Blowfish
 from struct import pack
@@ -285,3 +286,6 @@ def decryptBlowfish(ciphertext):
 		return plaintext.decode()
 	except:
 		return ""
+
+def hashData(data):
+	return hashlib.sha512(data.encode()).hexdigest()
