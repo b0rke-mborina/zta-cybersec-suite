@@ -1,7 +1,7 @@
-import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
+import datetime
 import json
 from .utilityFunctions import checkIfPossibleDosAtack, getAuthData, handleAuthorization, sendRequest
 
@@ -23,13 +23,13 @@ async def exceptionHandler(request, exc):
 	dataForMonitoringUnsuccessfulRequest = {
 		"timestamp": datetime.datetime.now().isoformat(),
 		"level": "INFO",
-		"logger_source": 4,
+		"logger_source": 5,
 		"user_id": 1,
 		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
 		"error_message": f"ZTA error. {exc}"
 	}
-	await sendRequest("post", "http://127.0.0.1:8086/zta/monitoring", dataForMonitoringUnsuccessfulRequest)
+	await sendRequest("post", "http://127.0.0.1:8087/zta/monitoring", dataForMonitoringUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 500,
@@ -73,8 +73,18 @@ async def tunnelling(data: Data):
 
 	isUserAllowed = networkResult[0].get("is_allowed")
 
-	isAuthorized = await handleAuthorization("ztaACL.db", userId, userRole)
-	isPossibleDosAtack = await checkIfPossibleDosAtack("ztaACL.db", 1)
+	aclResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8083/zta/acl",
+		{
+			"user_id": userId,
+			"user_role": userRole
+		}
+	)
+	if aclResult[0].get("acl") != "success":
+		raise HTTPException(500)
+	isAuthorized = aclResult[0].get("is_authorized")
+	isPossibleDosAtack = aclResult[0].get("is_possible_dos_atack")
 
 	response = { "tunnelling": "success", "is_authorized": isUserAllowed and isAuthorized and not isPossibleDosAtack }
 
@@ -91,7 +101,7 @@ async def tunnelling(data: Data):
 
 	monitoringResult = await sendRequest(
 		"post",
-		"http://127.0.0.1:8086/zta/monitoring",
+		"http://127.0.0.1:8087/zta/monitoring",
 		{
 			"timestamp": datetime.datetime.now().isoformat(),
 			"level": "INFO",

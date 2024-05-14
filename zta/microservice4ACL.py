@@ -1,25 +1,23 @@
-import datetime
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
+import asyncio
+import datetime
 import json
 from enum import Enum
-from .utilityFunctions import handleUserAuthentication, sendRequest
+from .utilityFunctions import checkIfPossibleDosAtack, getAuthData, handleAuthorization, sendRequest
 
 
 app = FastAPI()
 
 
-class AuthMethod(str, Enum):
-	USERNAME_AND_PASSWORD = "username_and_password"
-	JWT = "jwt"
+class Role(str, Enum):
+	USER = "user"
+	ADMIN = "admin"
 
 class Data(BaseModel):
-	auth_method: AuthMethod
-	auth_source: int
-	username: str = ""
-	passwordHash: str = ""
-	jwt: str = ""
+	user_id: int
+	user_role: Role
 	
 	@model_validator(mode='before')
 	@classmethod
@@ -31,7 +29,7 @@ async def exceptionHandler(request, exc):
 	dataForMonitoringUnsuccessfulRequest = {
 		"timestamp": datetime.datetime.now().isoformat(),
 		"level": "INFO",
-		"logger_source": 2,
+		"logger_source": 4,
 		"user_id": 1,
 		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
@@ -41,10 +39,11 @@ async def exceptionHandler(request, exc):
 
 	return JSONResponse(
 		status_code = 500,
-		content = { "iam": "failure", "error_message": "Unexpected error occured." },
+		content = { "tunnelling": "failure", "error_message": "Unexpected error occured." },
 	)
 
-@app.get("/zta/iam")
-async def identityManagement(data: Data):
-	(isUserAuthenticated, userId, userRole) = await handleUserAuthentication("ztaUsers.db", data)
-	return { "iam": "success", "is_authenticated": isUserAuthenticated, "user_id": userId, "user_role": userRole }
+@app.get("/zta/acl")
+async def tunnelling(data: Data):
+	tasks = [handleAuthorization("ztaACL.db", data.user_id, data.user_role.value), checkIfPossibleDosAtack("ztaACL.db", 1)]
+	[isAuthorized, isPossibleDosAtack] = await asyncio.gather(*tasks)
+	return { "acl": "success", "is_authorized": isAuthorized, "is_possible_dos_atack": isPossibleDosAtack }
