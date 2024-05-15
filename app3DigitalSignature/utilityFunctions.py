@@ -60,8 +60,8 @@ async def isUserAllowed(dbName, userId):
 			"SELECT * FROM ACL WHERE user_id = ?",
 			(userId, )
 		)
-		result = await cursor.fetchall()
-		return len(result) == 0
+		result = await cursor.fetchone()
+		return result[2] == 1
 
 def verifySignature(publicKeyBase64, signatureBase64, message, hashType):
 	try:
