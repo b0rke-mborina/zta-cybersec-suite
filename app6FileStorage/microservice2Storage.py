@@ -53,7 +53,6 @@ async def storage(data: DataStore):
 	key = encryptionResult[0].get("key")
 	tag = encryptionResult[0].get("tag")
 	nonce = encryptionResult[0].get("nonce")
-	print(encryptionResult)
 	if encryptionResult[0].get("encryption") != "success" or any(value is None for value in [encryptedFile, key, tag, nonce]):
 		raise HTTPException(500)
 
@@ -63,7 +62,6 @@ async def storage(data: DataStore):
 @app.get("/file/retrieval")
 async def retrieval(data: DataRetrieve):
 	fileData = await getFile("app6Data.db", data.user_id, data.filename)
-	print(fileData)
 
 	decryptionResult = await sendRequest(
 		"get",

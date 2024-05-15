@@ -86,7 +86,7 @@ async def incident(data: DataIncident):
 			"user_accounts_involved": data.user_accounts_involved
 		}
 	)
-	if analysisResult[0].get("analysis") != "success" or analysisResult[0].get("result") != "OK":
+	if analysisResult[0].get("analysis") != "success" or not analysisResult[0].get("is_ok"):
 		raise HTTPException(500)
 	
 	await storeThreat("app8Data.db", 1, data)
