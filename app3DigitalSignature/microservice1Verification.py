@@ -27,7 +27,7 @@ async def validation_exception_handler(request, exc):
 		"level": "INFO",
 		"logger_source": 1,
 		"user_id": 1,
-		"request": str(request),
+		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
 	}
