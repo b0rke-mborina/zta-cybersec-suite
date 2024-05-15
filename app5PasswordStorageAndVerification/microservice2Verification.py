@@ -3,7 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
-from .utilityFunctions import hashPassword, hashPasswordWithSalt, sendRequest
+from .utilityFunctions import hashPasswordWithSalt, sendRequest
 
 
 app = FastAPI()

@@ -5,7 +5,7 @@ import asyncio
 import datetime
 import json
 from enum import Enum
-from .utilityFunctions import log, reportToAdmin, sendRequest
+from .utilityFunctions import log, reportToAdmin
 
 
 app = FastAPI()

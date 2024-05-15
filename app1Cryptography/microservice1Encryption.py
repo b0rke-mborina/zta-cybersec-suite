@@ -2,9 +2,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
-from .utilityFunctions import sendRequest, encrypt
 import datetime
 from enum import Enum
+from .utilityFunctions import sendRequest, encrypt
 
 
 app = FastAPI()

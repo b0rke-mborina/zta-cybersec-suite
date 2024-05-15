@@ -1,7 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
-import asyncio
 import datetime
 import json
 from enum import Enum

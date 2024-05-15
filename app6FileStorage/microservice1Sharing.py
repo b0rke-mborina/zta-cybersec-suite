@@ -4,7 +4,6 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
 from enum import Enum
-
 from .utilityFunctions import sendRequest
 
 

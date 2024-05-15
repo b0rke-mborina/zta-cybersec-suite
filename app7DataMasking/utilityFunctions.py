@@ -4,8 +4,8 @@ import aiosqlite
 import copy
 import json
 import os.path
-from fastapi.exceptions import RequestValidationError
 from faker import Faker
+from fastapi.exceptions import RequestValidationError
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, data = json.dumps(data)) as response:

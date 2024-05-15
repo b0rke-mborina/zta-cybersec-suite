@@ -2,10 +2,10 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator, validator
-from .utilityFunctions import getData, saveData
 import datetime
 import json
 from enum import Enum
+from .utilityFunctions import getData, saveData
 
 
 app = FastAPI()

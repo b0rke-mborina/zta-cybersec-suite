@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator, validator
-import json
 import datetime
+import json
 from enum import Enum
 from .utilityFunctions import log
 

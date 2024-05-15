@@ -2,8 +2,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from .utilityFunctions import sendRequest, verifyAPIKey, verifyOAuth2, verifyJWT
 import datetime
+from .utilityFunctions import sendRequest, verifyAPIKey, verifyOAuth2, verifyJWT
 
 
 app = FastAPI()
