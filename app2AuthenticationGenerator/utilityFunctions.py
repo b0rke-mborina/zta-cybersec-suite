@@ -127,7 +127,7 @@ def generateJWT():
 	token = jwt.encode({ "user_id": 1, "expires": expiration_time }, secretKey, algorithm='HS256')
 	return token
 
-async def verifyAPIKey(dataFromDb, currentDatetime):
+def verifyAPIKey(dataFromDb, currentDatetime):
 	if len(dataFromDb) == 0:
 		return False
 	

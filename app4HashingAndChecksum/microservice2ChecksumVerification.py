@@ -50,7 +50,7 @@ async def httpExceptionHandler(request, exc):
 async def verification(data: Data):
 	isHashValid = verifyChecksum(data.data, data.algorithm.value, data.checksum)
 	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
-	response = { "verification": "success", "is_checksum_valid": 1 if isHashValid else 0 }
+	response = { "verification": "success", "is_checksum_valid": isHashValid }
 
 	if not isHashValid:
 		reportingResult = await sendRequest(

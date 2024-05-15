@@ -18,7 +18,7 @@ class Data(BaseModel):
 	auth_method: AuthMethod
 	auth_source: int
 	username: str = ""
-	passwordHash: str = ""
+	password_hash: str = ""
 	jwt: str = ""
 	
 	@model_validator(mode='before')

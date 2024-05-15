@@ -59,7 +59,7 @@ async def hashing(data: Data):
 	)
 	if policyResult[0].get("policy_management") != "success":
 		raise HTTPException(500)
-	if policyResult[0].get("is_data_ok") != 1:
+	if policyResult[0].get("is_data_ok"):
 		raise RequestValidationError("Password requirements not fulfilled.")
 
 	hash = hashData(data.data, data.algorithm.value)

@@ -57,9 +57,9 @@ async def verificatorAPIKey(data: DataAPIKey):
 	if keyResult[0].get("getting_info") != "success":
 		raise HTTPException(500)
 
-	verificationResult = "valid" if await verifyAPIKey(keyResult[0].get("info"), currentTime) else "invalid"
+	verificationResult = verifyAPIKey(keyResult[0].get("info"), currentTime)
 
-	response = { "verification": "success", "result": verificationResult }
+	response = { "verification": "success", "is_valid": verificationResult }
 	
 	loggingResult = await sendRequest(
 		"post",
@@ -94,10 +94,10 @@ async def verificatorOAuth2(data: DataOAuth2Token):
 	if tokenResult[0].get("getting_info") != "success":
 		raise HTTPException(500)
 
-	verificationResult = "valid" if verifyOAuth2(tokenResult[0].get("info"), currentTime, 1) else "invalid"
+	verificationResult = verifyOAuth2(tokenResult[0].get("info"), currentTime, 1)
 	print(verificationResult)
 
-	response = { "verification": "success", "result": verificationResult }
+	response = { "verification": "success", "is_valid": verificationResult }
 	
 	loggingResult = await sendRequest(
 		"post",
@@ -132,10 +132,10 @@ async def verificatorJWT(data: DataJWT):
 	if tokenResult[0].get("getting_info") != "success":
 		raise HTTPException(500)
 	
-	verificationResult = "valid" if verifyJWT(data.jwt, tokenResult[0].get("info"), currentTime, 1) else "invalid"
+	verificationResult = verifyJWT(data.jwt, tokenResult[0].get("info"), currentTime, 1)
 	print(verificationResult)
 	
-	response = { "verification": "success", "result": verificationResult }
+	response = { "verification": "success", "is_valid": verificationResult }
 	
 	loggingResult = await sendRequest(
 		"post",

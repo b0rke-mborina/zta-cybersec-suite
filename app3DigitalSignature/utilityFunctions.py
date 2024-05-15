@@ -43,7 +43,7 @@ def getDbPath(dbFilename):
 async def checkIfUserAllowed(dbName, userId, role):
 	tasks = [isRoleAllowed(dbName, role), isUserAllowed(dbName, userId)]
 	results = await asyncio.gather(*tasks)
-	return 1 if results[0] and results[1] else 0
+	return results[0] and results[1]
 
 async def isRoleAllowed(dbName, role):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
@@ -75,10 +75,10 @@ def verifySignature(publicKeyBase64, signatureBase64, message, hashType):
 			padding.PKCS1v15(),
 			hasher
 		)
-		return "valid"
+		return True
 	except Exception as e:
 		print("Error:", e)
-		return "invalid"
+		return False
 
 def handleParams(publicKeyBase64, signatureBase64, message, hashType):
 	try:

@@ -125,7 +125,7 @@ async def authenticateUserWithUsernameAndPassword(dbName, data):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
 		cursor = await conn.execute(
 			"SELECT * FROM User WHERE username = ? AND password_hash = ?",
-			(data.username, data.passwordHash)
+			(data.username, data.password_hash)
 		)
 		dataFromDb = await cursor.fetchone()
 		if dataFromDb is not None:

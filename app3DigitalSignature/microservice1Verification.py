@@ -47,11 +47,10 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/digital-signature/verify")
 async def digitalSignatureVerificator(data: Data):
-	# print(data)
 	result = verifySignature(data.public_key, data.digital_signature, data.message, data.hash_function)
 	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-	response = { "verification": "success", "result": result }
+	response = { "verification": "success", "is_valid": result }
 
 	accessControlResult = await sendRequest(
 		"get",

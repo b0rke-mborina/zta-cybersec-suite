@@ -49,4 +49,4 @@ async def exceptionHandler(request, exc):
 @app.post("/cryptography/logging", status_code = 200)
 async def logging(data: Data):
 	await log(data, "app1Logs.db")
-	return {"logging": "success"}
+	return { "logging": "success" }

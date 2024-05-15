@@ -48,7 +48,7 @@ async def tunnelling(data: Data):
 			"auth_method": authType,
 			"auth_source": data.auth_source,
 			"username": authData.get("username") if authData.get("username") is not None else "",
-			"passwordHash": authData.get("password") if authData.get("password") is not None else "",
+			"password_hash": authData.get("password") if authData.get("password") is not None else "",
 			"jwt": authData.get("jwt") if authData.get("jwt") is not None else ""
 		}
 	)

@@ -26,4 +26,4 @@ async def exceptionHandler(request, exc):
 @app.get("/hashing/policy", status_code = 200)
 async def reporting(data: Data):
 	isPasswordValid = validatePassword(data.data)
-	return { "policy_management": "success", "is_data_ok": 1 if isPasswordValid else 0 }
+	return { "policy_management": "success", "is_data_ok": isPasswordValid }

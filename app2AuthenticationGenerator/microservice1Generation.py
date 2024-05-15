@@ -98,7 +98,7 @@ async def generatorJWT():
 	jwToken = generateJWT()
 	print(jwToken)
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
-	oauth2TokenData = {
+	jwtokenData = {
 		"auth_type": "jwt",
 		"token_key": jwToken,
 		"expires": (currentTime + datetime.timedelta(days=14)).isoformat(),
@@ -106,12 +106,12 @@ async def generatorJWT():
 		"secret": "SECRET_KEY_PLACEHOLDER"
 	}
 
-	response = { "generation": "success", "oauth2_token": jwToken }
+	response = { "generation": "success", "jwtoken": jwToken }
 
 	storageResult = await sendRequest(
 		"post",
 		"http://127.0.0.1:8012/auth-generator/data-new",
-		oauth2TokenData
+		jwtokenData
 	)
 	if storageResult[0].get("saving_info") != "success":
 		raise HTTPException(500)
@@ -132,4 +132,4 @@ async def generatorJWT():
 	if loggingResult[0].get("logging") != "success":
 		raise HTTPException(500)
 	
-	return { "generation": "success", "jwtoken": jwToken }
+	return response
