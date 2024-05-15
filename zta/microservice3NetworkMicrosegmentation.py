@@ -10,9 +10,9 @@ app = FastAPI()
 
 
 class Data(BaseModel):
-	is_user_authenticated: bool
 	user_id: int
 	auth_source_app_id: int
+	is_user_authenticated: bool
 	possible_breach: bool
 	
 	@model_validator(mode='before')

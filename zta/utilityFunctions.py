@@ -83,7 +83,10 @@ async def reportToAdmin(problem):
 async def handleACLTask(dbName, data):
 	match data.task.value:
 		case "authorize":
-			tasks = [handleAuthorization(dbName, data.user_id, data.user_role.value), checkIfPossibleDosAtack("ztaACL.db", data.user_id)]
+			tasks = [
+				handleAuthorization(dbName, data.user_id, data.user_role.value),
+				checkIfPossibleDosAtack("ztaACL.db", data.user_id, data.is_user_authenticated)
+			]
 			return await asyncio.gather(*tasks)
 		case "deny_access_to_all":
 			await denyAccessToAll(dbName)
@@ -220,7 +223,7 @@ async def isUserAllowed(dbName, userId):
 		result = await cursor.fetchone()
 		return result[2] == 1
 
-async def checkIfPossibleDosAtack(dbName, userId):
+async def checkIfPossibleDosAtack(dbName, userId, isAuthenticated):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
 		cursor = await conn.execute(
 			"SELECT * FROM ACL WHERE user_id = ?",
@@ -235,10 +238,24 @@ async def checkIfPossibleDosAtack(dbName, userId):
 		isRequestsTimestampValid = requestsExpire > currentDatetime
 		isNumberOfRequestsHigh = result[4] > 100
 
-		if not isRequestsTimestampValid:
-			await resetRequestData(dbName, userId, currentDatetime)
+		if isAuthenticated:
+			if isRequestsTimestampValid:
+				await incrementRequestData(dbName, userId, result[4])
+			else:
+				await resetRequestData(dbName, userId, currentDatetime)
 		
 		return isRequestsTimestampValid and isNumberOfRequestsHigh
+
+async def incrementRequestData(dbName, userId, requestCount):
+	async with aiosqlite.connect(getDbPath(dbName)) as db:
+		await db.execute(
+			"UPDATE ACL SET request_count = ? WHERE user_id = ?",
+			(
+				requestCount + 1,
+	 			userId
+			)
+		)
+		await db.commit()
 
 async def resetRequestData(dbName, userId, datetime):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
