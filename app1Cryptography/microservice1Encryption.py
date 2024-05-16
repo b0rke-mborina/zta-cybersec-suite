@@ -3,6 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 import datetime
+import json
 from enum import Enum
 from .utilityFunctions import sendRequest, encrypt
 
@@ -23,32 +24,35 @@ class Data(BaseModel):
 	key: str = None
 	key_length: int = None
 
+	class Config:
+		use_enum_values = True
+
 	@validator("key")
 	def validatorKey(cls, v, values, **kwargs):
 		algorithm = values.get("algorithm")
-		if algorithm in [Algorithm.DES, Algorithm.TripleDES, Algorithm.AES, Algorithm.Blowfish] and v is None:
+		if algorithm in ["DES", "TripleDES", "AES", "Blowfish"] and v is None:
 			raise RequestValidationError('Key is required for DES, TripleDES, AES or Blowfish algorithm')
 		
-		if algorithm == Algorithm.DES and len(v) != 8:
+		if algorithm == "DES" and len(v) != 8:
 			raise RequestValidationError('Key must be 8 characters long for DES algorithm')
-		elif algorithm == Algorithm.TripleDES and len(v) != 24:
+		elif algorithm == "TripleDES" and len(v) != 24:
 			raise RequestValidationError('Key must be 24 characters long for TripleDES algorithm')
-		elif algorithm == Algorithm.AES and len(v) != 16:
+		elif algorithm == "AES" and len(v) != 16:
 			raise RequestValidationError('Key must be 16 characters long for AES algorithm')
 		return v
 
 	@validator("key_length")
 	def validatorKeyLength(cls, v, values, **kwargs):
 		algorithm = values.get('algorithm')
-		if algorithm == Algorithm.RSA and v not in [1024, 2048, 3072]:
+		if algorithm == "RSA" and v not in [1024, 2048, 3072]:
 			raise RequestValidationError('Acceptable values for key_length are 1024, 2048, 3072 for RSA algorithm')
 		return v
 
 def validateKeyAndKeyLength(data):
 	print(data.algorithm)
-	if data.algorithm in [Algorithm.DES, Algorithm.TripleDES, Algorithm.AES, Algorithm.Blowfish] and data.key is None:
+	if data.algorithm in ["DES", "TripleDES", "AES", "Blowfish"] and data.key is None:
 		raise RequestValidationError('Key is required for DES, TripleDES, AES or Blowfish algorithm')
-	if data.algorithm == Algorithm.RSA and data.key_length is None:
+	if data.algorithm == "RSA" and data.key_length is None:
 		raise RequestValidationError('Value of key_length is requried for RSA algorithm')
 
 @app.exception_handler(RequestValidationError)
@@ -80,7 +84,7 @@ async def httpExceptionHandler(request, exc):
 async def encryption(data: Data):
 	validateKeyAndKeyLength(data)
 	
-	encryptionResult = encrypt(data.algorithm.value, data.plaintext, data.key, data.key_length)
+	encryptionResult = encrypt(data.algorithm, data.plaintext, data.key, data.key_length)
 
 	response = {}
 	if data.algorithm == Algorithm.RSA:
@@ -98,12 +102,11 @@ async def encryption(data: Data):
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": str(data),
-			"response": str(response),
+			"request": json.dumps(data.model_dump()),
+			"response": json.dumps(response),
 			"error_message": ""
 		}
 	)
-
 	if loggingResult[0].get("logging") != "success":
 		raise HTTPException(500)
 

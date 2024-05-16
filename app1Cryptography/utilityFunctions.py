@@ -168,6 +168,7 @@ def decryptBlowfish(ciphertext, key):
 		plaintext = cipher.decrypt(ciphertext[Blowfish.block_size:])
 		padding_length = plaintext[-1]
 		plaintext = plaintext[:-padding_length]
-		return plaintext.decode()
+		print(plaintext)
+		return plaintext.decode() # int.from_bytes(plaintext, byteorder='big')
 	except:
 		return ""

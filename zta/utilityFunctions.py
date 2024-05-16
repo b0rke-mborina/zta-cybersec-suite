@@ -6,7 +6,6 @@ import json
 import hashlib
 import base64
 import os.path
-from enum import Enum
 from Crypto.Cipher import Blowfish
 from struct import pack
 
@@ -272,10 +271,7 @@ async def resetRequestData(dbName, userId, datetime):
 def encryptData(data):
 	result = {}
 	for key, value in data.items():
-		if isinstance(value, Enum):
-			(result[key], _, _) = encryptBlowfish(value.value)
-		else:
-			(result[key], _, _) = encryptBlowfish(value)
+		(result[key], _, _) = encryptBlowfish(value)
 	return result
 
 def encryptBlowfish(plaintext):
@@ -290,7 +286,6 @@ def encryptBlowfish(plaintext):
 	padding = [plen]*plen
 	padding = pack('b'*plen, *padding)
 	ciphertext = cipher.iv + cipher.encrypt(plaintext + padding)
-	print(key)
 	return (base64.b64encode(ciphertext).decode("utf-8"), None, None)
 
 def decryptData(data):

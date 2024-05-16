@@ -3,6 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 import datetime
+import json
 from enum import Enum
 from .utilityFunctions import sendRequest, decrypt
 
@@ -24,21 +25,24 @@ class Data(BaseModel):
 	tag: str = None
 	nonce: str = None
 
+	class Config:
+		use_enum_values = True
+
 	@validator('key')
 	def validate_key(cls, v, values, **kwargs):
 		algorithm = values.get('algorithm')
-		if algorithm == Algorithm.DES and len(v) != 8:
+		if algorithm == "DES" and len(v) != 8:
 			raise ValueError('Key must be 8 characters long for DES algorithm')
-		elif algorithm == Algorithm.TripleDES and len(v) != 24:
+		elif algorithm == "TripleDES" and len(v) != 24:
 			raise ValueError('Key must be 24 characters long for TripleDES algorithm')
-		elif algorithm == Algorithm.AES and len(v) != 16:
+		elif algorithm == "AES" and len(v) != 16:
 			raise ValueError('Key must be 16 characters long for AES algorithm')
 		return v
 
 def validateTagAndNonce(data):
-	if data.algorithm == Algorithm.AES and data.tag is None:
+	if data.algorithm == "AES" and data.tag is None:
 		raise RequestValidationError('Tag is required for AES algorithm')
-	if data.algorithm == Algorithm.AES and data.nonce is None:
+	if data.algorithm == "AES" and data.nonce is None:
 		raise RequestValidationError('Nonce is required for AES algorithm')
 
 @app.exception_handler(RequestValidationError)
@@ -70,11 +74,11 @@ async def httpExceptionHandler(request, exc):
 async def decryption(data: Data):
 	validateTagAndNonce(data)
 
-	plaintext = decrypt(data.algorithm.value, data.ciphertext, data.key, data.tag, data.nonce)
+	plaintext = decrypt(data.algorithm, data.ciphertext, data.key, data.tag, data.nonce)
 	if len(plaintext) == 0:
 		raise RequestValidationError("Decryption not successful.")
 	
-	response = { "decryption": "success", "ciphertext": plaintext }
+	response = { "decryption": "success", "plaintext": plaintext }
 
 	loggingResult = await sendRequest(
 		"post",
@@ -84,12 +88,11 @@ async def decryption(data: Data):
 			"level": "INFO",
 			"logger_source": 2,
 			"user_id": 1,
-			"request": str(data),
-			"response": str(response),
+			"request": json.dumps(data.model_dump()),
+			"response": json.dumps(response),
 			"error_message": ""
 		}
 	)
-
 	if loggingResult[0].get("logging") != "success":
 		raise HTTPException(500)
 

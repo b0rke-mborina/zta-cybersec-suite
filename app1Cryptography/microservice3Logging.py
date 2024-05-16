@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator, validator
 import datetime
@@ -25,6 +25,9 @@ class Data(BaseModel):
 	request: str
 	response: str = ""
 	error_message: str = ""
+
+	class Config:
+		use_enum_values = True
 
 	@validator("timestamp")
 	def validateISO8601Timestamp(cls, v):
@@ -55,7 +58,10 @@ async def logging(data: Data):
 			"data": data.model_dump()
 		}
 	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	
 	logData = orchestrationAutomationResult[0].get("data")
-
 	await log(logData, "app1Logs.db")
+
 	return { "logging": "success" }
