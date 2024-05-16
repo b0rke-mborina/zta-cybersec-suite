@@ -4,7 +4,7 @@ from pydantic import BaseModel, model_validator, validator
 import datetime
 import json
 from enum import Enum
-from .utilityFunctions import log
+from .utilityFunctions import log, sendRequest
 
 
 app = FastAPI()
@@ -48,5 +48,14 @@ async def exceptionHandler(request, exc):
 
 @app.post("/cryptography/logging", status_code = 200)
 async def logging(data: Data):
-	await log(data, "app1Logs.db")
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": data.model_dump()
+		}
+	)
+	logData = orchestrationAutomationResult[0].get("data")
+
+	await log(logData, "app1Logs.db")
 	return { "logging": "success" }
