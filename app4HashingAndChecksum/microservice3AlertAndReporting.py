@@ -24,11 +24,6 @@ class Data(BaseModel):
 		except ValueError:
 			raise ValueError("Timestamp must be in ISO 8601 format")
 		return v
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):

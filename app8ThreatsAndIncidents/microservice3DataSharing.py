@@ -34,11 +34,6 @@ class DataIncident(BaseModel):
 		except ValueError:
 			raise ValueError("Timestamp must be in ISO 8601 format")
 		return v
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 class DataThreats(BaseModel):
 	time_from: str
@@ -60,11 +55,6 @@ class DataThreats(BaseModel):
 		except ValueError:
 			raise ValueError("Value of time_to must be in ISO 8601 format")
 		return v
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):

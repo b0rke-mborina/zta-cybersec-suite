@@ -18,20 +18,10 @@ class DataStore(BaseModel):
 	format: Format
 	filename: str
 	file: str
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 class DataRetrieve(BaseModel):
 	user_id: int
 	filename: str
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 @app.exception_handler(HTTPException)
 async def exceptionHandler(request, exc):

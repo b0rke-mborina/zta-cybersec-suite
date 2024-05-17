@@ -22,11 +22,6 @@ class Problem(str, Enum):
 class Data(BaseModel):
 	problem: Problem
 	user_id: int = 0
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):

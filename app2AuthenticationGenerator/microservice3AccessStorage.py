@@ -20,11 +20,6 @@ class DataInfo(BaseModel):
 	auth_type: AuthType
 	token_key: str
 	user_id: int = None
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 class DataNew(BaseModel):
 	auth_type: AuthType
@@ -40,11 +35,6 @@ class DataNew(BaseModel):
 		except ValueError:
 			raise ValueError("Timestamp must be in ISO 8601 format")
 		return v
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 def validateInfoUserId(data):
 	print(data.auth_type)

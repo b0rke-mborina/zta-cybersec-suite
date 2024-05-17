@@ -10,22 +10,12 @@ app = FastAPI()
 
 class DataEncrypt(BaseModel):
 	file: str
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 class DataDecrypt(BaseModel):
 	file: str
 	key: str
 	tag: str
 	nonce: str
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 @app.exception_handler(HTTPException)
 async def exceptionHandler(request, exc):

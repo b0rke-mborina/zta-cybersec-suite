@@ -17,11 +17,6 @@ class DataStore(BaseModel):
 class DataRetrieve(BaseModel):
 	user_id: int
 	username: str
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 class DataUpdate(BaseModel):
 	user_id: int
@@ -29,11 +24,6 @@ class DataUpdate(BaseModel):
 	password_hash: str
 	salt: str
 	algorithm: str
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):

@@ -8,7 +8,7 @@ from faker import Faker
 from fastapi.exceptions import RequestValidationError
 
 async def request(session, method, url, data):
-	async with session.request(method = method, url = url, data = json.dumps(data)) as response:
+	async with session.request(method = method, url = url, json = data) as response:
 			return await response.json()
 
 async def sendRequest(method, url, reqData):

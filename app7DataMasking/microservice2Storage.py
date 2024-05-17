@@ -12,19 +12,9 @@ class DataStorage(BaseModel):
 	dataset: str
 	data_original: list
 	data_masked: list
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 class DataRetrieval(BaseModel):
 	dataset: str
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
