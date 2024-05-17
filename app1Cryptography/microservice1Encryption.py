@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
@@ -81,7 +81,9 @@ async def httpExceptionHandler(request, exc):
 	)
 
 @app.get("/cryptography/encrypt", status_code = 200)
-async def encryption(data: Data):
+async def encryption(request: Request, data: Data):
+	print(request.headers)
+
 	validateKeyAndKeyLength(data)
 	
 	encryptionResult = encrypt(data.algorithm, data.plaintext, data.key, data.key_length)
@@ -102,7 +104,9 @@ async def encryption(data: Data):
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": json.dumps(data.model_dump()),
+			# improve data for logging
+			# enable read data from app and from bruno
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": json.dumps(response),
 			"error_message": ""
 		}

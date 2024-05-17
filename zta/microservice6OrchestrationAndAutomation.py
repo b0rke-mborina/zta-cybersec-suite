@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
 import datetime
-import json
 from .utilityFunctions import decryptData, encryptData, hashData, sendRequest
 
 
@@ -11,19 +10,9 @@ app = FastAPI()
 
 class DataCryptography(BaseModel):
 	data: dict
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 class DataHashing(BaseModel):
 	data: str
-	
-	@model_validator(mode='before')
-	@classmethod
-	def to_py_dict(cls, data):
-		return json.loads(data)
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):

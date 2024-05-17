@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
@@ -71,7 +71,7 @@ async def httpExceptionHandler(request, exc):
 	)
 
 @app.get("/cryptography/decrypt", status_code = 200)
-async def decryption(data: Data):
+async def decryption(request: Request, data: Data):
 	validateTagAndNonce(data)
 
 	plaintext = decrypt(data.algorithm, data.ciphertext, data.key, data.tag, data.nonce)
@@ -88,7 +88,7 @@ async def decryption(data: Data):
 			"level": "INFO",
 			"logger_source": 2,
 			"user_id": 1,
-			"request": json.dumps(data.model_dump()),
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": json.dumps(response),
 			"error_message": ""
 		}
