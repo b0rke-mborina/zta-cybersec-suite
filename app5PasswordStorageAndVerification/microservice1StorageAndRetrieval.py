@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
@@ -51,7 +51,7 @@ async def httpExceptionHandler(request, exc):
 	)
 
 @app.post("/password/store")
-async def storage(data: DataStore):
+async def storage(request: Request, data: DataStore):
 	policyResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8043/password/policy",
@@ -78,7 +78,7 @@ async def storage(data: DataStore):
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": str(data),
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}

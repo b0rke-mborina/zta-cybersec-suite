@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -44,7 +44,7 @@ async def httpExceptionHandler(request, exc):
 	)
 
 @app.get("/auth-generator/verify/api-key")
-async def verificatorAPIKey(data: DataAPIKey):
+async def verificatorAPIKey(request: Request, data: DataAPIKey):
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
 	keyResult = await sendRequest(
 		"get",
@@ -69,7 +69,7 @@ async def verificatorAPIKey(data: DataAPIKey):
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": str(data),
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}
@@ -80,7 +80,7 @@ async def verificatorAPIKey(data: DataAPIKey):
 	return response
 
 @app.get("/auth-generator/verify/oauth2")
-async def verificatorOAuth2(data: DataOAuth2Token):
+async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
 	tokenResult = await sendRequest(
 		"get",
@@ -107,7 +107,7 @@ async def verificatorOAuth2(data: DataOAuth2Token):
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": str(data),
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}
@@ -118,7 +118,7 @@ async def verificatorOAuth2(data: DataOAuth2Token):
 	return response
 
 @app.get("/auth-generator/verify/jwt")
-async def verificatorJWT(data: DataJWT):
+async def verificatorJWT(request: Request, data: DataJWT):
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
 	tokenResult = await sendRequest(
 		"get",
@@ -145,7 +145,7 @@ async def verificatorJWT(data: DataJWT):
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": str(data),
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}

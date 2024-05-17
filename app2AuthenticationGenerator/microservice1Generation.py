@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 import datetime
 from .utilityFunctions import sendRequest, generateAPIKey, generateOAuth2, generateJWT
@@ -15,7 +15,7 @@ async def httpExceptionHandler(request, exc):
 	)
 
 @app.get("/auth-generator/generate/api-key")
-async def generatorAPIKey():
+async def generatorAPIKey(request: Request):
 	apiKey = generateAPIKey()
 	print(apiKey)
 	currentTime = datetime.datetime.now()
@@ -43,7 +43,7 @@ async def generatorAPIKey():
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": "",
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}
@@ -54,7 +54,7 @@ async def generatorAPIKey():
 	return response
 
 @app.get("/auth-generator/generate/oauth2")
-async def generatorOAuth2():
+async def generatorOAuth2(request: Request):
 	oauth2Token = generateOAuth2()
 	print(oauth2Token)
 	currentTime = datetime.datetime.now()
@@ -83,7 +83,7 @@ async def generatorOAuth2():
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": "",
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}
@@ -94,7 +94,7 @@ async def generatorOAuth2():
 	return response
 
 @app.get("/auth-generator/generate/jwt")
-async def generatorJWT():
+async def generatorJWT(request: Request):
 	jwToken = generateJWT()
 	print(jwToken)
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
@@ -124,7 +124,7 @@ async def generatorJWT():
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": "",
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}

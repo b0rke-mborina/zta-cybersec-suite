@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -46,7 +46,7 @@ async def httpExceptionHandler(request, exc):
 	)
 
 @app.get("/digital-signature/verify")
-async def digitalSignatureVerificator(data: Data):
+async def digitalSignatureVerificator(request: Request, data: Data):
 	result = verifySignature(data.public_key, data.digital_signature, data.message, data.hash_function)
 	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
@@ -71,7 +71,7 @@ async def digitalSignatureVerificator(data: Data):
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": "",
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}

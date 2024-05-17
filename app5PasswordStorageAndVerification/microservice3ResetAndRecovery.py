@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -40,7 +40,7 @@ async def exceptionHandler(request, exc):
 	)
 
 @app.post("/password/reset")
-async def reset(data: Data):
+async def reset(request: Request, data: Data):
 	policyResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8043/password/policy",
@@ -100,7 +100,7 @@ async def reset(data: Data):
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": str(data),
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}

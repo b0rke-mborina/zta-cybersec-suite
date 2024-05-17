@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -48,7 +48,7 @@ async def exceptionHandler(request, exc):
 	)
 
 @app.post("/file/store")
-async def storage(data: DataStore):
+async def storage(request: Request, data: DataStore):
 	accessControlResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8053/file/access-control",
@@ -82,7 +82,7 @@ async def storage(data: DataStore):
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": str(data),
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}
@@ -93,7 +93,7 @@ async def storage(data: DataStore):
 	return response
 
 @app.get("/file/retrieve")
-async def retrieval(data: DataRetrieve):
+async def retrieval(request: Request, data: DataRetrieve):
 	accessControlResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8053/file/access-control",
@@ -126,7 +126,7 @@ async def retrieval(data: DataRetrieve):
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": str(data),
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -42,7 +42,7 @@ async def exceptionHandler(request, exc):
 	)
 
 @app.get("/data/mask")
-async def masking(data: DataMask):
+async def masking(request: Request, data: DataMask):
 	checkData(data.data)
 	accessControlResult = await sendRequest(
 		"get",
@@ -79,7 +79,7 @@ async def masking(data: DataMask):
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": str(data),
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}
@@ -90,7 +90,7 @@ async def masking(data: DataMask):
 	return response
 
 @app.get("/data/unmask")
-async def unmasking(data: DataUnmask):
+async def unmasking(request: Request, data: DataUnmask):
 	accessControlResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8062/data/access-control",
@@ -122,7 +122,7 @@ async def unmasking(data: DataUnmask):
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			"request": str(data),
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}

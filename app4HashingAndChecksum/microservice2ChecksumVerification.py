@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -47,7 +47,7 @@ async def httpExceptionHandler(request, exc):
 	)
 
 @app.get("/hashing/verify", status_code = 200)
-async def verification(data: Data):
+async def verification(request: Request, data: Data):
 	isHashValid = verifyChecksum(data.data, data.algorithm.value, data.checksum)
 	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
 	response = { "verification": "success", "is_checksum_valid": isHashValid }
@@ -76,7 +76,7 @@ async def verification(data: Data):
 			"level": "INFO",
 			"logger_source": 2,
 			"user_id": 1,
-			"request": "",
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
 		}
