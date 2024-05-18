@@ -83,11 +83,14 @@ async def reportToAdmin(problem):
 async def handleACLTask(dbName, data):
 	match data.task.value:
 		case "authorize":
-			tasks = [
-				handleAuthorization(dbName, data.user_id, data.user_role.value),
-				checkIfPossibleDosAtack("ztaACL.db", data.user_id, data.is_user_authenticated)
-			]
-			return await asyncio.gather(*tasks)
+			if data.user_id == 0:
+				return [False, False]
+			else:
+				tasks = [
+					handleAuthorization(dbName, data.user_id, data.user_role.value),
+					checkIfPossibleDosAtack("ztaACL.db", data.user_id, data.is_user_authenticated)
+				]
+				return await asyncio.gather(*tasks)
 		case "deny_access_to_all":
 			await denyAccessToAll(dbName)
 			return ["", ""]
@@ -131,6 +134,8 @@ async def authenticateUserWithUsernameAndPassword(dbName, data):
 			(data.username, data.password_hash)
 		)
 		dataFromDb = await cursor.fetchone()
+		print(data)
+		print(dataFromDb)
 		if dataFromDb is not None:
 			isAuthenticated = True
 			userId = dataFromDb[0]
@@ -155,6 +160,8 @@ async def authenticateUserWithJwt(dbName, data):
 
 async def checkUserNetworkSegment(dbName, data):
 	result = False
+	if data.user_id == 0:
+		return False
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
 		cursor = await conn.execute(
 			"SELECT * FROM Network WHERE user_id = ?",
@@ -185,20 +192,20 @@ async def updateUserNetworkSegment(dbName, data, currentDatetime):
 		)
 		await db.commit()
 
-def getAuthData(headers):
-	authType, authData = None, {}
+def getDataForIAM(data):
+	dataForIAM = {
+			"auth_method": data.auth_type,
+			"auth_source": data.auth_source,
+	}
 
-	jwt = headers.get("jwt")
-	username = headers.get("username")
-	password = headers.get("password")
-	if jwt is not None and jwt != "":
-		authType = "jwt"
-		authData["jwt"] = jwt
-	elif username is not None and username != "" and password is not None and password != "":
-		authType = "username_and_password"
-		authData["username"] = username
-		authData["password"] = password
-	return (authType, authData)
+	if data.auth_data.get("username") is not None:
+		dataForIAM["username"] = data.auth_data.get("username")
+	if data.auth_data.get("password_hash") is not None:
+		dataForIAM["password_hash"] = data.auth_data.get("password_hash")
+	if data.auth_data.get("jwt") is not None:
+		dataForIAM["jwt"] = data.auth_data.get("jwt")
+	
+	return dataForIAM
 
 async def handleAuthorization(dbName, userId, userRole):
 	tasks = [isRoleAllowed(dbName, userRole), isUserAllowed(dbName, userId)]
@@ -221,7 +228,10 @@ async def isUserAllowed(dbName, userId):
 			(userId, )
 		)
 		result = await cursor.fetchone()
-		return result[2] == 1
+		if result is None:
+			return False
+		else:
+			return result[2] == 1
 
 async def checkIfPossibleDosAtack(dbName, userId, isAuthenticated):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
@@ -230,6 +240,8 @@ async def checkIfPossibleDosAtack(dbName, userId, isAuthenticated):
 			(userId, )
 		)
 		result = await cursor.fetchone()
+		if result is None:
+			return False
 
 		currentDatetime = datetime.datetime.now(datetime.timezone.utc)
 		requestsStarted = datetime.datetime.fromisoformat(result[3]).replace(tzinfo=datetime.timezone.utc)

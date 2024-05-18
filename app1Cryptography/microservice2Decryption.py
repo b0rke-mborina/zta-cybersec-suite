@@ -5,7 +5,7 @@ from pydantic import BaseModel, validator
 import datetime
 import json
 from enum import Enum
-from .utilityFunctions import sendRequest, decrypt
+from .utilityFunctions import getAuthData, sendRequest, decrypt
 
 
 app = FastAPI()
@@ -72,6 +72,22 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/cryptography/decrypt", status_code = 200)
 async def decryption(request: Request, data: Data):
+	authType, authData = getAuthData(request.headers)
+	print(authType, authData)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8003/cryptography/logging",
+		{
+			"auth_type": authType,
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	validateTagAndNonce(data)
 
 	plaintext = decrypt(data.algorithm, data.ciphertext, data.key, data.tag, data.nonce)

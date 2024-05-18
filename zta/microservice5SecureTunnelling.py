@@ -1,17 +1,19 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
 import asyncio
 import datetime
 import json
-from .utilityFunctions import getAuthData, sendRequest
+from .utilityFunctions import getDataForIAM, sendRequest
 
 
 app = FastAPI()
 
 
 class Data(BaseModel):
-	headers: dict
+	auth_type: str
+	auth_data: dict
 	auth_source: int
 
 @app.exception_handler(Exception)
@@ -34,22 +36,19 @@ async def exceptionHandler(request, exc):
 
 @app.get("/zta/tunnelling")
 async def tunnelling(data: Data):
-	(authType, authData) = getAuthData(data.headers)
-
+	print(data)
+	print(getDataForIAM(data))
 	authenticationResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8081/zta/iam",
-		{
-			"auth_method": authType,
-			"auth_source": data.auth_source,
-			"username": authData.get("username") if authData.get("username") is not None else "",
-			"password_hash": authData.get("password") if authData.get("password") is not None else "",
-			"jwt": authData.get("jwt") if authData.get("jwt") is not None else ""
-		}
+		getDataForIAM(data)
 	)
 	if authenticationResult[0].get("iam") != "success":
 		raise HTTPException(500)
-	
+	if authenticationResult[0].get("is_authenticated") != True:
+		raise RequestValidationError("User not allowed.")
+
+	print(authenticationResult)
 	isAuthenticated = authenticationResult[0].get("is_authenticated")
 	userId = authenticationResult[0].get("user_id")
 	userRole = authenticationResult[0].get("user_role")

@@ -5,7 +5,7 @@ from pydantic import BaseModel, validator
 import datetime
 import json
 from enum import Enum
-from .utilityFunctions import sendRequest, encrypt
+from .utilityFunctions import getAuthData, sendRequest, encrypt
 
 
 app = FastAPI()
@@ -82,7 +82,21 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/cryptography/encrypt", status_code = 200)
 async def encryption(request: Request, data: Data):
-	print(request.headers)
+	authType, authData = getAuthData(request.headers)
+	print(authType, authData)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8003/cryptography/logging",
+		{
+			"auth_type": authType,
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
 
 	validateKeyAndKeyLength(data)
 	
@@ -104,8 +118,6 @@ async def encryption(request: Request, data: Data):
 			"level": "INFO",
 			"logger_source": 1,
 			"user_id": 1,
-			# improve data for logging
-			# enable read data from app and from bruno
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": json.dumps(response),
 			"error_message": ""

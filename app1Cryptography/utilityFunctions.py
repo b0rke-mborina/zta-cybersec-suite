@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 import aiosqlite
+import hashlib
 import base64
 import os.path
 from Crypto.Cipher import AES, DES, DES3, Blowfish
@@ -38,6 +39,24 @@ def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
+
+def getAuthData(headers):
+	authType, authData = None, {}
+
+	jwt = headers.get("jwt")
+	username = headers.get("username")
+	password = headers.get("password")
+	if jwt is not None and jwt != "":
+		authType = "jwt"
+		authData["jwt"] = jwt
+	elif username is not None and username != "" and password is not None and password != "":
+		authType = "username_and_password"
+		authData["username"] = username
+		authData["password_hash"] = hashData(password)
+	return (authType, authData)
+
+def hashData(data):
+	return hashlib.sha512(data.encode()).hexdigest()
 
 def encrypt(algorithm, plaintext, key = None, key_length = None):
 	match algorithm:
