@@ -21,6 +21,9 @@ class Data(BaseModel):
 	algorithm: Algorithm
 	password: bool
 
+	class Config:
+		use_enum_values = True
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
@@ -62,7 +65,7 @@ async def hashing(request: Request, data: Data):
 	if policyResult[0].get("is_data_ok"):
 		raise RequestValidationError("Password requirements not fulfilled.")
 
-	hash = hashData(data.data, data.algorithm.value)
+	hash = hashData(data.data, data.algorithm)
 	response = { "hashing": "success", "hash": hash }
 
 	loggingResult = await sendRequest(

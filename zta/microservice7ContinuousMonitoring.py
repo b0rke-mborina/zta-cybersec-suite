@@ -26,6 +26,9 @@ class Data(BaseModel):
 	request: str
 	response: str = ""
 	error_message: str = ""
+	
+	class Config:
+		use_enum_values = True
 
 	@validator("timestamp")
 	def validateISO8601Timestamp(cls, v):

@@ -41,9 +41,9 @@ def getDbPath(dbFilename):
 	return dbPath
 
 async def handleProblem(data):
-	tasks = [reportToAdmin(data.problem.value)]
+	tasks = [reportToAdmin(data.problem)]
 	
-	if data.problem.value in ["security_breach", "infrastructure_integrity_violation"]:
+	if data.problem in ["security_breach", "infrastructure_integrity_violation"]:
 		tasks.append(
 			sendRequest(
 				"get",
@@ -53,7 +53,7 @@ async def handleProblem(data):
 				}
 			)
 		)
-	elif data.problem.value in ["data_inconsistency", "partial_system_failure", "total_system_failure"]:
+	elif data.problem in ["data_inconsistency", "partial_system_failure", "total_system_failure"]:
 		tasks.append(
 			sendRequest(
 				"get",
@@ -63,7 +63,7 @@ async def handleProblem(data):
 				}
 			)
 		)
-	elif data.problem.value == "dos_attack":
+	elif data.problem == "dos_attack":
 		tasks.append(
 			sendRequest(
 				"get",
@@ -81,13 +81,13 @@ async def reportToAdmin(problem):
 	pass
 
 async def handleACLTask(dbName, data):
-	match data.task.value:
+	match data.task:
 		case "authorize":
 			if data.user_id == 0:
 				return [False, False]
 			else:
 				tasks = [
-					handleAuthorization(dbName, data.user_id, data.user_role.value),
+					handleAuthorization(dbName, data.user_id, data.user_role),
 					checkIfPossibleDosAtack("ztaACL.db", data.user_id, data.is_user_authenticated_additionally)
 				]
 				return await asyncio.gather(*tasks)

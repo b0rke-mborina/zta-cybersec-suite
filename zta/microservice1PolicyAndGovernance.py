@@ -22,6 +22,9 @@ class Problem(str, Enum):
 class Data(BaseModel):
 	problem: Problem
 	user_id: int = 0
+	
+	class Config:
+		use_enum_values = True
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):

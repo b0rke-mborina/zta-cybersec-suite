@@ -20,6 +20,9 @@ class Data(BaseModel):
 	message: str
 	hash_function: HashFunction
 
+	class Config:
+		use_enum_values = True
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {

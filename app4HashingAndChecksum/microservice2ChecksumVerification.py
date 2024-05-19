@@ -21,6 +21,9 @@ class Data(BaseModel):
 	algorithm: Algorithm
 	checksum: str
 
+	class Config:
+		use_enum_values = True
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
@@ -48,7 +51,7 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/hashing/verify", status_code = 200)
 async def verification(request: Request, data: Data):
-	isHashValid = verifyChecksum(data.data, data.algorithm.value, data.checksum)
+	isHashValid = verifyChecksum(data.data, data.algorithm, data.checksum)
 	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
 	response = { "verification": "success", "is_checksum_valid": isHashValid }
 

@@ -19,6 +19,9 @@ class DataStore(BaseModel):
 	filename: str
 	file: str
 
+	class Config:
+		use_enum_values = True
+
 class DataRetrieve(BaseModel):
 	filename: str
 
@@ -66,7 +69,7 @@ async def storage(request: Request, data: DataStore):
 		"http://127.0.0.1:8051/file/storage",
 		{
 			"user_id": 1,
-			"format": data.format.value,
+			"format": data.format,
 			"filename": data.filename,
 			"file": data.file
 		}

@@ -25,6 +25,9 @@ class Data(BaseModel):
 	is_user_authenticated_additionally: bool
 	user_id: int = 0
 	user_role: Role = "user"
+	
+	class Config:
+		use_enum_values = True
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):

@@ -19,6 +19,9 @@ class DataStore(BaseModel):
 	filename: str
 	file: str
 
+	class Config:
+		use_enum_values = True
+
 class DataRetrieve(BaseModel):
 	user_id: int
 	filename: str
@@ -46,7 +49,7 @@ async def storage(data: DataStore):
 	if encryptionResult[0].get("encryption") != "success" or any(value is None for value in [encryptedFile, key, tag, nonce]):
 		raise HTTPException(500)
 
-	await storeFile("app6Data.db", data.user_id, data.filename, data.format.value, encryptedFile, key, tag, nonce)
+	await storeFile("app6Data.db", data.user_id, data.filename, data.format, encryptedFile, key, tag, nonce)
 	return { "storage": "success" }
 
 @app.get("/file/retrieval")

@@ -37,6 +37,9 @@ class Incident(BaseModel):
 
 class Data(BaseModel):
 	incident: Incident
+	
+	class Config:
+		use_enum_values = True
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
@@ -78,7 +81,7 @@ async def reporting(request: Request, data: Data):
 			"malicious_code": data.incident.malicious_code,
 			"compromised_data": data.incident.compromised_data,
 			"indicators_of_compromise": data.incident.indicators_of_compromise,
-			"severity": data.incident.severity.value,
+			"severity": data.incident.severity,
 			"user_accounts_involved": data.incident.user_accounts_involved,
 			"logs": data.incident.logs,
 			"actions": data.incident.actions

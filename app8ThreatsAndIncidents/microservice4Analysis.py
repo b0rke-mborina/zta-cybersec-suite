@@ -21,6 +21,9 @@ class Data(BaseModel):
 	compromised_data: list
 	severity: Severity
 	user_accounts_involved: list
+	
+	class Config:
+		use_enum_values = True
 
 	@validator("timestamp")
 	def validateISO8601Timestamp(cls, v):

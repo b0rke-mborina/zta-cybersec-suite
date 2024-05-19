@@ -26,6 +26,9 @@ class DataIncident(BaseModel):
 	user_accounts_involved: list
 	logs: list
 	actions: list
+	
+	class Config:
+		use_enum_values = True
 
 	@validator("timestamp")
 	def validateISO8601Timestamp(cls, v):
@@ -39,6 +42,9 @@ class DataThreats(BaseModel):
 	time_from: str
 	time_to: str
 	severity: Severity
+	
+	class Config:
+		use_enum_values = True
 
 	@validator("time_from")
 	def validateISO8601Timestamp(cls, v):
@@ -72,7 +78,7 @@ async def incident(data: DataIncident):
 			"timestamp": data.timestamp,
 			"affected_assets": data.affected_assets,
 			"compromised_data": data.compromised_data,
-			"severity": data.severity.value,
+			"severity": data.severity,
 			"user_accounts_involved": data.user_accounts_involved
 		}
 	)
@@ -84,5 +90,5 @@ async def incident(data: DataIncident):
 
 @app.get("/intelligence/threats", status_code = 200)
 async def threats(data: DataThreats):
-	threats = await getThreats("app8Data.db", data.time_from, data.time_to, data.severity.value)
+	threats = await getThreats("app8Data.db", data.time_from, data.time_to, data.severity)
 	return { "threats": "success", "data": threats }

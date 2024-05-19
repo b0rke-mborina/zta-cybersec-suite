@@ -17,6 +17,9 @@ class Data(BaseModel):
 	user_id: int
 	role: Role
 
+	class Config:
+		use_enum_values = True
+
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
 	return JSONResponse(
@@ -27,5 +30,5 @@ async def exceptionHandler(request, exc):
 @app.get("/digital-signature/access-control")
 async def accessControler(data: Data):
 	print(data)
-	isAllowed = await checkIfUserAllowed("app3ACL.db", data.user_id, data.role.value)
+	isAllowed = await checkIfUserAllowed("app3ACL.db", data.user_id, data.role)
 	return { "access_control": "success", "is_allowed": isAllowed }

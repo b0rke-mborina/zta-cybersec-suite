@@ -19,6 +19,9 @@ class Data(BaseModel):
 	time_from: str
 	time_to: str
 	severity: Severity
+	
+	class Config:
+		use_enum_values = True
 
 	@validator("time_from")
 	def validateISO8601Timestamp(cls, v):
@@ -71,7 +74,7 @@ async def retrieval(request: Request, data: Data):
 		{
 			"time_from": data.time_from,
 			"time_to": data.time_to,
-			"severity": data.severity.value,
+			"severity": data.severity,
 		}
 	)
 	if dataSharingResult[0].get("threats") != "success":

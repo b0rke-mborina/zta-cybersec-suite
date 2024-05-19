@@ -21,12 +21,18 @@ class DataInfo(BaseModel):
 	token_key: str
 	user_id: int = None
 
+	class Config:
+		use_enum_values = True
+
 class DataNew(BaseModel):
 	auth_type: AuthType
 	token_key: str
 	expires: str
 	user_id: int = None
 	secret: str = None
+
+	class Config:
+		use_enum_values = True
 
 	@validator("expires")
 	def validateISO8601ExpiresTimestamp(cls, v):
@@ -59,13 +65,13 @@ async def exceptionHandler(request, exc):
 async def dataGet(data: DataInfo):
 	validateInfoUserId(data)
 
-	authData = await getData(data.auth_type.value, data.token_key, data.user_id)
+	authData = await getData(data.auth_type, data.token_key, data.user_id)
 	return { "getting_info": "success", "info": authData }
 
 @app.post("/auth-generator/data-new")
 async def dataSave(data: DataNew):
 	validateSaveUserIdAndSecret(data)
 
-	await saveData(data.auth_type.value, data.token_key, data.expires, data.user_id, data.secret)
+	await saveData(data.auth_type, data.token_key, data.expires, data.user_id, data.secret)
 	return { "saving_info": "success" }
 

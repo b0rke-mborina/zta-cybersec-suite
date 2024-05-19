@@ -17,6 +17,9 @@ class Data(BaseModel):
 	user_id: int
 	role: Role
 
+	class Config:
+		use_enum_values = True
+
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
 	return JSONResponse(
@@ -26,5 +29,5 @@ async def exceptionHandler(request, exc):
 
 @app.get("/file/access-control")
 async def accessControl(data: Data):
-	isAllowed = await checkIfUserAllowed("app6ACL.db", data.user_id, data.role.value)
+	isAllowed = await checkIfUserAllowed("app6ACL.db", data.user_id, data.role)
 	return { "access_control": "success", "is_allowed": isAllowed }
