@@ -12,7 +12,7 @@ app = FastAPI()
 class Data(BaseModel):
 	user_id: int
 	auth_source_app_id: int
-	is_user_authenticated: bool
+	is_user_authenticated_additionally: bool
 	possible_breach: bool
 
 @app.exception_handler(Exception)

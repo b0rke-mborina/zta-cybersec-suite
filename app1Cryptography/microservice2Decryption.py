@@ -72,13 +72,11 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/cryptography/decrypt", status_code = 200)
 async def decryption(request: Request, data: Data):
-	authType, authData = getAuthData(request.headers)
-	print(authType, authData)
+	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8003/cryptography/logging",
+		"http://127.0.0.1:8085/zta/tunnelling",
 		{
-			"auth_type": authType,
 			"auth_data": authData,
 			"auth_source": 1
 		}

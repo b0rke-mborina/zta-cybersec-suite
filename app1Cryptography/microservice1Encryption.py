@@ -49,7 +49,6 @@ class Data(BaseModel):
 		return v
 
 def validateKeyAndKeyLength(data):
-	print(data.algorithm)
 	if data.algorithm in ["DES", "TripleDES", "AES", "Blowfish"] and data.key is None:
 		raise RequestValidationError('Key is required for DES, TripleDES, AES or Blowfish algorithm')
 	if data.algorithm == "RSA" and data.key_length is None:
@@ -82,13 +81,11 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/cryptography/encrypt", status_code = 200)
 async def encryption(request: Request, data: Data):
-	authType, authData = getAuthData(request.headers)
-	print(authType, authData)
+	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8003/cryptography/logging",
+		"http://127.0.0.1:8085/zta/tunnelling",
 		{
-			"auth_type": authType,
 			"auth_data": authData,
 			"auth_source": 1
 		}

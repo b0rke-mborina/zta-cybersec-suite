@@ -41,19 +41,18 @@ def getDbPath(dbFilename):
 	return dbPath
 
 def getAuthData(headers):
-	authType, authData = None, {}
-
 	jwt = headers.get("jwt")
 	username = headers.get("username")
 	password = headers.get("password")
-	if jwt is not None and jwt != "":
-		authType = "jwt"
-		authData["jwt"] = jwt
-	elif username is not None and username != "" and password is not None and password != "":
-		authType = "username_and_password"
+
+	authData = {
+		"jwt": jwt if jwt is not None and jwt != "" else ""
+	}
+	if username is not None and username != "" and password is not None and password != "":
 		authData["username"] = username
 		authData["password_hash"] = hashData(password)
-	return (authType, authData)
+	
+	return authData
 
 def hashData(data):
 	return hashlib.sha512(data.encode()).hexdigest()
@@ -98,10 +97,8 @@ def encryptAES(plaintext, key):
 def encryptRSA(plaintext, keyLength):
 	key = RSA.generate(keyLength)
 	privateKeyStr = key.export_key().decode().replace("-----BEGIN RSA PRIVATE KEY-----\n", "").replace("\n-----END RSA PRIVATE KEY-----", "")
-	print("private:\n" + privateKeyStr)
 	publicKeyStr = key.publickey().export_key().decode().replace("-----BEGIN PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----", "")
-	print("public:\n" + publicKeyStr)
-
+	
 	publicKeyBytes = base64.b64decode(publicKeyStr)
 	publicKey = RSA.import_key(publicKeyBytes)
 	cipher = PKCS1_OAEP.new(publicKey)
@@ -116,7 +113,6 @@ def encryptBlowfish(plaintext, key):
 	padding = [plen]*plen
 	padding = pack('b'*plen, *padding)
 	ciphertext = cipher.iv + cipher.encrypt(plaintext + padding)
-	print(key)
 	return (base64.b64encode(ciphertext).decode("utf-8"), None, None)
 
 def decrypt(algorithm, ciphertext, key, tag = None, nonce = None):
@@ -158,7 +154,6 @@ def decryptAES(ciphertext, key, tag, nonce):
 	try:
 		ciphertext = base64.b64decode(ciphertext)
 		key = key.encode("utf-8")
-		print("tag", tag)
 		tag = base64.b64decode(tag)
 		nonce = base64.b64decode(nonce)
 		cipher = AES.new(key, AES.MODE_EAX, nonce = nonce)
@@ -186,7 +181,6 @@ def decryptBlowfish(ciphertext, key):
 		plaintext = cipher.decrypt(ciphertext[Blowfish.block_size:])
 		padding_length = plaintext[-1]
 		plaintext = plaintext[:-padding_length]
-		print(plaintext)
 		return plaintext.decode() # int.from_bytes(plaintext, byteorder='big')
 	except:
 		return ""

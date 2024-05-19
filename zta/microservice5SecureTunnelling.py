@@ -12,7 +12,6 @@ app = FastAPI()
 
 
 class Data(BaseModel):
-	auth_type: str
 	auth_data: dict
 	auth_source: int
 
@@ -36,29 +35,27 @@ async def exceptionHandler(request, exc):
 
 @app.get("/zta/tunnelling")
 async def tunnelling(data: Data):
-	print(data)
-	print(getDataForIAM(data))
 	authenticationResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8081/zta/iam",
 		getDataForIAM(data)
 	)
-	if authenticationResult[0].get("iam") != "success":
-		raise HTTPException(500)
-	if authenticationResult[0].get("is_authenticated") != True:
-		raise RequestValidationError("User not allowed.")
-
-	print(authenticationResult)
 	isAuthenticated = authenticationResult[0].get("is_authenticated")
+	isAuthenticatedAdditionally = authenticationResult[0].get("is_authenticated_additionally")
 	userId = authenticationResult[0].get("user_id")
 	userRole = authenticationResult[0].get("user_role")
+	if authenticationResult[0].get("iam") != "success":
+		raise HTTPException(500)
+	if isAuthenticated != True:
+		raise RequestValidationError("User not allowed.")
+
 	
 	tasksAuthorization = [
 		sendRequest(
 			"get",
 			"http://127.0.0.1:8082/zta/network",
 			{
-				"is_user_authenticated": isAuthenticated,
+				"is_user_authenticated_additionally": isAuthenticatedAdditionally,
 				"user_id": userId,
 				"auth_source_app_id": data.auth_source,
 				"possible_breach": False
@@ -69,9 +66,9 @@ async def tunnelling(data: Data):
 			"http://127.0.0.1:8083/zta/acl",
 			{
 				"task": "authorize",
+				"is_user_authenticated_additionally": isAuthenticatedAdditionally,
 				"user_id": userId,
-				"user_role": userRole,
-				"is_user_authenticated": isAuthenticated
+				"user_role": userRole
 			}
 		)
 	]

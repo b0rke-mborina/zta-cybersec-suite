@@ -22,7 +22,7 @@ class Role(str, Enum):
 
 class Data(BaseModel):
 	task: Task
-	is_user_authenticated: bool
+	is_user_authenticated_additionally: bool
 	user_id: int = 0
 	user_role: Role = "user"
 

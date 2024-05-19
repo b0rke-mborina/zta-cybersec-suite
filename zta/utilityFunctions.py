@@ -88,7 +88,7 @@ async def handleACLTask(dbName, data):
 			else:
 				tasks = [
 					handleAuthorization(dbName, data.user_id, data.user_role.value),
-					checkIfPossibleDosAtack("ztaACL.db", data.user_id, data.is_user_authenticated)
+					checkIfPossibleDosAtack("ztaACL.db", data.user_id, data.is_user_authenticated_additionally)
 				]
 				return await asyncio.gather(*tasks)
 		case "deny_access_to_all":
@@ -120,11 +120,12 @@ async def denyAccessToUser(dbName, userId):
 		await db.commit()
 
 async def handleUserAuthentication(dbName, data):
-	match data.auth_method.value:
-		case "username_and_password":
-			return await authenticateUserWithUsernameAndPassword(dbName, data)
-		case "jwt":
-			return await authenticateUserWithJwt(dbName, data)
+	tasks = [
+		authenticateUserWithJwt(dbName, data),
+		authenticateUserWithUsernameAndPassword(dbName, data)
+	]
+	results = await asyncio.gather(*tasks)
+	return (results[0][0], results[1][0], results[0][1], results[0][2])
 
 async def authenticateUserWithUsernameAndPassword(dbName, data):
 	isAuthenticated, userId, userRole = False, 0, "user"
@@ -134,8 +135,6 @@ async def authenticateUserWithUsernameAndPassword(dbName, data):
 			(data.username, data.password_hash)
 		)
 		dataFromDb = await cursor.fetchone()
-		print(data)
-		print(dataFromDb)
 		if dataFromDb is not None:
 			isAuthenticated = True
 			userId = dataFromDb[0]
@@ -172,10 +171,10 @@ async def checkUserNetworkSegment(dbName, data):
 		currentDatetime = datetime.datetime.now(datetime.timezone.utc)
 		lastAuthenticated = datetime.datetime.fromisoformat(dataFromDb[2]).replace(tzinfo=datetime.timezone.utc)
 		lastAuthenticationExpires = lastAuthenticated + datetime.timedelta(hours=1)
-		if (data.auth_source_app_id == dataFromDb[1] and currentDatetime < lastAuthenticationExpires) or data.is_user_authenticated:
+		if (data.auth_source_app_id == dataFromDb[1] and currentDatetime < lastAuthenticationExpires) or data.is_user_authenticated_additionally:
 			result = True
 
-	if data.is_user_authenticated:
+	if data.is_user_authenticated_additionally:
 		await updateUserNetworkSegment(dbName, data, currentDatetime)
 	
 	return result
@@ -194,16 +193,14 @@ async def updateUserNetworkSegment(dbName, data, currentDatetime):
 
 def getDataForIAM(data):
 	dataForIAM = {
-			"auth_method": data.auth_type,
-			"auth_source": data.auth_source,
+		"auth_source": data.auth_source,
+		"jwt": data.auth_data.get("jwt")
 	}
 
 	if data.auth_data.get("username") is not None:
 		dataForIAM["username"] = data.auth_data.get("username")
 	if data.auth_data.get("password_hash") is not None:
 		dataForIAM["password_hash"] = data.auth_data.get("password_hash")
-	if data.auth_data.get("jwt") is not None:
-		dataForIAM["jwt"] = data.auth_data.get("jwt")
 	
 	return dataForIAM
 

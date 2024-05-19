@@ -10,16 +10,11 @@ from .utilityFunctions import handleUserAuthentication, sendRequest
 app = FastAPI()
 
 
-class AuthMethod(str, Enum):
-	USERNAME_AND_PASSWORD = "username_and_password"
-	JWT = "jwt"
-
 class Data(BaseModel):
-	auth_method: AuthMethod
 	auth_source: int
+	jwt: str
 	username: str = ""
 	password_hash: str = ""
-	jwt: str = ""
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
@@ -41,5 +36,9 @@ async def exceptionHandler(request, exc):
 
 @app.get("/zta/iam")
 async def identityManagement(data: Data):
-	(isUserAuthenticated, userId, userRole) = await handleUserAuthentication("ztaUsers.db", data)
-	return { "iam": "success", "is_authenticated": isUserAuthenticated, "user_id": userId, "user_role": userRole }
+	(isUserAuthenticated, isUserAuthenticatedAdditionally, userId, userRole) = await handleUserAuthentication("ztaUsers.db", data)
+	return {
+		"iam": "success",
+		"is_authenticated": isUserAuthenticated, "is_authenticated_additionally": isUserAuthenticatedAdditionally,
+		"user_id": userId, "user_role": userRole
+	}
