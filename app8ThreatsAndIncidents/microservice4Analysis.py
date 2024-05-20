@@ -1,10 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, model_validator, validator
+from pydantic import BaseModel, validator
 import datetime
-import json
 from enum import Enum
-from .utilityFunctions import incidentIncludesThisSystem
+from .utilityFunctions import incidentIncludesThisSystem, sendRequest
 
 
 app = FastAPI()
@@ -44,4 +43,16 @@ async def exceptionHandler(request, exc):
 async def analysis(data: Data):
 	isThisSystemIncluded = incidentIncludesThisSystem(data)
 	isOK = not isThisSystemIncluded
+
+	governanceResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8080/zta/governance",
+		{
+			"problem": "security_breach",
+			"user_id": 1
+		}
+	)
+	if governanceResult[0].get("logging") != "success":
+		raise HTTPException(500)
+
 	return { "analysis": "success", "is_ok": isOK }

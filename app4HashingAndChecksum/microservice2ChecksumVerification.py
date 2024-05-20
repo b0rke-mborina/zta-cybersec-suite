@@ -79,7 +79,7 @@ async def verification(request: Request, data: Data):
 				"user_id": 1,
 				"data": data.data,
 				"checksum": data.checksum,
-				"error_message": "Hash Is not valid."
+				"error_message": "Hash is not valid."
 			}
 		)
 		if reportingResult[0].get("reporting") != "success":

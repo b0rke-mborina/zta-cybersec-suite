@@ -1,9 +1,8 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, model_validator, validator
+from pydantic import BaseModel, validator
 import datetime
-import json
 from enum import Enum
 from .utilityFunctions import getData, saveData
 
@@ -44,14 +43,14 @@ class DataNew(BaseModel):
 
 def validateInfoUserId(data):
 	print(data.auth_type)
-	if data.auth_type in [AuthType.OAUTH2_TOKEN, AuthType.JWT] and data.user_id is None:
+	if data.auth_type in ["oauth2_token", "jwt"] and data.user_id is None:
 		raise RequestValidationError('User id is required for OAuth2 and JWT auth type')
 
 def validateSaveUserIdAndSecret(data):
 	print(data.auth_type)
-	if data.auth_type in [AuthType.OAUTH2_TOKEN, AuthType.JWT] and data.user_id is None:
+	if data.auth_type in ["oauth2_token", "jwt"] and data.user_id is None:
 		raise RequestValidationError('User id is required for OAuth2 and JWT auth type')
-	if data.auth_type == AuthType.JWT and data.secret is None:
+	if data.auth_type == "jwt" and data.secret is None:
 		raise RequestValidationError('Secret is required for JWT auth type')
 
 @app.exception_handler(Exception)

@@ -1,8 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, model_validator
-import json
-from .utilityFunctions import validatePassword
+from pydantic import BaseModel
+import datetime
+from .utilityFunctions import sendRequest, validatePassword
 
 
 app = FastAPI()
@@ -21,4 +21,22 @@ async def exceptionHandler(request, exc):
 @app.get("/hashing/policy", status_code = 200)
 async def reporting(data: Data):
 	isPasswordValid = validatePassword(data.data)
+	
+	if not isPasswordValid:
+		monitoringResult = await sendRequest(
+			"post",
+			"http://127.0.0.1:8087/zta/monitoring",
+			{
+				"timestamp": datetime.datetime.now().isoformat(),
+				"level": "INFO",
+				"logger_source": 1,
+				"user_id": 1,
+				"request": "",
+				"response": "",
+				"error_message": "Password validation failed. Passwod did not meet the requirements."
+			}
+		)
+		if monitoringResult[0].get("monitoring") != "success":
+			raise HTTPException(500)
+	
 	return { "policy_management": "success", "is_data_ok": isPasswordValid }

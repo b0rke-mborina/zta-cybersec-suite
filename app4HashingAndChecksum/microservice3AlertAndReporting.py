@@ -1,9 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, model_validator, validator
+from pydantic import BaseModel, validator
 import datetime
-import json
-from .utilityFunctions import storeReport
+from .utilityFunctions import sendRequest, storeReport
 
 
 app = FastAPI()
@@ -34,8 +33,21 @@ async def exceptionHandler(request, exc):
 
 @app.post("/hashing/reporting", status_code = 200)
 async def reporting(data: Data):
-	# make report to ZTA
-
+	monitoringResult = await sendRequest(
+		"post",
+		"http://127.0.0.1:8087/zta/monitoring",
+		{
+			"timestamp": datetime.datetime.now().isoformat(),
+			"level": "INFO",
+			"logger_source": 1,
+			"user_id": 1,
+			"request": "",
+			"response": "",
+			"error_message": "Checksum verification failed. Checksum is invalid."
+		}
+	)
+	if monitoringResult[0].get("monitoring") != "success":
+		raise HTTPException(500)
 
 	await storeReport(data, "app4Reports.db")
 	return { "reporting": "success" }
