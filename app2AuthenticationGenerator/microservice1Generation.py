@@ -11,7 +11,7 @@ app = FastAPI()
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
-		"timestamp": datetime.datetime.now().isoformat(),
+		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "INFO",
 		"logger_source": 1,
 		"user_id": 1,
@@ -51,7 +51,7 @@ async def generatorAPIKey(request: Request):
 
 	apiKey = generateAPIKey()
 	print(apiKey)
-	currentTime = datetime.datetime.now()
+	currentTime = datetime.datetime.now(datetime.timezone.utc)
 	apiKeyData = {
 		"auth_type": "api_key",
 		"token_key": apiKey,
@@ -104,7 +104,7 @@ async def generatorOAuth2(request: Request):
 
 	oauth2Token = generateOAuth2()
 	print(oauth2Token)
-	currentTime = datetime.datetime.now()
+	currentTime = datetime.datetime.now(datetime.timezone.utc)
 	oauth2TokenData = {
 		"auth_type": "oauth2_token",
 		"token_key": oauth2Token,

@@ -27,7 +27,7 @@ async def policy(data: Data):
 			"post",
 			"http://127.0.0.1:8087/zta/monitoring",
 			{
-				"timestamp": datetime.datetime.now().isoformat(),
+				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "INFO",
 				"logger_source": 1,
 				"user_id": 1,

@@ -18,7 +18,7 @@ class Data(BaseModel):
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
 	dataForMonitoringUnsuccessfulRequest = {
-		"timestamp": datetime.datetime.now().isoformat(),
+		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "INFO",
 		"logger_source": 3,
 		"user_id": 1,

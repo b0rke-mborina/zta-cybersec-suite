@@ -28,7 +28,7 @@ class DataUpdate(BaseModel):
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
-		"timestamp": datetime.datetime.now().isoformat(),
+		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "INFO",
 		"logger_source": 1,
 		"user_id": 1,

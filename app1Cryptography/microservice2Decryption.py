@@ -48,7 +48,7 @@ def validateTagAndNonce(data):
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
-		"timestamp": datetime.datetime.now().isoformat(),
+		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "INFO",
 		"logger_source": 1,
 		"user_id": 1,
@@ -98,7 +98,7 @@ async def decryption(request: Request, data: Data):
 		"post",
 		"http://127.0.0.1:8003/cryptography/logging",
 		{
-			"timestamp": datetime.datetime.now().isoformat(),
+			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "INFO",
 			"logger_source": 2,
 			"user_id": 1,
