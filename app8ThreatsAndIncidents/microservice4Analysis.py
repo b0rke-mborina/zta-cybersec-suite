@@ -52,7 +52,7 @@ async def analysis(data: Data):
 			"user_id": 1
 		}
 	)
-	if governanceResult[0].get("logging") != "success":
+	if governanceResult[0].get("governance") != "success":
 		raise HTTPException(500)
 
 	return { "analysis": "success", "is_ok": isOK }
