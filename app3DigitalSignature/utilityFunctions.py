@@ -24,13 +24,13 @@ async def log(dataItem, dbName):
 		await db.execute(
 			"INSERT INTO Log (timestamp, level, logger_source, user_id, request, response, error_message) VALUES (?, ?, ?, ?, ?, ?, ?)",
 			(
-				dataItem.timestamp,
-				dataItem.level,
-				dataItem.logger_source,
-				dataItem.user_id,
-				dataItem.request,
-				dataItem.response,
-				dataItem.error_message
+				dataItem["timestamp"],
+				dataItem["level"],
+				dataItem["logger_source"],
+				dataItem["user_id"],
+				dataItem["request"],
+				dataItem["response"],
+				dataItem["error_message"]
 			)
 		)
 		await db.commit()

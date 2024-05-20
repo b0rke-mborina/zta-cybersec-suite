@@ -1,11 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator, validator
 import asyncio
 import datetime
 import json
 from enum import Enum
-from .utilityFunctions import log, reportToAdmin
+from .utilityFunctions import log, reportToAdmin, sendRequest
 
 
 app = FastAPI()
@@ -48,7 +48,19 @@ async def exceptionHandler(request, exc):
 	)
 
 @app.post("/zta/monitoring")
-async def identityAndAccessManagement(data: Data):
-	tasks = [log(data, "ztaLogs.db"), reportToAdmin("Fatal error.")]
+async def monitoring(data: Data):
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": data.model_dump()
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	logData = orchestrationAutomationResult[0].get("data")
+
+	tasks = [log(logData, "ztaLogs.db"), reportToAdmin("Fatal error.")]
 	await asyncio.gather(*tasks)
+
 	return { "monitoring": "success" }

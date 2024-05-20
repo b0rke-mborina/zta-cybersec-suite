@@ -1,10 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator, validator
 import datetime
 import json
 from enum import Enum
-from .utilityFunctions import log
+from .utilityFunctions import log, sendRequest
 
 
 app = FastAPI()
@@ -46,5 +46,17 @@ async def exceptionHandler(request, exc):
 
 @app.post("/hashing/logging", status_code = 200)
 async def logging(data: Data):
-	await log(data, "app4Logs.db")
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": data.model_dump()
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	
+	logData = orchestrationAutomationResult[0].get("data")
+	await log(logData, "app4Logs.db")
+	
 	return { "logging": "success" }

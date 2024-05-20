@@ -48,6 +48,6 @@ async def exceptionHandler(request, exc):
 	)
 
 @app.get("/zta/acl")
-async def tunnelling(data: Data):
+async def acl(data: Data):
 	[isAuthorized, isPossibleDosAtack] = await handleACLTask("ztaACL.db", data)
 	return { "acl": "success", "is_authorized": isAuthorized, "is_possible_dos_atack": isPossibleDosAtack }
