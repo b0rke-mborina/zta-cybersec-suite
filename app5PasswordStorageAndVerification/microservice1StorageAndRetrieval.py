@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
 import datetime
 import json
-from .utilityFunctions import sendRequest, storePasswordHash, getPasswordHashInfo, updatePasswordHash, hashPassword
+from .utilityFunctions import getAuthData, sendRequest, storePasswordHash, getPasswordHashInfo, updatePasswordHash, hashPassword
 
 
 app = FastAPI()
@@ -52,6 +52,20 @@ async def httpExceptionHandler(request, exc):
 
 @app.post("/password/store")
 async def storage(request: Request, data: DataStore):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	policyResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8043/password/policy",

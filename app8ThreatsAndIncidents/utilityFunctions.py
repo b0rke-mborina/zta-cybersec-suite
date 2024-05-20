@@ -3,6 +3,7 @@ import asyncio
 import aiosqlite
 import datetime
 import json
+import hashlib
 import os.path
 from fastapi.exceptions import RequestValidationError
 
@@ -36,6 +37,23 @@ def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
+
+def getAuthData(headers):
+	jwt = headers.get("jwt")
+	username = headers.get("username")
+	password = headers.get("password")
+
+	authData = {
+		"jwt": jwt if jwt is not None and jwt != "" else ""
+	}
+	if username is not None and username != "" and password is not None and password != "":
+		authData["username"] = username
+		authData["password_hash"] = hashData(password)
+	
+	return authData
+
+def hashData(data):
+	return hashlib.sha512(data.encode()).hexdigest()
 
 async def storeThreat(dbName, userId, dataItem):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:

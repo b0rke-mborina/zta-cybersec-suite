@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
 from enum import Enum
-from .utilityFunctions import hashData, sendRequest
+from .utilityFunctions import getAuthData, hashData, sendRequest
 
 
 app = FastAPI()
@@ -51,6 +51,20 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/hashing/hash", status_code = 200)
 async def hashing(request: Request, data: Data):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
 	policyResult = await sendRequest(

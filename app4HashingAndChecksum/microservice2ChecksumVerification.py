@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
 from enum import Enum
-from .utilityFunctions import sendRequest, verifyChecksum
+from .utilityFunctions import getAuthData, sendRequest, verifyChecksum
 
 
 app = FastAPI()
@@ -51,6 +51,20 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/hashing/verify", status_code = 200)
 async def verification(request: Request, data: Data):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	isHashValid = verifyChecksum(data.data, data.algorithm, data.checksum)
 	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
 	response = { "verification": "success", "is_checksum_valid": isHashValid }

@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 import datetime
 from enum import Enum
-from .utilityFunctions import sendRequest, validateThreatRequest
+from .utilityFunctions import getAuthData, sendRequest, validateThreatRequest
 
 
 app = FastAPI()
@@ -66,6 +66,20 @@ async def exceptionHandler(request, exc):
 
 @app.get("/intelligence/retrieve", status_code = 200)
 async def retrieval(request: Request, data: Data):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	validateThreatRequest(data.time_from, data.time_to)
 
 	dataSharingResult = await sendRequest(

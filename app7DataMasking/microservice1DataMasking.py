@@ -3,7 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
-from .utilityFunctions import maskData, sendRequest, checkData
+from .utilityFunctions import getAuthData, maskData, sendRequest, checkData
 
 
 app = FastAPI()
@@ -43,6 +43,20 @@ async def exceptionHandler(request, exc):
 
 @app.get("/data/mask")
 async def masking(request: Request, data: DataMask):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	checkData(data.data)
 	accessControlResult = await sendRequest(
 		"get",
@@ -91,6 +105,20 @@ async def masking(request: Request, data: DataMask):
 
 @app.get("/data/unmask")
 async def unmasking(request: Request, data: DataUnmask):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	accessControlResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8062/data/access-control",

@@ -1,11 +1,30 @@
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 import datetime
-from .utilityFunctions import sendRequest, generateAPIKey, generateOAuth2, generateJWT
+from .utilityFunctions import getAuthData, sendRequest, generateAPIKey, generateOAuth2, generateJWT
 
 
 app = FastAPI()
 
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+	dataForLoggingUnsuccessfulRequest = {
+		"timestamp": datetime.datetime.now().isoformat(),
+		"level": "INFO",
+		"logger_source": 1,
+		"user_id": 1,
+		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+		"response": "",
+		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
+	}
+	await sendRequest("post", "http://127.0.0.1:8013/auth-generator/logging", dataForLoggingUnsuccessfulRequest)
+
+	return JSONResponse(
+		status_code = 400,
+		content = { "generation": "failure", "error_message": "Input invalid." },
+	)
 
 @app.exception_handler(HTTPException)
 async def httpExceptionHandler(request, exc):
@@ -16,6 +35,20 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/auth-generator/generate/api-key")
 async def generatorAPIKey(request: Request):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	apiKey = generateAPIKey()
 	print(apiKey)
 	currentTime = datetime.datetime.now()
@@ -55,6 +88,20 @@ async def generatorAPIKey(request: Request):
 
 @app.get("/auth-generator/generate/oauth2")
 async def generatorOAuth2(request: Request):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	oauth2Token = generateOAuth2()
 	print(oauth2Token)
 	currentTime = datetime.datetime.now()
@@ -95,6 +142,20 @@ async def generatorOAuth2(request: Request):
 
 @app.get("/auth-generator/generate/jwt")
 async def generatorJWT(request: Request):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	jwToken = generateJWT()
 	print(jwToken)
 	currentTime = datetime.datetime.now(datetime.timezone.utc)

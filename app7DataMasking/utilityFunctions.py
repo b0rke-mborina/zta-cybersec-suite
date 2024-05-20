@@ -3,6 +3,7 @@ import asyncio
 import aiosqlite
 import copy
 import json
+import hashlib
 import os.path
 from faker import Faker
 from fastapi.exceptions import RequestValidationError
@@ -60,6 +61,23 @@ def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
+
+def getAuthData(headers):
+	jwt = headers.get("jwt")
+	username = headers.get("username")
+	password = headers.get("password")
+
+	authData = {
+		"jwt": jwt if jwt is not None and jwt != "" else ""
+	}
+	if username is not None and username != "" and password is not None and password != "":
+		authData["username"] = username
+		authData["password_hash"] = hashData(password)
+	
+	return authData
+
+def hashData(data):
+	return hashlib.sha512(data.encode()).hexdigest()
 
 def checkData(data):
 	if not isinstance(data, list):

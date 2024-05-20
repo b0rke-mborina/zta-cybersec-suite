@@ -3,7 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
-from .utilityFunctions import sendRequest, verifyAPIKey, verifyOAuth2, verifyJWT
+from .utilityFunctions import getAuthData, sendRequest, verifyAPIKey, verifyOAuth2, verifyJWT
 
 
 app = FastAPI()
@@ -33,18 +33,32 @@ async def validation_exception_handler(request, exc):
 
 	return JSONResponse(
 		status_code = 400,
-		content = { "encryption": "failure", "error_message": "Input invalid." },
+		content = { "verification": "failure", "error_message": "Input invalid." },
 	)
 
 @app.exception_handler(HTTPException)
 async def httpExceptionHandler(request, exc):
 	return JSONResponse(
 		status_code = 500,
-		content = { "generation": "failure", "error_message": "Unexpected error occured." },
+		content = { "verification": "failure", "error_message": "Unexpected error occured." },
 	)
 
 @app.get("/auth-generator/verify/api-key")
 async def verificatorAPIKey(request: Request, data: DataAPIKey):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
 	keyResult = await sendRequest(
 		"get",
@@ -81,6 +95,20 @@ async def verificatorAPIKey(request: Request, data: DataAPIKey):
 
 @app.get("/auth-generator/verify/oauth2")
 async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
 	tokenResult = await sendRequest(
 		"get",
@@ -119,6 +147,20 @@ async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 
 @app.get("/auth-generator/verify/jwt")
 async def verificatorJWT(request: Request, data: DataJWT):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
 	tokenResult = await sendRequest(
 		"get",

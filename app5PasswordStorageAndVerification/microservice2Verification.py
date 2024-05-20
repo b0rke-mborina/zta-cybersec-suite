@@ -3,7 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
-from .utilityFunctions import hashPasswordWithSalt, sendRequest
+from .utilityFunctions import getAuthData, hashPasswordWithSalt, sendRequest
 
 
 app = FastAPI()
@@ -40,6 +40,20 @@ async def exceptionHandler(request, exc):
 
 @app.get("/password/verify")
 async def verification(request: Request, data: Data):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	response = { "verification": "success", "is_valid": True }
 
 	retrievalResult = await sendRequest(

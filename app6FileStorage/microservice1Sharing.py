@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
 from enum import Enum
-from .utilityFunctions import sendRequest
+from .utilityFunctions import getAuthData, sendRequest
 
 
 app = FastAPI()
@@ -52,6 +52,20 @@ async def exceptionHandler(request, exc):
 
 @app.post("/file/store")
 async def storage(request: Request, data: DataStore):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	accessControlResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8053/file/access-control",
@@ -97,6 +111,20 @@ async def storage(request: Request, data: DataStore):
 
 @app.get("/file/retrieve")
 async def retrieval(request: Request, data: DataRetrieve):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	accessControlResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8053/file/access-control",

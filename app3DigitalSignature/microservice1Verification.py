@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
 from enum import Enum
-from .utilityFunctions import sendRequest, verifySignature
+from .utilityFunctions import getAuthData, sendRequest, verifySignature
 
 
 app = FastAPI()
@@ -50,6 +50,20 @@ async def httpExceptionHandler(request, exc):
 
 @app.get("/digital-signature/verify")
 async def digitalSignatureVerificator(request: Request, data: Data):
+	authData = getAuthData(request.headers)
+	tunnellingResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8085/zta/tunnelling",
+		{
+			"auth_data": authData,
+			"auth_source": 1
+		}
+	)
+	if tunnellingResult[0].get("tunnelling") != "success":
+		raise HTTPException(500)
+	if not tunnellingResult[0].get("is_authorized"):
+		raise RequestValidationError("User not allowed.")
+
 	result = verifySignature(data.public_key, data.digital_signature, data.message, data.hash_function)
 	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
