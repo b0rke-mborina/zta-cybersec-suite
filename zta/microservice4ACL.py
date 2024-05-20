@@ -33,7 +33,7 @@ class Data(BaseModel):
 async def exceptionHandler(request, exc):
 	dataForMonitoringUnsuccessfulRequest = {
 		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-		"level": "INFO",
+		"level": "FATAL",
 		"logger_source": 4,
 		"user_id": 1,
 		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",

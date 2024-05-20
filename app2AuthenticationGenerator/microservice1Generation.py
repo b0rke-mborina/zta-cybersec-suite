@@ -12,7 +12,7 @@ app = FastAPI()
 async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
 		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-		"level": "INFO",
+		"level": "ERROR",
 		"logger_source": 1,
 		"user_id": 1,
 		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
