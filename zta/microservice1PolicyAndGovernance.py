@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
 import datetime
@@ -45,6 +45,7 @@ async def exceptionHandler(request, exc):
 	)
 
 @app.post("/zta/governance")
-async def governance(data: Data):
-	await handleProblem(data)
-	return { "governance": "success" }
+async def governance(request: Request, data: Data):
+	response = { "governance": "success" }
+	await handleProblem(request, data, response)
+	return response

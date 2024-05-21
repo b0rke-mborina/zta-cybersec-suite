@@ -41,8 +41,23 @@ def getDbPath(dbFilename):
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
 
-async def handleProblem(data):
-	tasks = [reportToAdmin(data.problem)]
+async def handleProblem(request, data, response):
+	tasks = [
+		reportToAdmin(data.problem),
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8087/zta/monitoring",
+			{
+				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+				"level": "INFO",
+				"logger_source": 1,
+				"user_id": 1,
+				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+				"response": str(response),
+				"error_message": data.problem
+			}
+		)
+	]
 	
 	if data.problem in ["security_breach", "infrastructure_integrity_violation"]:
 		tasks.append(

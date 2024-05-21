@@ -40,7 +40,10 @@ class Data(BaseModel):
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
-	reportToAdmin("Fatal error.")
+	dataForGovernanceUnsuccessfulRequest = {
+		"problem": "total_system_failure"
+	}
+	await sendRequest("post", "http://127.0.0.1:8080/zta/governance", dataForGovernanceUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 500,
