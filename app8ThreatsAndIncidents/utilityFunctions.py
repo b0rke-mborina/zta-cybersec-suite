@@ -67,7 +67,7 @@ async def storeThreat(dbName, userId, dataItem):
 				json.dumps(dataItem.malicious_code),
 				json.dumps(dataItem.compromised_data),
 				json.dumps(dataItem.indicators_of_compromise),
-				dataItem.severity.value,
+				dataItem.severity,
 				json.dumps(dataItem.user_accounts_involved),
 				json.dumps(dataItem.logs),
 				json.dumps(dataItem.actions)
@@ -139,7 +139,7 @@ def incidentIncludesThisSystem(data):
 	if any(asset in assets for asset in affectedAssets):
 		return True
 	
-	accounts = {1, "user1"}
+	accounts = {1, "user1"} # PLACEHOLDER
 	userAccounts = getattr(data, "user_accounts_involved", [])
 	if any(account in accounts for account in userAccounts):
 		return True

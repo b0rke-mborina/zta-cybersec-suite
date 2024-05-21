@@ -44,8 +44,8 @@ async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
 		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "ERROR",
-		"logger_source": 1,
-		"user_id": 1,
+		"logger_source": 1, # PLACEHOLDER
+		"user_id": 1, # PLACEHOLDER
 		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
@@ -80,7 +80,7 @@ async def retrieval(request: Request, data: Data):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1
+			"auth_source": 1 # PLACEHOLDER
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -111,8 +111,8 @@ async def retrieval(request: Request, data: Data):
 		{
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "INFO",
-			"logger_source": 1,
-			"user_id": 1,
+			"logger_source": 1, # PLACEHOLDER
+			"user_id": 1, # PLACEHOLDER
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""

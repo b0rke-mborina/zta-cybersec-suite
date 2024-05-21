@@ -1,8 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, model_validator, validator
+from pydantic import BaseModel, validator
 import datetime
-import json
 from enum import Enum
 from .utilityFunctions import getThreats, sendRequest, storeThreat
 
@@ -93,7 +92,7 @@ async def incident(data: DataIncident):
 	if analysisResult[0].get("analysis") != "success" or not analysisResult[0].get("is_ok"):
 		raise HTTPException(500)
 	
-	await storeThreat("app8Data.db", 1, data)
+	await storeThreat("app8Data.db", 1, data) # PLACEHOLDER
 	return { "incident": "success" }
 
 @app.get("/intelligence/threats", status_code = 200)

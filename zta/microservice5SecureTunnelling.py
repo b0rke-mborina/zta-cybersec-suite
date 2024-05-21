@@ -23,8 +23,8 @@ async def exceptionHandler(request, exc):
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "FATAL",
-				"logger_source": 5,
-				"user_id": 1,
+				"logger_source": 5, # PLACEHOLDER
+				"user_id": 1, # PLACEHOLDER
 				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 				"response": "",
 				"error_message": f"ZTA error. {exc}"
@@ -101,8 +101,8 @@ async def tunnelling(data: Data):
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "INFO",
-				"logger_source": 4,
-				"user_id": 1,
+				"logger_source": 4, # PLACEHOLDER
+				"user_id": 1, # PLACEHOLDER
 				"request": str(data),
 				"response": str(response),
 				"error_message": ""

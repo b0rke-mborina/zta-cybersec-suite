@@ -23,8 +23,8 @@ async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
 		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "ERROR",
-		"logger_source": 1,
-		"user_id": 1,
+		"logger_source": 1, # PLACEHOLDER
+		"user_id": 1, # PLACEHOLDER
 		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
@@ -59,7 +59,7 @@ async def verificatorAPIKey(request: Request, data: DataAPIKey):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1
+			"auth_source": 1 # PLACEHOLDER
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -89,8 +89,8 @@ async def verificatorAPIKey(request: Request, data: DataAPIKey):
 		{
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
-			"logger_source": 1,
-			"user_id": 1,
+			"logger_source": 1, # PLACEHOLDER
+			"user_id": 1, # PLACEHOLDER
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
@@ -109,7 +109,7 @@ async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1
+			"auth_source": 1 # PLACEHOLDER
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -124,13 +124,13 @@ async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 		{
 			"auth_type": "oauth2_token",
 			"token_key": data.oauth2_token,
-			"user_id": 1
+			"user_id": 1 # PLACEHOLDER
 		}
 	)
 	if tokenResult[0].get("getting_info") != "success":
 		raise HTTPException(500)
 
-	verificationResult = verifyOAuth2(tokenResult[0].get("info"), currentTime, 1)
+	verificationResult = verifyOAuth2(tokenResult[0].get("info"), currentTime, 1) # PLACEHOLDER
 	print(verificationResult)
 
 	response = { "verification": "success", "is_valid": verificationResult }
@@ -141,8 +141,8 @@ async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 		{
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
-			"logger_source": 1,
-			"user_id": 1,
+			"logger_source": 1, # PLACEHOLDER
+			"user_id": 1, # PLACEHOLDER
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
@@ -161,7 +161,7 @@ async def verificatorJWT(request: Request, data: DataJWT):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1
+			"auth_source": 1 # PLACEHOLDER
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -176,13 +176,13 @@ async def verificatorJWT(request: Request, data: DataJWT):
 		{
 			"auth_type": "jwt",
 			"token_key": data.jwt,
-			"user_id": 1
+			"user_id": 1 # PLACEHOLDER
 		}
 	)
 	if tokenResult[0].get("getting_info") != "success":
 		raise HTTPException(500)
 	
-	verificationResult = verifyJWT(data.jwt, tokenResult[0].get("info"), currentTime, 1)
+	verificationResult = verifyJWT(data.jwt, tokenResult[0].get("info"), currentTime, 1) # PLACEHOLDER
 	print(verificationResult)
 	
 	response = { "verification": "success", "is_valid": verificationResult }
@@ -193,8 +193,8 @@ async def verificatorJWT(request: Request, data: DataJWT):
 		{
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
-			"logger_source": 1,
-			"user_id": 1,
+			"logger_source": 1, # PLACEHOLDER
+			"user_id": 1, # PLACEHOLDER
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""

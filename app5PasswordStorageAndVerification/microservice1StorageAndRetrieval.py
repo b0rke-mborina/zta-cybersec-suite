@@ -1,9 +1,8 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 import datetime
-import json
 from .utilityFunctions import getAuthData, sendRequest, storePasswordHash, getPasswordHashInfo, updatePasswordHash, hashPassword
 
 
@@ -30,8 +29,8 @@ async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
 		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "ERROR",
-		"logger_source": 1,
-		"user_id": 1,
+		"logger_source": 1, # PLACEHOLDER
+		"user_id": 1, # PLACEHOLDER
 		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
@@ -66,7 +65,7 @@ async def storage(request: Request, data: DataStore):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1
+			"auth_source": 1 # PLACEHOLDER
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -89,7 +88,7 @@ async def storage(request: Request, data: DataStore):
 	(passwordHash, salt, algorithm) = hashPassword(data.password)
 	passwordHashString = passwordHash.decode("utf-8")
 	saltString = salt.decode("utf-8")
-	await storePasswordHash("app5Data.db", 1, data.username, passwordHashString, saltString, algorithm)
+	await storePasswordHash("app5Data.db", 1, data.username, passwordHashString, saltString, algorithm) # PLACEHOLDER
 	response = { "storage": "success" }
 
 	loggingResult = await sendRequest(
@@ -98,8 +97,8 @@ async def storage(request: Request, data: DataStore):
 		{
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "INFO",
-			"logger_source": 1,
-			"user_id": 1,
+			"logger_source": 1, # PLACEHOLDER
+			"user_id": 1, # PLACEHOLDER
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""

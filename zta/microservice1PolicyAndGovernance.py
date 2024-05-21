@@ -1,8 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 import datetime
-import json
 from enum import Enum
 from .utilityFunctions import handleProblem, sendRequest
 
@@ -31,8 +30,8 @@ async def exceptionHandler(request, exc):
 	dataForMonitoringUnsuccessfulRequest = {
 		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "FATAL",
-		"logger_source": 1,
-		"user_id": 1,
+		"logger_source": 1, # PLACEHOLDER
+		"user_id": 1, # PLACEHOLDER
 		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
 		"error_message": f"ZTA error. {exc}"

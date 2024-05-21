@@ -141,7 +141,7 @@ def generateOAuth2():
 def generateJWT():
 	secretKey = "SECRET_KEY_PLACEHOLDER"
 	expiration_time = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=14)).isoformat()
-	token = jwt.encode({ "user_id": 1, "expires": expiration_time }, secretKey, algorithm='HS256')
+	token = jwt.encode({ "user_id": 1, "expires": expiration_time }, secretKey, algorithm='HS256') # PLACEHOLDER
 	return token
 
 def verifyAPIKey(dataFromDb, currentDatetime):
@@ -169,7 +169,7 @@ def verifyJWT(token, dataFromDb, currentDatetime, userId):
 	# secretFromDb = dataFromDb[0][3]
 	
 	try:
-		decodedPayload = jwt.decode(token, "SECRET_KEY_PLACEHOLDER", algorithms=['HS256']) # base64.b64decode(secretFromDb)
+		decodedPayload = jwt.decode(token, "SECRET_KEY_PLACEHOLDER", algorithms=['HS256']) # base64.b64decode(secretFromDb) # PLACEHOLDER
 		print(decodedPayload)
 
 		datetimeFromPayload = datetime.datetime.fromisoformat(decodedPayload.get("expires")).replace(tzinfo=datetime.timezone.utc)

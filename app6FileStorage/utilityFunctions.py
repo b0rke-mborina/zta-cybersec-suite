@@ -108,7 +108,7 @@ async def getFile(dbName, userId, filename):
 		return result
 
 async def encryptFile(file):
-	key = "key_placeholder1" # must be 16 chars
+	key = "key_placeholder1" # must be 16 chars # PLACEHOLDER
 	cipher = AES.new(key.encode("utf-8"), AES.MODE_EAX)
 	ciphertext, tag = cipher.encrypt_and_digest(file.encode("utf-8"))
 	return (

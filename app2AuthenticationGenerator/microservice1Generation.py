@@ -13,8 +13,8 @@ async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
 		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "ERROR",
-		"logger_source": 1,
-		"user_id": 1,
+		"logger_source": 1, # PLACEHOLDER
+		"user_id": 1, # PLACEHOLDER
 		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
@@ -49,7 +49,7 @@ async def generatorAPIKey(request: Request):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1
+			"auth_source": 1 # PLACEHOLDER
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -82,8 +82,8 @@ async def generatorAPIKey(request: Request):
 		{
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
-			"logger_source": 1,
-			"user_id": 1,
+			"logger_source": 1, # PLACEHOLDER
+			"user_id": 1, # PLACEHOLDER
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
@@ -102,7 +102,7 @@ async def generatorOAuth2(request: Request):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1
+			"auth_source": 1 # PLACEHOLDER
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -117,7 +117,7 @@ async def generatorOAuth2(request: Request):
 		"auth_type": "oauth2_token",
 		"token_key": oauth2Token,
 		"expires": (currentTime + datetime.timedelta(days=14)).isoformat(),
-		"user_id": 1
+		"user_id": 1 # PLACEHOLDER
 	}
 
 	response = { "generation": "success", "oauth2_token": oauth2Token }
@@ -136,8 +136,8 @@ async def generatorOAuth2(request: Request):
 		{
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
-			"logger_source": 1,
-			"user_id": 1,
+			"logger_source": 1, # PLACEHOLDER
+			"user_id": 1, # PLACEHOLDER
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
@@ -156,7 +156,7 @@ async def generatorJWT(request: Request):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1
+			"auth_source": 1 # PLACEHOLDER
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -171,8 +171,8 @@ async def generatorJWT(request: Request):
 		"auth_type": "jwt",
 		"token_key": jwToken,
 		"expires": (currentTime + datetime.timedelta(days=14)).isoformat(),
-		"user_id": 1,
-		"secret": "SECRET_KEY_PLACEHOLDER"
+		"user_id": 1, # PLACEHOLDER
+		"secret": "SECRET_KEY_PLACEHOLDER" # PLACEHOLDER
 	}
 
 	response = { "generation": "success", "jwtoken": jwToken }
@@ -191,8 +191,8 @@ async def generatorJWT(request: Request):
 		{
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
-			"logger_source": 1,
-			"user_id": 1,
+			"logger_source": 1, # PLACEHOLDER
+			"user_id": 1, # PLACEHOLDER
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""

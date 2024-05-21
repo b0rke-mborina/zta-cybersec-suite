@@ -2,7 +2,6 @@ import aiohttp
 import asyncio
 import aiosqlite
 import datetime
-import json
 import hashlib
 import base64
 import os.path
@@ -50,8 +49,8 @@ async def handleProblem(request, data, response):
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "INFO",
-				"logger_source": 1,
-				"user_id": 1,
+				"logger_source": 1, # PLACEHOLDER
+				"user_id": 1, # PLACEHOLDER
 				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 				"response": str(response),
 				"error_message": data.problem
@@ -315,7 +314,7 @@ def encryptBlowfish(plaintext):
 		plaintext = intToBytes(plaintext)
 	else:
 		plaintext = plaintext.encode("utf-8")
-	key = "KEY_PLACEHOLDER".encode("utf-8")
+	key = "KEY_PLACEHOLDER".encode("utf-8") # PLACEHOLDER
 	bs = Blowfish.block_size
 	cipher = Blowfish.new(key, Blowfish.MODE_CBC)
 	plen = bs - len(plaintext) % bs
@@ -333,7 +332,7 @@ def decryptData(data):
 def decryptBlowfish(ciphertext):
 	try:
 		ciphertext = base64.b64decode(ciphertext)
-		key = "KEY_PLACEHOLDER".encode("utf-8")
+		key = "KEY_PLACEHOLDER".encode("utf-8") # PLACEHOLDER
 		iv = ciphertext[:Blowfish.block_size]
 		cipher = Blowfish.new(key, Blowfish.MODE_CBC, iv)
 		plaintext = cipher.decrypt(ciphertext[Blowfish.block_size:])

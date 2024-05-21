@@ -28,8 +28,8 @@ async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
 		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "ERROR",
-		"logger_source": 1,
-		"user_id": 1,
+		"logger_source": 1, # PLACEHOLDER
+		"user_id": 1, # PLACEHOLDER
 		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
@@ -64,7 +64,7 @@ async def digitalSignatureVerificator(request: Request, data: Data):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1
+			"auth_source": 1 # PLACEHOLDER
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -81,11 +81,11 @@ async def digitalSignatureVerificator(request: Request, data: Data):
 		"get",
 		"http://127.0.0.1:8021/digital-signature/access-control",
 		{
-			"user_id": 1,
-			"role": "user"
+			"user_id": 1, # PLACEHOLDER
+			"role": "user" # PLACEHOLDER
 		}
 	)
-	if accessControlResult[0].get("access_control") != "success" or accessControlResult[0].get("is_allowed") != 1:
+	if accessControlResult[0].get("access_control") != "success" or not accessControlResult[0].get("is_allowed"):
 		raise HTTPException(500)
 
 	loggingResult = await sendRequest(
@@ -94,8 +94,8 @@ async def digitalSignatureVerificator(request: Request, data: Data):
 		{
 			"timestamp": currentTime,
 			"level": "INFO",
-			"logger_source": 1,
-			"user_id": 1,
+			"logger_source": 1, # PLACEHOLDER
+			"user_id": 1, # PLACEHOLDER
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
