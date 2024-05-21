@@ -26,6 +26,14 @@ class Data(BaseModel):
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
+	await sendRequest(
+		"post",
+		"http://127.0.0.1:8080/zta/governance",
+		{
+			"problem": "partial_system_failure"
+		}
+	)
+	
 	return JSONResponse(
 		status_code = 500,
 		content = { "reporting": "failure", "error_message": "Unexpected error occured." },

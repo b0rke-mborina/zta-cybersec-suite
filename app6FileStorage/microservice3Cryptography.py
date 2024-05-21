@@ -1,8 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, model_validator
-import json
-from .utilityFunctions import decryptFile, encryptFile
+from pydantic import BaseModel
+from .utilityFunctions import decryptFile, encryptFile, sendRequest
 
 
 app = FastAPI()
@@ -19,6 +18,14 @@ class DataDecrypt(BaseModel):
 
 @app.exception_handler(HTTPException)
 async def exceptionHandler(request, exc):
+	await sendRequest(
+		"post",
+		"http://127.0.0.1:8080/zta/governance",
+		{
+			"problem": "partial_system_failure"
+		}
+	)
+	
 	return JSONResponse(
 		status_code = 500,
 		content = { "cryptography": "failure", "error_message": "Unexpected error occured." },

@@ -45,6 +45,14 @@ async def validation_exception_handler(request, exc):
 
 @app.exception_handler(HTTPException)
 async def httpExceptionHandler(request, exc):
+	await sendRequest(
+		"post",
+		"http://127.0.0.1:8080/zta/governance",
+		{
+			"problem": "partial_system_failure"
+		}
+	)
+	
 	return JSONResponse(
 		status_code = 500,
 		content = { "storage": "failure", "error_message": "Unexpected error occured." },

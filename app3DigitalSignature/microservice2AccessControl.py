@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
 import json
 from enum import Enum
-from .utilityFunctions import checkIfUserAllowed
+from .utilityFunctions import checkIfUserAllowed, sendRequest
 
 
 app = FastAPI()
@@ -22,6 +22,14 @@ class Data(BaseModel):
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
+	await sendRequest(
+		"post",
+		"http://127.0.0.1:8080/zta/governance",
+		{
+			"problem": "partial_system_failure"
+		}
+	)
+	
 	return JSONResponse(
 		status_code = 500,
 		content = { "logging": "failure", "error_message": "Unexpected error occured." },
