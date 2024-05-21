@@ -31,7 +31,7 @@ async def exceptionHandler(request, exc):
 	
 	return JSONResponse(
 		status_code = 500,
-		content = { "logging": "failure", "error_message": "Unexpected error occured." },
+		content = { "access_control": "failure", "error_message": "Unexpected error occured." },
 	)
 
 @app.get("/digital-signature/access-control")

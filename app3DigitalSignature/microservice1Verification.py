@@ -105,4 +105,3 @@ async def digitalSignatureVerificator(request: Request, data: Data):
 		raise HTTPException(500)
 	
 	return response
-
