@@ -8,6 +8,7 @@ import base64
 import os.path
 from Crypto.Cipher import Blowfish
 from struct import pack
+import pika
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, json = data) as response:
@@ -78,7 +79,18 @@ async def handleProblem(data):
 	await asyncio.gather(*tasks)
 
 async def reportToAdmin(problem):
-	pass
+	connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
+	channel = connection.channel()
+
+	channel.queue_declare(queue = "notifications")
+	channel.basic_publish(
+		exchange = "",
+		routing_key = "notifications",
+		body = problem
+	)
+
+	print("Notification sent")
+	connection.close()
 
 async def handleACLTask(dbName, data):
 	match data.task:
