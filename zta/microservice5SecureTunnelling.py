@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -23,7 +23,7 @@ async def exceptionHandler(request, exc):
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "FATAL",
-				"logger_source": 5, # PLACEHOLDER
+				"logger_source": 5,
 				"user_id": 1, # PLACEHOLDER
 				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 				"response": "",
@@ -46,7 +46,7 @@ async def exceptionHandler(request, exc):
 	)
 
 @app.get("/zta/tunnelling")
-async def tunnelling(data: Data):
+async def tunnelling(request: Request, data: Data):
 	authenticationResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8081/zta/iam",
@@ -101,9 +101,9 @@ async def tunnelling(data: Data):
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "INFO",
-				"logger_source": 4, # PLACEHOLDER
+				"logger_source": 5,
 				"user_id": 1, # PLACEHOLDER
-				"request": str(data),
+				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 				"response": str(response),
 				"error_message": ""
 			}

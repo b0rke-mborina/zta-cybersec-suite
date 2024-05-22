@@ -47,7 +47,7 @@ async def reporting(data: Data):
 		{
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "WARN",
-			"logger_source": 1, # PLACEHOLDER
+			"logger_source": 43,
 			"user_id": 1, # PLACEHOLDER
 			"request": "",
 			"response": "",

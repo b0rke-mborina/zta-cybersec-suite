@@ -29,7 +29,7 @@ async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
 		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "ERROR",
-		"logger_source": 2, # PLACEHOLDER
+		"logger_source": 42,
 		"user_id": 1, # PLACEHOLDER
 		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
@@ -83,7 +83,7 @@ async def verification(request: Request, data: Data):
 			"http://127.0.0.1:8032/hashing/reporting",
 			{
 				"timestamp": currentTime,
-				"logger_source": 2, # PLACEHOLDER
+				"logger_source": 42,
 				"user_id": 1, # PLACEHOLDER
 				"data": data.data,
 				"checksum": data.checksum,
@@ -99,7 +99,7 @@ async def verification(request: Request, data: Data):
 		{
 			"timestamp": currentTime,
 			"level": "INFO",
-			"logger_source": 2, # PLACEHOLDER
+			"logger_source": 42,
 			"user_id": 1, # PLACEHOLDER
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),

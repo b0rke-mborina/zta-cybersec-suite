@@ -23,7 +23,7 @@ async def validation_exception_handler(request, exc):
 	dataForLoggingUnsuccessfulRequest = {
 		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "ERROR",
-		"logger_source": 1, # PLACEHOLDER
+		"logger_source": 22,
 		"user_id": 1, # PLACEHOLDER
 		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
@@ -89,7 +89,7 @@ async def verificatorAPIKey(request: Request, data: DataAPIKey):
 		{
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
-			"logger_source": 1, # PLACEHOLDER
+			"logger_source": 22,
 			"user_id": 1, # PLACEHOLDER
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
@@ -141,7 +141,7 @@ async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 		{
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
-			"logger_source": 1, # PLACEHOLDER
+			"logger_source": 22,
 			"user_id": 1, # PLACEHOLDER
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
@@ -193,7 +193,7 @@ async def verificatorJWT(request: Request, data: DataJWT):
 		{
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
-			"logger_source": 1, # PLACEHOLDER
+			"logger_source": 22,
 			"user_id": 1, # PLACEHOLDER
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
