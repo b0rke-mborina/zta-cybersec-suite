@@ -8,11 +8,13 @@ app = FastAPI()
 
 
 class DataStorage(BaseModel):
+	user_id: int
 	dataset: str
 	data_original: list
 	data_masked: list
 
 class DataRetrieval(BaseModel):
+	user_id: int
 	dataset: str
 
 @app.exception_handler(Exception)
@@ -32,10 +34,10 @@ async def exceptionHandler(request, exc):
 
 @app.post("/data/store")
 async def storage(data: DataStorage):
-	await storeData("app7Data.db", 1, data.dataset, data.data_original, data.data_masked) # PLACEHOLDER
+	await storeData("app7Data.db", data.user_id, data.dataset, data.data_original, data.data_masked)
 	return { "storage": "success" }
 
 @app.get("/data/retrieve")
 async def retrieval(data: DataRetrieval):
-	data = await retrieveData("app7Data.db", 1, data.dataset) # PLACEHOLDER
+	data = await retrieveData("app7Data.db", data.user_id, data.dataset)
 	return { "retrieval": "success", "data": data }

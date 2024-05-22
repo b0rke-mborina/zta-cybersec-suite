@@ -64,14 +64,17 @@ async def masking(request: Request, data: DataMask):
 		raise HTTPException(500)
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
+	
+	userId = tunnellingResult[0].get("user_id")
+	userRole = tunnellingResult[0].get("user_role")
 
 	checkData(data.data)
 	accessControlResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8062/data/access-control",
 		{
-			"user_id": 1, # PLACEHOLDER
-			"role": "user" # PLACEHOLDER
+			"user_id": userId,
+			"role": userRole
 		}
 	)
 	if accessControlResult[0].get("access_control") != "success" or not accessControlResult[0].get("is_allowed"):
@@ -85,6 +88,7 @@ async def masking(request: Request, data: DataMask):
 		"post",
 		"http://127.0.0.1:8061/data/store",
 		{
+			"user_id": userId,
 			"dataset": data.dataset,
 			"data_original": data.data,
 			"data_masked": maskedData
@@ -100,7 +104,7 @@ async def masking(request: Request, data: DataMask):
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "INFO",
 			"logger_source": 71,
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
@@ -126,13 +130,16 @@ async def unmasking(request: Request, data: DataUnmask):
 		raise HTTPException(500)
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
+	
+	userId = tunnellingResult[0].get("user_id")
+	userRole = tunnellingResult[0].get("user_role")
 
 	accessControlResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8062/data/access-control",
 		{
-			"user_id": 1, # PLACEHOLDER
-			"role": "user" # PLACEHOLDER
+			"user_id": userId,
+			"role": userRole
 		}
 	)
 	if accessControlResult[0].get("access_control") != "success" or not accessControlResult[0].get("is_allowed"):
@@ -142,6 +149,7 @@ async def unmasking(request: Request, data: DataUnmask):
 		"get",
 		"http://127.0.0.1:8061/data/retrieve",
 		{
+			"user_id": userId,
 			"dataset": data.dataset
 		}
 	)
@@ -157,7 +165,7 @@ async def unmasking(request: Request, data: DataUnmask):
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "INFO",
 			"logger_source": 71,
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""

@@ -93,6 +93,8 @@ async def decryption(request: Request, data: Data):
 		raise HTTPException(500)
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
+	
+	userId = tunnellingResult[0].get("user_id")
 
 	validateTagAndNonce(data)
 
@@ -109,7 +111,7 @@ async def decryption(request: Request, data: Data):
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "INFO",
 			"logger_source": 12,
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": json.dumps(response),
 			"error_message": ""

@@ -48,7 +48,7 @@ async def reporting(data: Data):
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "WARN",
 			"logger_source": 43,
-			"user_id": 1, # PLACEHOLDER
+			"user_id": data.user_id,
 			"request": "",
 			"response": "",
 			"error_message": "Checksum verification failed. Checksum is invalid."

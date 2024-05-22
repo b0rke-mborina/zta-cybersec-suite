@@ -139,7 +139,7 @@ def incidentIncludesThisSystem(data):
 	if any(asset in assets for asset in affectedAssets):
 		return True
 	
-	accounts = {1, "user1"} # PLACEHOLDER
+	accounts = {data.user_id, data.username}
 	userAccounts = getattr(data, "user_accounts_involved", [])
 	if any(account in accounts for account in userAccounts):
 		return True

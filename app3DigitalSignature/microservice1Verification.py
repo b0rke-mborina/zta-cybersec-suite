@@ -71,6 +71,9 @@ async def digitalSignatureVerificator(request: Request, data: Data):
 		raise HTTPException(500)
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
+	
+	userId = tunnellingResult[0].get("user_id")
+	userRole = tunnellingResult[0].get("user_role")
 
 	result = verifySignature(data.public_key, data.digital_signature, data.message, data.hash_function)
 	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -81,8 +84,8 @@ async def digitalSignatureVerificator(request: Request, data: Data):
 		"get",
 		"http://127.0.0.1:8021/digital-signature/access-control",
 		{
-			"user_id": 1, # PLACEHOLDER
-			"role": "user" # PLACEHOLDER
+			"user_id": userId,
+			"role": userRole
 		}
 	)
 	if accessControlResult[0].get("access_control") != "success" or not accessControlResult[0].get("is_allowed"):
@@ -95,7 +98,7 @@ async def digitalSignatureVerificator(request: Request, data: Data):
 			"timestamp": currentTime,
 			"level": "INFO",
 			"logger_source": 31,
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""

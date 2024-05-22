@@ -15,6 +15,8 @@ class Severity(str, Enum):
 	HIGH = "high"
 
 class Data(BaseModel):
+	user_id: int
+	username: str
 	timestamp: str
 	affected_assets: list
 	compromised_data: list
@@ -57,7 +59,7 @@ async def analysis(data: Data):
 		"http://127.0.0.1:8080/zta/governance",
 		{
 			"problem": "security_breach",
-			"user_id": 1 # PLACEHOLDER
+			"user_id": data.user_id
 		}
 	)
 	if governanceResult[0].get("governance") != "success":

@@ -62,12 +62,15 @@ async def reset(request: Request, data: Data):
 		raise HTTPException(500)
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
+	
+	userId = tunnellingResult[0].get("user_id")
 
 	policyResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8043/password/policy",
 		{
-			"data": data.new_password
+			"data": data.new_password,
+			"user_id": userId
 		}
 	)
 	if policyResult[0].get("policy") != "success":
@@ -79,7 +82,7 @@ async def reset(request: Request, data: Data):
 		"get",
 		"http://127.0.0.1:8040/password/retrieve",
 		{
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"username": data.username
 		}
 	)
@@ -104,7 +107,7 @@ async def reset(request: Request, data: Data):
 		"post",
 		"http://127.0.0.1:8040/password/update",
 		{
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"username": data.username,
 			"password_hash": newPasswordHashString,
 			"salt": salt,
@@ -121,7 +124,7 @@ async def reset(request: Request, data: Data):
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "INFO",
 			"logger_source": 53,
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""

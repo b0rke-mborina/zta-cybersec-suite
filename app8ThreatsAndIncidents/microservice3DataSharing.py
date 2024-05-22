@@ -15,6 +15,8 @@ class Severity(str, Enum):
 	HIGH = "high"
 
 class DataIncident(BaseModel):
+	user_id: int
+	username: str
 	timestamp: str
 	affected_assets: list
 	attack_vectors: list
@@ -82,6 +84,8 @@ async def incident(data: DataIncident):
 		"get",
 		"http://127.0.0.1:8073/intelligence/analysis",
 		{
+			"user_id": data.user_id,
+			"username": data.username,
 			"timestamp": data.timestamp,
 			"affected_assets": data.affected_assets,
 			"compromised_data": data.compromised_data,
@@ -92,7 +96,7 @@ async def incident(data: DataIncident):
 	if analysisResult[0].get("analysis") != "success" or not analysisResult[0].get("is_ok"):
 		raise HTTPException(500)
 	
-	await storeThreat("app8Data.db", 1, data) # PLACEHOLDER
+	await storeThreat("app8Data.db", data.user_id, data)
 	return { "incident": "success" }
 
 @app.get("/intelligence/threats", status_code = 200)

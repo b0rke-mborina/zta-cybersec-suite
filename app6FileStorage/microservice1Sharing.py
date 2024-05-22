@@ -73,13 +73,16 @@ async def storage(request: Request, data: DataStore):
 		raise HTTPException(500)
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
+	
+	userId = tunnellingResult[0].get("user_id")
+	userRole = tunnellingResult[0].get("user_role")
 
 	accessControlResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8053/file/access-control",
 		{
-			"user_id": 1, # PLACEHOLDER
-			"role": "user"
+			"user_id": userId,
+			"role": userRole
 		}
 	)
 	if accessControlResult[0].get("access_control") != "success" or not accessControlResult[0].get("is_allowed"):
@@ -90,7 +93,7 @@ async def storage(request: Request, data: DataStore):
 		"post",
 		"http://127.0.0.1:8051/file/storage",
 		{
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"format": data.format,
 			"filename": data.filename,
 			"file": data.file
@@ -106,7 +109,7 @@ async def storage(request: Request, data: DataStore):
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "INFO",
 			"logger_source": 61,
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
@@ -132,13 +135,16 @@ async def retrieval(request: Request, data: DataRetrieve):
 		raise HTTPException(500)
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
+	
+	userId = tunnellingResult[0].get("user_id")
+	userRole = tunnellingResult[0].get("user_role")
 
 	accessControlResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8053/file/access-control",
 		{
-			"user_id": 1, # PLACEHOLDER
-			"role": "user"
+			"user_id": userId,
+			"role": userRole
 		}
 	)
 	if accessControlResult[0].get("access_control") != "success" or not accessControlResult[0].get("is_allowed"):
@@ -148,7 +154,7 @@ async def retrieval(request: Request, data: DataRetrieve):
 		"get",
 		"http://127.0.0.1:8051/file/retrieval",
 		{
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"filename": data.filename
 		}
 	)
@@ -164,7 +170,7 @@ async def retrieval(request: Request, data: DataRetrieve):
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "INFO",
 			"logger_source": 61,
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""

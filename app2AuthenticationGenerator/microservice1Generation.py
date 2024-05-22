@@ -56,6 +56,8 @@ async def generatorAPIKey(request: Request):
 		raise HTTPException(500)
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
+	
+	userId = tunnellingResult[0].get("user_id")
 
 	apiKey = generateAPIKey()
 	print(apiKey)
@@ -83,7 +85,7 @@ async def generatorAPIKey(request: Request):
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
 			"logger_source": 21,
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
@@ -109,6 +111,8 @@ async def generatorOAuth2(request: Request):
 		raise HTTPException(500)
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
+	
+	userId = tunnellingResult[0].get("user_id")
 
 	oauth2Token = generateOAuth2()
 	print(oauth2Token)
@@ -117,7 +121,7 @@ async def generatorOAuth2(request: Request):
 		"auth_type": "oauth2_token",
 		"token_key": oauth2Token,
 		"expires": (currentTime + datetime.timedelta(days=14)).isoformat(),
-		"user_id": 1 # PLACEHOLDER
+		"user_id": userId
 	}
 
 	response = { "generation": "success", "oauth2_token": oauth2Token }
@@ -137,7 +141,7 @@ async def generatorOAuth2(request: Request):
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
 			"logger_source": 21,
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""
@@ -163,15 +167,17 @@ async def generatorJWT(request: Request):
 		raise HTTPException(500)
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
+	
+	userId = tunnellingResult[0].get("user_id")
 
-	jwToken = generateJWT()
+	jwToken = generateJWT(userId)
 	print(jwToken)
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
 	jwtokenData = {
 		"auth_type": "jwt",
 		"token_key": jwToken,
 		"expires": (currentTime + datetime.timedelta(days=14)).isoformat(),
-		"user_id": 1, # PLACEHOLDER
+		"user_id": userId,
 		"secret": "SECRET_KEY_PLACEHOLDER" # PLACEHOLDER
 	}
 
@@ -192,7 +198,7 @@ async def generatorJWT(request: Request):
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
 			"logger_source": 21,
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""

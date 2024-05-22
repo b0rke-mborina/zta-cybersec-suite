@@ -72,6 +72,8 @@ async def hashing(request: Request, data: Data):
 		raise HTTPException(500)
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
+	
+	userId = tunnellingResult[0].get("user_id")
 
 	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
@@ -79,7 +81,8 @@ async def hashing(request: Request, data: Data):
 		"get",
 		"http://127.0.0.1:8033/hashing/policy",
 		{
-			"data": data.data
+			"data": data.data,
+			"user_id": userId
 		}
 	)
 	if policyResult[0].get("policy_management") != "success":
@@ -97,7 +100,7 @@ async def hashing(request: Request, data: Data):
 			"timestamp": currentTime,
 			"level": "INFO",
 			"logger_source": 41,
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""

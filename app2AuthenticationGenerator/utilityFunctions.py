@@ -138,10 +138,10 @@ def generateAPIKey():
 def generateOAuth2():
 	return secrets.token_urlsafe(32)
 
-def generateJWT():
+def generateJWT(userId):
 	secretKey = "SECRET_KEY_PLACEHOLDER"
 	expiration_time = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=14)).isoformat()
-	token = jwt.encode({ "user_id": 1, "expires": expiration_time }, secretKey, algorithm='HS256') # PLACEHOLDER
+	token = jwt.encode({ "user_id": userId, "expires": expiration_time }, secretKey, algorithm='HS256')
 	return token
 
 def verifyAPIKey(dataFromDb, currentDatetime):

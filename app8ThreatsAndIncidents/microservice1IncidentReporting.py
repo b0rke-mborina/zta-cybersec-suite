@@ -89,6 +89,8 @@ async def reporting(request: Request, data: Data):
 		raise HTTPException(500)
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
+	
+	userId = tunnellingResult[0].get("user_id")
 
 	validateIncidentData(data.incident)
 	response = { "reporting": "success" }
@@ -97,6 +99,8 @@ async def reporting(request: Request, data: Data):
 		"post",
 		"http://127.0.0.1:8072/intelligence/incident",
 		{
+			"user_id": userId,
+			"username": request.headers.get("username"),
 			"timestamp": data.incident.timestamp,
 			"affected_assets": data.incident.affected_assets,
 			"attack_vectors": data.incident.attack_vectors,
@@ -119,7 +123,7 @@ async def reporting(request: Request, data: Data):
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "INFO",
 			"logger_source": 81,
-			"user_id": 1, # PLACEHOLDER
+			"user_id": userId,
 			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 			"response": str(response),
 			"error_message": ""

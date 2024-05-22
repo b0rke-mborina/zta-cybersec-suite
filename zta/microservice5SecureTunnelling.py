@@ -92,7 +92,13 @@ async def tunnelling(request: Request, data: Data):
 	isUserAllowed = networkResult[0].get("is_allowed")
 	isAuthorized = aclResult[0].get("is_authorized")
 	isPossibleDosAtack = aclResult[0].get("is_possible_dos_atack")
-	response = { "tunnelling": "success", "is_authorized": isUserAllowed and isAuthorized and not isPossibleDosAtack }
+	
+	response = {
+		"tunnelling": "success",
+		"is_authorized": isUserAllowed and isAuthorized and not isPossibleDosAtack,
+		"user_id": userId,
+		"user_role": userRole
+	}
 
 	tasksFinal = [
 		sendRequest(
@@ -102,7 +108,7 @@ async def tunnelling(request: Request, data: Data):
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "INFO",
 				"logger_source": 5,
-				"user_id": 1, # PLACEHOLDER
+				"user_id": userId,
 				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 				"response": str(response),
 				"error_message": ""
