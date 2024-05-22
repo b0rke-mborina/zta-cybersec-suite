@@ -25,7 +25,7 @@ async def exceptionHandler(request, exc):
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "FATAL",
 				"logger_source": 6,
-				"user_id": 1, # PLACEHOLDER
+				"user_id": 0, # placeholder value is used because user is not important
 				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 				"response": "",
 				"error_message": f"ZTA error. {exc}"

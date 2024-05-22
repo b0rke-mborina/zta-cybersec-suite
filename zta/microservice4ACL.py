@@ -31,6 +31,7 @@ class Data(BaseModel):
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
+	body = await request.body()
 	tasks = [
 		sendRequest(
 			"post",
@@ -39,8 +40,8 @@ async def exceptionHandler(request, exc):
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "FATAL",
 				"logger_source": 4,
-				"user_id": 1, # PLACEHOLDER
-				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+				"user_id": body.user_id,
+				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {body}",
 				"response": "",
 				"error_message": f"ZTA error. {exc}"
 			}
