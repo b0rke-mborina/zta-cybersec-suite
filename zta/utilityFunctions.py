@@ -219,7 +219,6 @@ async def updateUserNetworkSegment(dbName, data, currentDatetime):
 
 def getDataForIAM(data):
 	dataForIAM = {
-		"auth_source": data.auth_source,
 		"jwt": data.auth_data.get("jwt")
 	}
 
@@ -229,6 +228,28 @@ def getDataForIAM(data):
 		dataForIAM["password_hash"] = data.auth_data.get("password_hash")
 	
 	return dataForIAM
+
+def getAppIdFromServiceAuthSource(serviceId):
+	appId = 0
+	if serviceId > 10 and serviceId < 20:
+		appId = 1
+	elif serviceId > 20 and serviceId < 30:
+		appId = 2
+	elif serviceId > 30 and serviceId < 40:
+		appId = 3
+	elif serviceId > 40 and serviceId < 50:
+		appId = 4
+	elif serviceId > 50 and serviceId < 60:
+		appId = 5
+	elif serviceId > 60 and serviceId < 70:
+		appId = 6
+	elif serviceId > 70 and serviceId < 80:
+		appId = 7
+	elif serviceId > 80 and serviceId < 90:
+		appId = 8
+	else:
+		appId = 9
+	return appId
 
 async def handleAuthorization(dbName, userId, userRole):
 	tasks = [isRoleAllowed(dbName, userRole), isUserAllowed(dbName, userId)]

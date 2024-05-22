@@ -57,7 +57,7 @@ async def masking(request: Request, data: DataMask):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1 # PLACEHOLDER
+			"auth_source": 71
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -119,7 +119,7 @@ async def unmasking(request: Request, data: DataUnmask):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1 # PLACEHOLDER
+			"auth_source": 71
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":

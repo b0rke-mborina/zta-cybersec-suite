@@ -10,7 +10,6 @@ app = FastAPI()
 
 
 class Data(BaseModel):
-	auth_source: int
 	jwt: str
 	username: str = ""
 	password_hash: str = ""

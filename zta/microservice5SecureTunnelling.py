@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import asyncio
 import datetime
-from .utilityFunctions import getDataForIAM, sendRequest
+from .utilityFunctions import getAppIdFromServiceAuthSource, getDataForIAM, sendRequest
 
 
 app = FastAPI()
@@ -69,7 +69,7 @@ async def tunnelling(request: Request, data: Data):
 			{
 				"is_user_authenticated_additionally": isAuthenticatedAdditionally,
 				"user_id": userId,
-				"auth_source_app_id": data.auth_source,
+				"auth_source_app_id": getAppIdFromServiceAuthSource(data.auth_source),
 				"possible_breach": False
 			}
 		),

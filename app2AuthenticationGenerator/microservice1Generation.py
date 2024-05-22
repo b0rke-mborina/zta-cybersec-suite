@@ -49,7 +49,7 @@ async def generatorAPIKey(request: Request):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1 # PLACEHOLDER
+			"auth_source": 21
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -102,7 +102,7 @@ async def generatorOAuth2(request: Request):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1 # PLACEHOLDER
+			"auth_source": 21
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -156,7 +156,7 @@ async def generatorJWT(request: Request):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1 # PLACEHOLDER
+			"auth_source": 21
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":

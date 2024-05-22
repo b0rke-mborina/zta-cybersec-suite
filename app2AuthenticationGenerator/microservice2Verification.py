@@ -59,7 +59,7 @@ async def verificatorAPIKey(request: Request, data: DataAPIKey):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1 # PLACEHOLDER
+			"auth_source": 22
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -109,7 +109,7 @@ async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1 # PLACEHOLDER
+			"auth_source": 22
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
@@ -161,7 +161,7 @@ async def verificatorJWT(request: Request, data: DataJWT):
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
 			"auth_data": authData,
-			"auth_source": 1 # PLACEHOLDER
+			"auth_source": 22
 		}
 	)
 	if tunnellingResult[0].get("tunnelling") != "success":
