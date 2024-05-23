@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -84,33 +85,33 @@ async def masking(request: Request, data: DataMask):
 	print(maskedData)
 	response = { "masking": "success", "data": maskedData }
 
-	storageResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8061/data/store",
-		{
-			"user_id": userId,
-			"dataset": data.dataset,
-			"data_original": data.data,
-			"data_masked": maskedData
-		}
-	)
-	if storageResult[0].get("storage") != "success":
-		raise HTTPException(500)
-	
-	loggingResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8063/data/logging",
-		{
-			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-			"level": "INFO",
-			"logger_source": 71,
-			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
-		}
-	)
-	if loggingResult[0].get("logging") != "success":
+	tasks = [
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8061/data/store",
+			{
+				"user_id": userId,
+				"dataset": data.dataset,
+				"data_original": data.data,
+				"data_masked": maskedData
+			}
+		),
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8063/data/logging",
+			{
+				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+				"level": "INFO",
+				"logger_source": 71,
+				"user_id": userId,
+				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+				"response": str(response),
+				"error_message": ""
+			}
+		)
+	]
+	results = await asyncio.gather(*tasks)
+	if results[0][0].get("storage") != "success" or results[1][0].get("logging") != "success":
 		raise HTTPException(500)
 	
 	return response

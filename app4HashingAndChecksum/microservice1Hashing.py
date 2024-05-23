@@ -75,8 +75,6 @@ async def hashing(request: Request, data: Data):
 	
 	userId = tunnellingResult[0].get("user_id")
 
-	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
 	policyResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8033/hashing/policy",
@@ -90,6 +88,7 @@ async def hashing(request: Request, data: Data):
 	if policyResult[0].get("is_data_ok"):
 		raise RequestValidationError("Password requirements not fulfilled.")
 
+	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
 	hash = hashData(data.data, data.algorithm)
 	response = { "hashing": "success", "hash": hash }
 

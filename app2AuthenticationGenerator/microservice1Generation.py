@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -70,28 +71,28 @@ async def generatorAPIKey(request: Request):
 
 	response = { "generation": "success", "api_key": apiKey }
 
-	storageResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8012/auth-generator/data-new",
-		apiKeyData
-	)
-	if storageResult[0].get("saving_info") != "success":
-		raise HTTPException(500)
-
-	loggingResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8013/auth-generator/logging",
-		{
-			"timestamp": currentTime.isoformat(),
-			"level": "INFO",
-			"logger_source": 21,
-			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
-		}
-	)
-	if loggingResult[0].get("logging") != "success":
+	tasks = [
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8012/auth-generator/data-new",
+			apiKeyData
+		),
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8013/auth-generator/logging",
+			{
+				"timestamp": currentTime.isoformat(),
+				"level": "INFO",
+				"logger_source": 21,
+				"user_id": userId,
+				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+				"response": str(response),
+				"error_message": ""
+			}
+		)
+	]
+	results = await asyncio.gather(*tasks)
+	if results[0][0].get("saving_info") != "success" or results[1][0].get("logging") != "success":
 		raise HTTPException(500)
 
 	return response
@@ -126,28 +127,28 @@ async def generatorOAuth2(request: Request):
 
 	response = { "generation": "success", "oauth2_token": oauth2Token }
 
-	storageResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8012/auth-generator/data-new",
-		oauth2TokenData
-	)
-	if storageResult[0].get("saving_info") != "success":
-		raise HTTPException(500)
-
-	loggingResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8013/auth-generator/logging",
-		{
-			"timestamp": currentTime.isoformat(),
-			"level": "INFO",
-			"logger_source": 21,
-			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
-		}
-	)
-	if loggingResult[0].get("logging") != "success":
+	tasks = [
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8012/auth-generator/data-new",
+			oauth2TokenData
+		),
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8013/auth-generator/logging",
+			{
+				"timestamp": currentTime.isoformat(),
+				"level": "INFO",
+				"logger_source": 21,
+				"user_id": userId,
+				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+				"response": str(response),
+				"error_message": ""
+			}
+		)
+	]
+	results = await asyncio.gather(*tasks)
+	if results[0][0].get("saving_info") != "success" or results[1][0].get("logging") != "success":
 		raise HTTPException(500)
 
 	return response
@@ -183,28 +184,28 @@ async def generatorJWT(request: Request):
 
 	response = { "generation": "success", "jwtoken": jwToken }
 
-	storageResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8012/auth-generator/data-new",
-		jwtokenData
-	)
-	if storageResult[0].get("saving_info") != "success":
-		raise HTTPException(500)
-
-	loggingResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8013/auth-generator/logging",
-		{
-			"timestamp": currentTime.isoformat(),
-			"level": "INFO",
-			"logger_source": 21,
-			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
-		}
-	)
-	if loggingResult[0].get("logging") != "success":
+	tasks = [
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8012/auth-generator/data-new",
+			jwtokenData
+		),
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8013/auth-generator/logging",
+			{
+				"timestamp": currentTime.isoformat(),
+				"level": "INFO",
+				"logger_source": 21,
+				"user_id": userId,
+				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+				"response": str(response),
+				"error_message": ""
+			}
+		)
+	]
+	results = await asyncio.gather(*tasks)
+	if results[0][0].get("saving_info") != "success" or results[1][0].get("logging") != "success":
 		raise HTTPException(500)
 	
 	return response

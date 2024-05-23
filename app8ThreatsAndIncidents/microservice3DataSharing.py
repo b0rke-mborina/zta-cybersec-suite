@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
+import asyncio
 import datetime
 from enum import Enum
 from .utilityFunctions import getThreats, sendRequest, storeThreat
@@ -80,23 +81,27 @@ async def exceptionHandler(request, exc):
 
 @app.post("/intelligence/incident", status_code = 200)
 async def incident(data: DataIncident):
-	analysisResult = await sendRequest(
-		"get",
-		"http://127.0.0.1:8073/intelligence/analysis",
-		{
-			"user_id": data.user_id,
-			"username": data.username,
-			"timestamp": data.timestamp,
-			"affected_assets": data.affected_assets,
-			"compromised_data": data.compromised_data,
-			"severity": data.severity,
-			"user_accounts_involved": data.user_accounts_involved
-		}
-	)
-	if analysisResult[0].get("analysis") != "success" or not analysisResult[0].get("is_ok"):
+	tasks = [
+		sendRequest(
+			"get",
+			"http://127.0.0.1:8073/intelligence/analysis",
+			{
+				"user_id": data.user_id,
+				"username": data.username,
+				"timestamp": data.timestamp,
+				"affected_assets": data.affected_assets,
+				"compromised_data": data.compromised_data,
+				"severity": data.severity,
+				"user_accounts_involved": data.user_accounts_involved
+			}
+		),
+		storeThreat("app8Data.db", data.user_id, data)
+	]
+	
+	results = await asyncio.gather(*tasks)
+	if results[0][0].get("analysis") != "success" or not results[0][0].get("is_ok"):
 		raise HTTPException(500)
 	
-	await storeThreat("app8Data.db", data.user_id, data)
 	return { "incident": "success" }
 
 @app.get("/intelligence/threats", status_code = 200)

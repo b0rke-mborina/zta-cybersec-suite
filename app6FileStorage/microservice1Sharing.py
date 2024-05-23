@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+import asyncio
 import datetime
 from enum import Enum
 from .utilityFunctions import getAuthData, sendRequest
@@ -89,33 +90,34 @@ async def storage(request: Request, data: DataStore):
 		raise HTTPException(500)
 	
 	response = { "storage": "success" }
-	storageResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8051/file/storage",
-		{
-			"user_id": userId,
-			"format": data.format,
-			"filename": data.filename,
-			"file": data.file
-		}
-	)
-	if storageResult[0].get("storage") != "success":
-		raise HTTPException(500)
 
-	loggingResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8054/file/logging",
-		{
-			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-			"level": "INFO",
-			"logger_source": 61,
-			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
-		}
-	)
-	if loggingResult[0].get("logging") != "success":
+	tasks = [
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8051/file/storage",
+			{
+				"user_id": userId,
+				"format": data.format,
+				"filename": data.filename,
+				"file": data.file
+			}
+		),
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8054/file/logging",
+			{
+				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+				"level": "INFO",
+				"logger_source": 61,
+				"user_id": userId,
+				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+				"response": str(response),
+				"error_message": ""
+			}
+		)
+	]
+	results = await asyncio.gather(*tasks)
+	if results[0][0].get("storage") != "success" or results[1][0].get("logging") != "success":
 		raise HTTPException(500)
 
 	return response

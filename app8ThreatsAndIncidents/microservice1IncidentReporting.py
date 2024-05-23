@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -95,41 +96,41 @@ async def reporting(request: Request, data: Data):
 	validateIncidentData(data.incident)
 	response = { "reporting": "success" }
 
-	dataSharingResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8072/intelligence/incident",
-		{
-			"user_id": userId,
-			"username": request.headers.get("username"),
-			"timestamp": data.incident.timestamp,
-			"affected_assets": data.incident.affected_assets,
-			"attack_vectors": data.incident.attack_vectors,
-			"malicious_code": data.incident.malicious_code,
-			"compromised_data": data.incident.compromised_data,
-			"indicators_of_compromise": data.incident.indicators_of_compromise,
-			"severity": data.incident.severity,
-			"user_accounts_involved": data.incident.user_accounts_involved,
-			"logs": data.incident.logs,
-			"actions": data.incident.actions
-		}
-	)
-	if dataSharingResult[0].get("incident") != "success":
-		raise HTTPException(500)
-
-	loggingResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8074/intelligence/logging",
-		{
-			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-			"level": "INFO",
-			"logger_source": 81,
-			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
-		}
-	)
-	if loggingResult[0].get("logging") != "success":
+	tasks = [
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8072/intelligence/incident",
+			{
+				"user_id": userId,
+				"username": request.headers.get("username"),
+				"timestamp": data.incident.timestamp,
+				"affected_assets": data.incident.affected_assets,
+				"attack_vectors": data.incident.attack_vectors,
+				"malicious_code": data.incident.malicious_code,
+				"compromised_data": data.incident.compromised_data,
+				"indicators_of_compromise": data.incident.indicators_of_compromise,
+				"severity": data.incident.severity,
+				"user_accounts_involved": data.incident.user_accounts_involved,
+				"logs": data.incident.logs,
+				"actions": data.incident.actions
+			}
+		),
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8074/intelligence/logging",
+			{
+				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+				"level": "INFO",
+				"logger_source": 81,
+				"user_id": userId,
+				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+				"response": str(response),
+				"error_message": ""
+			}
+		)
+	]
+	results = await asyncio.gather(*tasks)
+	if results[0][0].get("incident") != "success" or results[1][0].get("logging") != "success":
 		raise HTTPException(500)
 
 	return response

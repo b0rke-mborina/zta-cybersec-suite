@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+import asyncio
 import datetime
 from enum import Enum
 from .utilityFunctions import getAuthData, sendRequest, verifyChecksum
@@ -79,36 +80,42 @@ async def verification(request: Request, data: Data):
 	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
 	response = { "verification": "success", "is_checksum_valid": isHashValid }
 
-	if not isHashValid:
-		reportingResult = await sendRequest(
+	tasks = [
+		sendRequest(
 			"post",
-			"http://127.0.0.1:8032/hashing/reporting",
+			"http://127.0.0.1:8034/hashing/logging",
 			{
 				"timestamp": currentTime,
+				"level": "INFO",
 				"logger_source": 42,
 				"user_id": userId,
-				"data": data.data,
-				"checksum": data.checksum,
-				"error_message": "Hash is not valid."
+				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+				"response": str(response),
+				"error_message": ""
 			}
 		)
-		if reportingResult[0].get("reporting") != "success":
-			raise HTTPException(500)
-
-	loggingResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8034/hashing/logging",
-		{
-			"timestamp": currentTime,
-			"level": "INFO",
-			"logger_source": 42,
-			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
-		}
-	)
-	if loggingResult[0].get("logging") != "success":
+	]
+	if not isHashValid:
+		tasks.append(
+			sendRequest(
+				"post",
+				"http://127.0.0.1:8032/hashing/reporting",
+				{
+					"timestamp": currentTime,
+					"logger_source": 42,
+					"user_id": userId,
+					"data": data.data,
+					"checksum": data.checksum,
+					"error_message": "Hash is not valid."
+				}
+			)
+		)
+	
+	results = await asyncio.gather(*tasks)
+	if results[0][0].get("logging") != "success":
 		raise HTTPException(500)
+	if len(results) == 2:
+		if results[1][0].get("reporting") != "success":
+			raise HTTPException(500)
 
 	return response
