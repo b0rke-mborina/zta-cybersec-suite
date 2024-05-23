@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+import asyncio
 import datetime
 from .utilityFunctions import getAuthData, sendRequest, storePasswordHash, getPasswordHashInfo, updatePasswordHash, hashPassword
 
@@ -72,6 +73,8 @@ async def storage(request: Request, data: DataStore):
 		raise HTTPException(500)
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
+	
+	userId = tunnellingResult[0].get("user_id")
 
 	policyResult = await sendRequest(
 		"get",
@@ -85,29 +88,30 @@ async def storage(request: Request, data: DataStore):
 		raise HTTPException(500)
 	if not policyResult[0].get("is_data_ok"):
 		raise RequestValidationError("Password requirements not fulfilled.")
-	
-	userId = tunnellingResult[0].get("user_id")
 
 	(passwordHash, salt, algorithm) = hashPassword(data.password)
 	passwordHashString = passwordHash.decode("utf-8")
 	saltString = salt.decode("utf-8")
-	await storePasswordHash("app5Data.db", userId, data.username, passwordHashString, saltString, algorithm)
 	response = { "storage": "success" }
-
-	loggingResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8044/password/logging",
-		{
-			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-			"level": "INFO",
-			"logger_source": 51,
-			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
-		}
-	)
-	if loggingResult[0].get("logging") != "success":
+	
+	tasks = [
+		storePasswordHash("app5Data.db", userId, data.username, passwordHashString, saltString, algorithm),
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8044/password/logging",
+			{
+				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+				"level": "INFO",
+				"logger_source": 51,
+				"user_id": userId,
+				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+				"response": str(response),
+				"error_message": ""
+			}
+		)
+	]
+	results = await asyncio.gather(*tasks)
+	if results[1][0].get("logging") != "success":
 		raise HTTPException(500)
 
 	return response
