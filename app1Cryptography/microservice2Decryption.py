@@ -5,7 +5,7 @@ from pydantic import BaseModel, validator
 import datetime
 import json
 from enum import Enum
-from .utilityFunctions import getAuthData, sendRequest, decrypt
+from .utilityFunctions import getAuthData, isStringValid, sendRequest, decrypt
 
 
 app = FastAPI()
@@ -28,8 +28,21 @@ class Data(BaseModel):
 	class Config:
 		use_enum_values = True
 
-	@validator('key')
+	@validator("ciphertext")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
+
+	@validator("key")
 	def validate_key(cls, v, values, **kwargs):
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+
 		algorithm = values.get('algorithm')
 		if algorithm == "DES" and len(v) != 8:
 			raise ValueError('Key must be 8 characters long for DES algorithm')
@@ -37,13 +50,18 @@ class Data(BaseModel):
 			raise ValueError('Key must be 24 characters long for TripleDES algorithm')
 		elif algorithm == "AES" and len(v) != 16:
 			raise ValueError('Key must be 16 characters long for AES algorithm')
+		
 		return v
 
 def validateTagAndNonce(data):
-	if data.algorithm == "AES" and data.tag is None:
-		raise RequestValidationError('Tag is required for AES algorithm')
-	if data.algorithm == "AES" and data.nonce is None:
-		raise RequestValidationError('Nonce is required for AES algorithm')
+	if data.algorithm == "AES":
+		isValid = isStringValid(data.tag, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+
+		isValid = isStringValid(data.nonce, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):

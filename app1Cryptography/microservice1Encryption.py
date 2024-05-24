@@ -5,7 +5,7 @@ from pydantic import BaseModel, validator
 import datetime
 import json
 from enum import Enum
-from .utilityFunctions import getAuthData, sendRequest, encrypt
+from .utilityFunctions import getAuthData, isStringValid, sendRequest, encrypt
 
 
 app = FastAPI()
@@ -27,8 +27,21 @@ class Data(BaseModel):
 	class Config:
 		use_enum_values = True
 
+	@validator("plaintext")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
+
 	@validator("key")
 	def validatorKey(cls, v, values, **kwargs):
+		isValid = isStringValid(v, True, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+
 		algorithm = values.get("algorithm")
 		if algorithm in ["DES", "TripleDES", "AES", "Blowfish"] and v is None:
 			raise RequestValidationError('Key is required for DES, TripleDES, AES or Blowfish algorithm')
@@ -43,6 +56,10 @@ class Data(BaseModel):
 
 	@validator("key_length")
 	def validatorKeyLength(cls, v, values, **kwargs):
+		isValid = isStringValid(v, True, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
 		algorithm = values.get('algorithm')
 		if algorithm == "RSA" and v not in [1024, 2048, 3072]:
 			raise RequestValidationError('Acceptable values for key_length are 1024, 2048, 3072 for RSA algorithm')

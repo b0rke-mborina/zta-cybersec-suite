@@ -1,10 +1,10 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import asyncio
 import datetime
-from .utilityFunctions import getAuthData, hashPasswordWithSalt, sendRequest
+from .utilityFunctions import getAuthData, hashPasswordWithSalt, isStringValid, sendRequest
 
 
 app = FastAPI()
@@ -14,6 +14,15 @@ class Data(BaseModel):
 	username: str
 	current_password: str
 	new_password: str
+
+	@validator("username", "current_password", "new_password")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):

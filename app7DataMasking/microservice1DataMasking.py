@@ -2,9 +2,9 @@ import asyncio
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import datetime
-from .utilityFunctions import getAuthData, maskData, sendRequest, checkData
+from .utilityFunctions import getAuthData, isStringValid, maskData, sendRequest, checkData
 
 
 app = FastAPI()
@@ -14,8 +14,36 @@ class DataMask(BaseModel):
 	dataset: str
 	data: list
 
+	@validator("dataset")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
+
+	@validator("data")
+	def validateAndSanitizeString(cls, v):
+		for l in v:
+			for dataValue in l:
+				if isinstance(dataValue, str):
+					isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+					if not isValid:
+						raise RequestValidationError("String is not valid.")
+					return v
+
 class DataUnmask(BaseModel):
 	dataset: str
+
+	@validator("dataset")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):

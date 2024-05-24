@@ -1,11 +1,11 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import asyncio
 import datetime
 from enum import Enum
-from .utilityFunctions import getAuthData, sendRequest
+from .utilityFunctions import getAuthData, isStringValid, sendRequest
 
 
 app = FastAPI()
@@ -23,8 +23,26 @@ class DataStore(BaseModel):
 	class Config:
 		use_enum_values = True
 
+	@validator("filename", "file")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
+
 class DataRetrieve(BaseModel):
 	filename: str
+
+	@validator("filename")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
