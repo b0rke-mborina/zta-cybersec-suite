@@ -1,10 +1,11 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 import asyncio
 import datetime
 from enum import Enum
-from .utilityFunctions import getThreats, sendRequest, storeThreat
+from .utilityFunctions import getThreats, isStringValid, sendRequest, storeThreat
 
 
 app = FastAPI()
@@ -38,6 +39,45 @@ class DataIncident(BaseModel):
 			datetime.datetime.fromisoformat(v)
 		except ValueError:
 			raise ValueError("Timestamp must be in ISO 8601 format")
+		return v
+
+	@validator("username")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
+
+	@validator("affected_assets", "malicious_code", "compromised_data", "indicators_of_compromise", "user_accounts_involved", "logs", "actions")
+	def validateAndSanitizeList(cls, v):
+		for item in v:
+			if isinstance(item, str):
+				isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+				if not isValid:
+					raise RequestValidationError("String is not valid.")
+				return v
+			else:
+				raise RequestValidationError("Request not valid.")
+		
+		return v
+
+	@validator("attack_vectors")
+	def validateAndSanitizeList(cls, v):
+		if not all(isinstance(item, list) for item in v):
+			raise RequestValidationError("Request not valid.")
+		
+		for item in v:
+			for value in item:
+				if isinstance(value, str):
+					isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+					if not isValid:
+						raise RequestValidationError("String is not valid.")
+					return v
+				else:
+					raise RequestValidationError("Request not valid.")
+		
 		return v
 
 class DataThreats(BaseModel):

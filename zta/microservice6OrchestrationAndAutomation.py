@@ -1,9 +1,10 @@
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import asyncio
 import datetime
-from .utilityFunctions import decryptData, encryptData, hashData, sendRequest
+from .utilityFunctions import decryptData, encryptData, hashData, isStringValid, sendRequest
 
 
 app = FastAPI()
@@ -11,9 +12,27 @@ app = FastAPI()
 
 class DataCryptography(BaseModel):
 	data: dict
+	
+	@validator("data")
+	def validateAndSanitizeDict(cls, v):
+		for key, value in v.items():
+			if isinstance(value, str):
+				if not isStringValid(value, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$'):
+					raise RequestValidationError("String is not valid.")
+		
+		return v
 
 class DataHashing(BaseModel):
 	data: str
+	
+	@validator("data")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):

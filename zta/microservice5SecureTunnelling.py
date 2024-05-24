@@ -1,10 +1,10 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import asyncio
 import datetime
-from .utilityFunctions import getAppIdFromServiceAuthSource, getDataForIAM, sendRequest
+from .utilityFunctions import getAppIdFromServiceAuthSource, getDataForIAM, isStringValid, sendRequest
 
 
 app = FastAPI()
@@ -13,6 +13,15 @@ app = FastAPI()
 class Data(BaseModel):
 	auth_data: dict
 	auth_source: int
+	
+	@validator("auth_data")
+	def validateAndSanitizeDict(cls, v):
+		for key, value in v.items():
+			if isinstance(value, str):
+				if not isStringValid(value, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$'):
+					raise RequestValidationError("String is not valid.")
+		
+		return v
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):

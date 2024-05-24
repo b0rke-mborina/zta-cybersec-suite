@@ -1,9 +1,10 @@
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import asyncio
 import datetime
-from .utilityFunctions import handleUserAuthentication, sendRequest
+from .utilityFunctions import handleUserAuthentication, isStringValid, sendRequest
 
 
 app = FastAPI()
@@ -13,6 +14,16 @@ class Data(BaseModel):
 	jwt: str
 	username: str = ""
 	password_hash: str = ""
+
+	@validator("jwt", "username", "password_hash")
+	def validateAndSanitizeString(cls, v, field):
+		allowNoneOrEmpty = False if field.name == "jwt" else True
+		isValid = isStringValid(v, allowNoneOrEmpty, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):

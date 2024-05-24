@@ -2,6 +2,8 @@ import aiohttp
 import asyncio
 import aiosqlite
 import hashlib
+import html
+import re
 import os.path
 import bcrypt
 from fastapi.exceptions import RequestValidationError
@@ -15,6 +17,20 @@ async def sendRequest(method, url, reqData):
 		task = request(session, method, url, reqData)
 		result = await asyncio.gather(task)
 		return result
+
+def isStringValid(strValue, allowNoneOrEmpty, regex):
+	if not allowNoneOrEmpty and (strValue is None or strValue.strip() == ""):
+		return False
+	
+	sanitizedStrValue = html.escape(strValue)
+	if strValue != sanitizedStrValue:
+		return False
+	
+	pattern = re.compile(regex)
+	if not pattern.match(strValue):
+		return False
+	
+	return True
 
 async def log(dataItem, dbName):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:

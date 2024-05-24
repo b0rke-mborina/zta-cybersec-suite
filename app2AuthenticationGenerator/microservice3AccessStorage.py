@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 import datetime
 from enum import Enum
-from .utilityFunctions import getData, saveData, sendRequest
+from .utilityFunctions import getData, isStringValid, saveData, sendRequest
 
 
 app = FastAPI()
@@ -23,6 +23,15 @@ class DataInfo(BaseModel):
 	class Config:
 		use_enum_values = True
 
+	@validator("token_key")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
+
 class DataNew(BaseModel):
 	auth_type: AuthType
 	token_key: str
@@ -39,6 +48,16 @@ class DataNew(BaseModel):
 			datetime.datetime.fromisoformat(v)
 		except ValueError:
 			raise ValueError("Timestamp must be in ISO 8601 format")
+		return v
+
+	@validator("token_key", "secret")
+	def validateAndSanitizeString(cls, v, field):
+		allowNoneOrEmpty = False if field.name == "token_key" else True
+		isValid = isStringValid(v, allowNoneOrEmpty, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
 		return v
 
 def validateInfoUserId(data):

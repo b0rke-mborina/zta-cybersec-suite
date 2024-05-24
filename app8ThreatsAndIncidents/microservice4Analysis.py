@@ -1,9 +1,10 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 import datetime
 from enum import Enum
-from .utilityFunctions import incidentIncludesThisSystem, sendRequest
+from .utilityFunctions import incidentIncludesThisSystem, isStringValid, sendRequest
 
 
 app = FastAPI()
@@ -33,6 +34,26 @@ class Data(BaseModel):
 		except ValueError:
 			raise ValueError("Timestamp must be in ISO 8601 format")
 		return v
+
+	@validator("username")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
+
+	@validator("affected_assets", "compromised_data", "user_accounts_involved")
+	def validateAndSanitizeList(cls, v):
+		for item in v:
+			if isinstance(item, str):
+				isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+				if not isValid:
+					raise RequestValidationError("String is not valid.")
+				return v
+			else:
+				raise RequestValidationError("Request not valid.")
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):

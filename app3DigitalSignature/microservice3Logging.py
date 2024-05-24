@@ -1,9 +1,10 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 import datetime
 from enum import Enum
-from .utilityFunctions import log, sendRequest
+from .utilityFunctions import isStringValid, log, sendRequest
 
 
 app = FastAPI()
@@ -34,6 +35,16 @@ class Data(BaseModel):
 			datetime.datetime.fromisoformat(v)
 		except ValueError:
 			raise ValueError("Timestamp must be in ISO 8601 format")
+		return v
+
+	@validator("request", "response", "error_message")
+	def validateAndSanitizeString(cls, v, field):
+		allowNoneOrEmpty = False if field.name == "request" else True
+		isValid = isStringValid(v, allowNoneOrEmpty, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
 		return v
 
 @app.exception_handler(Exception)
