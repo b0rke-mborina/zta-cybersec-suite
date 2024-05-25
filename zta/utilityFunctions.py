@@ -342,40 +342,43 @@ async def resetRequestData(dbName, userId, datetime):
 
 def encryptData(data):
 	result = {}
-	for key, value in data.items():
-		(result[key], _, _) = encryptBlowfish(value)
+	for field, value in data.items():
+		(result[field], _, _) = encryptBlowfish(field, value)
 	return result
 
-def encryptBlowfish(plaintext):
-	if isinstance(plaintext, int):
-		plaintext = intToBytes(plaintext)
-	else:
-		plaintext = plaintext.encode("utf-8")
+def encryptBlowfish(field, plaintext):
+	plaintextBytes = intToBytes(plaintext) if isIntValue(field) else plaintext.encode("utf-8")
 	key = "KEY_PLACEHOLDER".encode("utf-8") # PLACEHOLDER
+
+	mode = Blowfish.MODE_ECB if useDeterministicCryptography(field) else Blowfish.MODE_CBC
+	cipher = Blowfish.new(key, mode)
+
 	bs = Blowfish.block_size
-	cipher = Blowfish.new(key, Blowfish.MODE_CBC)
-	plen = bs - len(plaintext) % bs
+	plen = bs - len(plaintextBytes) % bs
 	padding = [plen]*plen
 	padding = pack('b'*plen, *padding)
-	ciphertext = cipher.iv + cipher.encrypt(plaintext + padding)
+	ciphertext = cipher.iv + cipher.encrypt(plaintextBytes + padding)
 	return (base64.b64encode(ciphertext).decode("utf-8"), None, None)
 
 def decryptData(data):
 	result = {}
-	for key, value in data.items():
-		(result[key], _, _) = decryptBlowfish(value)
+	for field, value in data.items():
+		(result[field], _, _) = decryptBlowfish(field, value)
 	return result
 
-def decryptBlowfish(ciphertext):
+def decryptBlowfish(field, ciphertext):
 	try:
 		ciphertext = base64.b64decode(ciphertext)
 		key = "KEY_PLACEHOLDER".encode("utf-8") # PLACEHOLDER
+
 		iv = ciphertext[:Blowfish.block_size]
 		cipher = Blowfish.new(key, Blowfish.MODE_CBC, iv)
 		plaintext = cipher.decrypt(ciphertext[Blowfish.block_size:])
 		padding_length = plaintext[-1]
+
 		plaintext = plaintext[:-padding_length]
-		return plaintext.decode()
+		plaintext = bytesToInt(plaintext) if isIntValue(field) else plaintext.encode("utf-8")
+		return plaintext
 	except:
 		return ""
 
@@ -387,3 +390,11 @@ def bytesToInt(byteData):
 
 def hashData(data):
 	return hashlib.sha512(data.encode()).hexdigest()
+
+def isIntValue(field):
+	intFields = {"logger_source", "user_id", "is_allowed", "request_count", "current_app_id"}
+	return field in intFields
+
+def useDeterministicCryptography(field):
+	deterministicFields = {"user_id", "role", "username", "key", "token", "filename", "dataset", "severity", "password_hash", "jwt"}
+	return field in deterministicFields
