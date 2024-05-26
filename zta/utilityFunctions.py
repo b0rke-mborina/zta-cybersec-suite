@@ -8,6 +8,7 @@ import re
 import base64
 import os.path
 from Crypto.Cipher import Blowfish
+from Crypto.Util.Padding import pad, unpad
 from struct import pack
 import pika
 
@@ -343,41 +344,53 @@ async def resetRequestData(dbName, userId, datetime):
 def encryptData(data):
 	result = {}
 	for field, value in data.items():
-		(result[field], _, _) = encryptBlowfish(field, value)
+		result[field] = encryptBlowfish(field, value)
 	return result
 
 def encryptBlowfish(field, plaintext):
 	plaintextBytes = intToBytes(plaintext) if isIntValue(field) else plaintext.encode("utf-8")
 	key = "KEY_PLACEHOLDER".encode("utf-8") # PLACEHOLDER
+	ciphertext = None
 
-	mode = Blowfish.MODE_ECB if useDeterministicCryptography(field) else Blowfish.MODE_CBC
-	cipher = Blowfish.new(key, mode)
+	if useDeterministicCryptography(field):
+		mode = Blowfish.MODE_ECB
+		cipher = Blowfish.new(key, Blowfish.MODE_ECB)
+		paddedText = pad(plaintextBytes, Blowfish.block_size)
+		ciphertext = cipher.encrypt(paddedText)
+	else:
+		mode = Blowfish.MODE_CBC
+		cipher = Blowfish.new(key, mode)
+		bs = Blowfish.block_size
+		plen = bs - len(plaintextBytes) % bs
+		padding = [plen]*plen
+		padding = pack('b'*plen, *padding)
+		ciphertext = cipher.iv + cipher.encrypt(plaintextBytes + padding)
 
-	bs = Blowfish.block_size
-	plen = bs - len(plaintextBytes) % bs
-	padding = [plen]*plen
-	padding = pack('b'*plen, *padding)
-	ciphertext = cipher.iv + cipher.encrypt(plaintextBytes + padding)
-	return (base64.b64encode(ciphertext).decode("utf-8"), None, None)
+	return base64.b64encode(ciphertext).decode("utf-8")
 
 def decryptData(data):
 	result = {}
 	for field, value in data.items():
-		(result[field], _, _) = decryptBlowfish(field, value)
+		result[field] = decryptBlowfish(field, value)
 	return result
 
 def decryptBlowfish(field, ciphertext):
 	try:
-		ciphertext = base64.b64decode(ciphertext)
+		ciphertextBytes = base64.b64decode(ciphertext)
 		key = "KEY_PLACEHOLDER".encode("utf-8") # PLACEHOLDER
+		plaintextBytes = None
 
-		iv = ciphertext[:Blowfish.block_size]
-		cipher = Blowfish.new(key, Blowfish.MODE_CBC, iv)
-		plaintext = cipher.decrypt(ciphertext[Blowfish.block_size:])
-		padding_length = plaintext[-1]
+		if useDeterministicCryptography(field):
+			cipher = Blowfish.new(key, Blowfish.MODE_ECB)
+			plaintextBytes = unpad(cipher.decrypt(ciphertextBytes), Blowfish.block_size)
+		else:
+			iv = ciphertextBytes[:Blowfish.block_size]
+			cipher = Blowfish.new(key, Blowfish.MODE_CBC, iv)
+			plaintextBytes = cipher.decrypt(ciphertextBytes[Blowfish.block_size:])
+			paddingLength = plaintextBytes[-1]
+			plaintextBytes = plaintextBytes[:-paddingLength]
 
-		plaintext = plaintext[:-padding_length]
-		plaintext = bytesToInt(plaintext) if isIntValue(field) else plaintext.encode("utf-8")
+		plaintext = bytesToInt(plaintextBytes) if isIntValue(field) else plaintextBytes.decode("utf-8")
 		return plaintext
 	except:
 		return ""
