@@ -41,9 +41,9 @@ async def exceptionHandler(request, exc):
 				"level": "FATAL",
 				"logger_source": 4,
 				"user_id": body.user_id,
-				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {body}",
-				"response": "",
-				"error_message": f"ZTA error. {exc}"
+				"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {body}".translate(str.maketrans("\"'{}:", "_____")),
+				"response": "__NULL__",
+				"error_message": f"ZTA error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 			}
 		),
 		sendRequest(

@@ -64,12 +64,12 @@ async def handleProblem(request, data, response):
 			"post",
 			"http://127.0.0.1:8087/zta/monitoring",
 			{
-				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat().translate(str.maketrans("\"'{}:", "_____")),
 				"level": "INFO",
 				"logger_source": 1,
 				"user_id": data.user_id,
-				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-				"response": str(response),
+				"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+				"response": str(response).translate(str.maketrans("\"'{}:", "_____")),
 				"error_message": data.problem
 			}
 		)
@@ -236,13 +236,13 @@ async def updateUserNetworkSegment(dbName, data, currentDatetime):
 
 def getDataForIAM(data):
 	dataForIAM = {
-		"jwt": data.auth_data.get("jwt")
+		"jwt": data.get("auth_data").get("jwt")
 	}
 
-	if data.auth_data.get("username") is not None:
-		dataForIAM["username"] = data.auth_data.get("username")
-	if data.auth_data.get("password_hash") is not None:
-		dataForIAM["password_hash"] = data.auth_data.get("password_hash")
+	if data.get("auth_data").get("username") is not None:
+		dataForIAM["username"] = data.get("auth_data").get("username")
+	if data.get("auth_data").get("password_hash") is not None:
+		dataForIAM["password_hash"] = data.get("auth_data").get("password_hash")
 	
 	return dataForIAM
 

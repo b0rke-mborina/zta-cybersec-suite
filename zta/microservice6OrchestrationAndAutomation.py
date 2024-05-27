@@ -10,14 +10,26 @@ from .utilityFunctions import decryptData, encryptData, hashData, isStringValid,
 app = FastAPI()
 
 
-class DataCryptography(BaseModel):
+class DataEncrypt(BaseModel):
 	data: dict
 	
 	@validator("data")
 	def validateAndSanitizeDict(cls, v):
 		for key, value in v.items():
 			if isinstance(value, str):
-				if not isStringValid(value, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$'):
+				if not isStringValid(value, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$'):
+					raise RequestValidationError("String is not valid.")
+		
+		return v
+
+class DataDecrypt(BaseModel):
+	data: dict
+	
+	@validator("data")
+	def validateAndSanitizeDict(cls, v):
+		for key, value in v.items():
+			if isinstance(value, str):
+				if not isStringValid(value, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$'): # base64 regex
 					raise RequestValidationError("String is not valid.")
 		
 		return v
@@ -27,7 +39,7 @@ class DataHashing(BaseModel):
 	
 	@validator("data")
 	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$')
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -45,9 +57,9 @@ async def exceptionHandler(request, exc):
 				"level": "FATAL",
 				"logger_source": 6,
 				"user_id": 0, # placeholder value is used because user is not important
-				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-				"response": "",
-				"error_message": f"ZTA error. {exc}"
+				"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+				"response": "__NULL__",
+				"error_message": f"ZTA error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 			}
 		),
 		sendRequest(
@@ -66,12 +78,12 @@ async def exceptionHandler(request, exc):
 	)
 
 @app.get("/zta/encrypt")
-async def encryption(data: DataCryptography):
+async def encryption(data: DataEncrypt):
 	encryptedData = encryptData(data.data)
 	return { "encryption": "success", "data": encryptedData }
 
 @app.get("/zta/decrypt")
-async def decryption(data: DataCryptography):
+async def decryption(data: DataDecrypt):
 	decryptedData = decryptData(data.data)
 	return { "decryption": "success", "data": decryptedData }
 

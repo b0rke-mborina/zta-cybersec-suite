@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 import asyncio
 import datetime
 from .utilityFunctions import getAppIdFromServiceAuthSource, getDataForIAM, isStringValid, sendRequest
@@ -10,18 +10,32 @@ from .utilityFunctions import getAppIdFromServiceAuthSource, getDataForIAM, isSt
 app = FastAPI()
 
 
-class Data(BaseModel):
-	auth_data: dict
-	auth_source: int
+class AuthData(BaseModel):
+	jwt: str
+	username: str = ""
+	password_hash: str = ""
 	
-	@validator("auth_data")
-	def validateAndSanitizeDict(cls, v):
-		for key, value in v.items():
-			if isinstance(value, str):
-				if not isStringValid(value, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$'):
-					raise RequestValidationError("String is not valid.")
+	@field_validator("jwt", "username", "password_hash")
+	def validateAndSanitizeString(cls, v, info):
+		regex = None
+		if info.field_name == "jwt":
+			regex = r'^[A-Za-z0-9_-]+\.([A-Za-z0-9_-]+\.|[A-Za-z0-9_-]+)+[A-Za-z0-9_-]+$'
+		elif info.field_name == "password_hash":
+			regex = r'^[a-fA-F0-9]{128}$'
+		else:
+			regex = r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$'
+
+		allowNoneOrEmpty = False if info.field_name == "jwt" else True
+		isValid = isStringValid(v, allowNoneOrEmpty, regex)
+
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
 		
 		return v
+
+class Data(BaseModel):
+	auth_data: AuthData
+	auth_source: int
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
@@ -34,9 +48,9 @@ async def exceptionHandler(request, exc):
 				"level": "FATAL",
 				"logger_source": 5,
 				"user_id": 0, # placeholder value is used because user cannot be authenticated
-				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-				"response": "",
-				"error_message": f"ZTA error. {exc}"
+				"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+				"response": "__NULL__",
+				"error_message": f"ZTA error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 			}
 		),
 		sendRequest(
@@ -59,7 +73,7 @@ async def tunnelling(request: Request, data: Data):
 	authenticationResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8081/zta/iam",
-		getDataForIAM(data)
+		getDataForIAM(data.model_dump())
 	)
 	isAuthenticated = authenticationResult[0].get("is_authenticated")
 	isAuthenticatedAdditionally = authenticationResult[0].get("is_authenticated_additionally")
@@ -69,7 +83,6 @@ async def tunnelling(request: Request, data: Data):
 		raise HTTPException(500)
 	if isAuthenticated != True:
 		raise RequestValidationError("User not allowed.")
-
 	
 	tasksAuthorization = [
 		sendRequest(
@@ -118,9 +131,9 @@ async def tunnelling(request: Request, data: Data):
 				"level": "INFO",
 				"logger_source": 5,
 				"user_id": userId,
-				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-				"response": str(response),
-				"error_message": ""
+				"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+				"response": str(response).translate(str.maketrans("\"'{}:", "_____")),
+				"error_message": "__NULL__"
 			}
 		)
 	]

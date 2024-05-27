@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 import asyncio
 import datetime
 from .utilityFunctions import handleUserAuthentication, isStringValid, sendRequest
@@ -15,11 +15,19 @@ class Data(BaseModel):
 	username: str = ""
 	password_hash: str = ""
 
-	@validator("jwt", "username", "password_hash")
-	def validateAndSanitizeString(cls, v, field):
-		allowNoneOrEmpty = False if field.name == "jwt" else True
-		isValid = isStringValid(v, allowNoneOrEmpty, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
-		
+	@field_validator("jwt", "username", "password_hash")
+	def validateAndSanitizeString(cls, v, info):
+		regex = None
+		if info.field_name == "jwt":
+			regex = r'^[A-Za-z0-9_-]+\.([A-Za-z0-9_-]+\.|[A-Za-z0-9_-]+)+[A-Za-z0-9_-]+$'
+		elif info.field_name == "password_hash":
+			regex = r'^[a-fA-F0-9]{128}$'
+		else:
+			regex = r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$'
+
+		allowNoneOrEmpty = False if info.field_name == "jwt" else True
+		isValid = isStringValid(v, allowNoneOrEmpty, regex)
+
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
 		
@@ -36,9 +44,9 @@ async def exceptionHandler(request, exc):
 				"level": "FATAL",
 				"logger_source": 2,
 				"user_id": 0, # placeholder value is used because user cannot be authenticated
-				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-				"response": "",
-				"error_message": f"ZTA error. {exc}"
+				"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+				"response": "__NULL__",
+				"error_message": f"ZTA error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 			}
 		),
 		sendRequest(

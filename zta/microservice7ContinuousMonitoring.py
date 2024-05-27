@@ -24,8 +24,8 @@ class Data(BaseModel):
 	logger_source: int
 	user_id: int
 	request: str
-	response: str = ""
-	error_message: str = ""
+	response: str
+	error_message: str
 	
 	class Config:
 		use_enum_values = True
@@ -39,9 +39,8 @@ class Data(BaseModel):
 		return v
 
 	@validator("request", "response", "error_message")
-	def validateAndSanitizeString(cls, v, field):
-		allowNoneOrEmpty = False if field.name == "request" else True
-		isValid = isStringValid(v, allowNoneOrEmpty, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$')
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -62,11 +61,14 @@ async def exceptionHandler(request, exc):
 
 @app.post("/zta/monitoring")
 async def monitoring(data: Data):
+	dataForEncryption = data.model_dump()
+	dataForEncryption["timestamp"] = dataForEncryption["timestamp"].translate(str.maketrans("\"'{}:", "_____"))
+
 	orchestrationAutomationResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8086/zta/encrypt",
 		{
-			"data": data.model_dump()
+			"data": dataForEncryption
 		}
 	)
 	if orchestrationAutomationResult[0].get("encryption") != "success":
