@@ -146,18 +146,18 @@ async def handleACLTask(dbName, data):
 
 async def denyAccessToAll(dbName):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
-		await db.execute("UPDATE ACL SET isAllowed = 0 WHERE role = 'user' OR role = 'admin'")
+		await db.execute("UPDATE ACL SET is_allowed = 0 WHERE role = 'user' OR role = 'admin'")
 		await db.commit()
 
 async def denyAccessToUsers(dbName):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
-		await db.execute("UPDATE ACL SET isAllowed = 0 WHERE role = 'user'")
+		await db.execute("UPDATE ACL SET is_allowed = 0 WHERE role = 'user'")
 		await db.commit()
 
 async def denyAccessToUser(dbName, userId):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
 		await db.execute(
-			"UPDATE ACL SET isAllowed = 0 WHERE user_id = ?",
+			"UPDATE ACL SET is_allowed = 0 WHERE user_id = ?",
 			(userId, )
 		)
 		await db.commit()
@@ -239,10 +239,12 @@ def getDataForIAM(data):
 		"jwt": data.get("auth_data").get("jwt")
 	}
 
-	if data.get("auth_data").get("username") is not None:
-		dataForIAM["username"] = data.get("auth_data").get("username")
-	if data.get("auth_data").get("password_hash") is not None:
-		dataForIAM["password_hash"] = data.get("auth_data").get("password_hash")
+	username = data.get("auth_data").get("username")
+	passwordHash = data.get("auth_data").get("password_hash")
+	if username != "":
+		dataForIAM["username"] = username
+	if passwordHash != "":
+		dataForIAM["password_hash"] = passwordHash
 	
 	return dataForIAM
 

@@ -75,7 +75,6 @@ async def monitoring(data: Data):
 		raise HTTPException(500)
 	logData = orchestrationAutomationResult[0].get("data")
 
-	tasks = [log(logData, "ztaLogs.db"), reportToAdmin("Fatal error.")]
-	await asyncio.gather(*tasks)
+	await log(logData, "ztaLogs.db")
 
 	return { "monitoring": "success" }
