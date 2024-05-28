@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
-import asyncio
 import datetime
 from enum import Enum
 from .utilityFunctions import isStringValid, log, reportToAdmin, sendRequest
