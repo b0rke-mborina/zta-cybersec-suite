@@ -1,19 +1,29 @@
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import asyncio
 import datetime
-from .utilityFunctions import checkUserNetworkSegment, sendRequest
+from .utilityFunctions import checkUserNetworkSegment, isStringValid, sendRequest
 
 
 app = FastAPI()
 
 
 class Data(BaseModel):
-	user_id: int
-	auth_source_app_id: int
-	is_user_authenticated_additionally: bool
+	user_id: str
+	auth_source_app_id: str
+	is_user_authenticated_additionally: str
 	possible_breach: bool
+
+	@validator("user_id", "auth_source_app_id", "is_user_authenticated_additionally")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
+
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):

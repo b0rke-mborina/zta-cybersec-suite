@@ -1,33 +1,43 @@
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import asyncio
 import datetime
 from enum import Enum
-from .utilityFunctions import handleACLTask, sendRequest
+from .utilityFunctions import handleACLTask, isStringValid, sendRequest
 
 
 app = FastAPI()
 
 
 class Task(str, Enum):
-	AUTHORIZE = "authorize"
-	DENY_ACCESS_TO_ALL = "deny_access_to_all"
-	DENY_ACCESS_TO_USERS = "deny_access_to_users"
-	DENY_ACCESS_TO_USER = "deny_access_to_user"
+	AUTHORIZE = "eZ9FPVVabeN6dDFRZ9itdA=="
+	DENY_ACCESS_TO_ALL = "r+KhlYVgRAQABXy35o6JOCACeHZG6q5o"
+	DENY_ACCESS_TO_USERS = "r+KhlYVgRAQI7B9eX5vQoBZazil7VuSO"
+	DENY_ACCESS_TO_USER = "r+KhlYVgRAQI7B9eX5vQoKm6HFXK1u4G"
 
 class Role(str, Enum):
-	USER = "user"
-	ADMIN = "admin"
+	USER = "3DoxBhFdBD8="
+	ADMIN = "4I1FoHuYuxc="
 
 class Data(BaseModel):
 	task: Task
-	is_user_authenticated_additionally: bool
-	user_id: int = 0
-	user_role: Role = "user"
+	user_id: str
+	user_role: Role
+	is_user_authenticated_additionally: str
 	
 	class Config:
 		use_enum_values = True
+
+	@validator("task", "user_id", "is_user_authenticated_additionally")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
+
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):

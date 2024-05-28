@@ -125,8 +125,8 @@ async def reportToAdmin(problem):
 
 async def handleACLTask(dbName, data):
 	match data.task:
-		case "authorize":
-			if data.user_id == 0:
+		case "eZ9FPVVabeN6dDFRZ9itdA==":
+			if data.user_id == "35oIObfdlDo=":
 				return [False, False]
 			else:
 				tasks = [
@@ -134,30 +134,30 @@ async def handleACLTask(dbName, data):
 					checkIfPossibleDosAtack("ztaACL.db", data.user_id, data.is_user_authenticated_additionally)
 				]
 				return await asyncio.gather(*tasks)
-		case "deny_access_to_all":
+		case "r+KhlYVgRAQABXy35o6JOCACeHZG6q5o":
 			await denyAccessToAll(dbName)
 			return ["", ""]
-		case "deny_access_to_users":
+		case "r+KhlYVgRAQI7B9eX5vQoBZazil7VuSO":
 			await denyAccessToUsers(dbName)
 			return ["", ""]
-		case "deny_access_to_user":
+		case "r+KhlYVgRAQI7B9eX5vQoKm6HFXK1u4G":
 			await denyAccessToUser(dbName, data.user_id)
 			return ["", ""]
 
 async def denyAccessToAll(dbName):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
-		await db.execute("UPDATE ACL SET is_allowed = 0 WHERE role = 'user' OR role = 'admin'")
+		await db.execute("UPDATE ACL SET is_allowed = '35oIObfdlDo=' WHERE role = '3DoxBhFdBD8=' OR role = '4I1FoHuYuxc='") # 'user' or 'admin'
 		await db.commit()
 
 async def denyAccessToUsers(dbName):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
-		await db.execute("UPDATE ACL SET is_allowed = 0 WHERE role = 'user'")
+		await db.execute("UPDATE ACL SET is_allowed = '35oIObfdlDo=' WHERE role = '3DoxBhFdBD8='") # 'user'
 		await db.commit()
 
 async def denyAccessToUser(dbName, userId):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
 		await db.execute(
-			"UPDATE ACL SET is_allowed = 0 WHERE user_id = ?",
+			"UPDATE ACL SET is_allowed = '35oIObfdlDo=' WHERE user_id = ?",
 			(userId, )
 		)
 		await db.commit()
@@ -171,38 +171,38 @@ async def handleUserAuthentication(dbName, data):
 	return (results[0][0], results[1][0], results[0][1], results[0][2])
 
 async def authenticateUserWithUsernameAndPassword(dbName, data):
-	isAuthenticated, userId, userRole = False, 0, "user"
+	isAuthenticated, userId, userRole = False, "35oIObfdlDo=", "3DoxBhFdBD8=" # False, 0, "user"
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
 		cursor = await conn.execute(
 			"SELECT * FROM User WHERE username = ? AND password_hash = ?",
-			(data.username, data.password_hash)
+			(data["username"], data["password_hash"])
 		)
 		dataFromDb = await cursor.fetchone()
 		if dataFromDb is not None:
 			isAuthenticated = True
 			userId = dataFromDb[0]
-			if dataFromDb[1] != "user":
+			if dataFromDb[1] != "3DoxBhFdBD8=":
 				userRole = dataFromDb[1]
 	return (isAuthenticated, userId, userRole)
 
 async def authenticateUserWithJwt(dbName, data):
-	isAuthenticated, userId, userRole = False, 0, "user"
+	isAuthenticated, userId, userRole = False, "35oIObfdlDo=", "3DoxBhFdBD8=" # False, 0, "user"
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
 		cursor = await conn.execute(
 			"SELECT * FROM User WHERE jwt = ?",
-			(data.jwt, )
+			(data["jwt"], )
 		)
 		dataFromDb = await cursor.fetchone()
 		if dataFromDb is not None:
 			isAuthenticated = True
 			userId = dataFromDb[0]
-			if dataFromDb[1] != "user":
+			if dataFromDb[1] != "3DoxBhFdBD8=":
 				userRole = dataFromDb[1]
 	return (isAuthenticated, userId, userRole)
 
 async def checkUserNetworkSegment(dbName, data):
 	result = False
-	if data.user_id == 0:
+	if data.user_id == "35oIObfdlDo=": # == 0
 		return False
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
 		cursor = await conn.execute(
@@ -214,10 +214,10 @@ async def checkUserNetworkSegment(dbName, data):
 		currentDatetime = datetime.datetime.now(datetime.timezone.utc)
 		lastAuthenticated = datetime.datetime.fromisoformat(dataFromDb[2]).replace(tzinfo=datetime.timezone.utc)
 		lastAuthenticationExpires = lastAuthenticated + datetime.timedelta(hours=1)
-		if (data.auth_source_app_id == dataFromDb[1] and currentDatetime < lastAuthenticationExpires) or data.is_user_authenticated_additionally:
+		if (data.auth_source_app_id == dataFromDb[1] and currentDatetime < lastAuthenticationExpires) or data.is_user_authenticated_additionally == "eMviHPAW92g=": # == 1
 			result = True
 
-	if data.is_user_authenticated_additionally:
+	if data.is_user_authenticated_additionally == "eMviHPAW92g=": # == 1
 		await updateUserNetworkSegment(dbName, data, currentDatetime)
 	
 	return result
@@ -282,7 +282,7 @@ async def isRoleAllowed(dbName, role):
 			(role, )
 		)
 		result = await cursor.fetchone()
-		return result[2] == 1
+		return result[2] == "eMviHPAW92g=" # is_allowed == 1
 
 async def isUserAllowed(dbName, userId):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
@@ -294,7 +294,7 @@ async def isUserAllowed(dbName, userId):
 		if result is None:
 			return False
 		else:
-			return result[2] == 1
+			return result[2] == "eMviHPAW92g=" # is_allowed == 1
 
 async def checkIfPossibleDosAtack(dbName, userId, isAuthenticated):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
@@ -407,9 +407,9 @@ def hashData(data):
 	return hashlib.sha512(data.encode()).hexdigest()
 
 def isIntValue(field):
-	intFields = {"logger_source", "user_id", "is_allowed", "request_count", "current_app_id"}
+	intFields = {"logger_source", "user_id", "is_allowed", "request_count", "current_app_id", "auth_source_app_id", "is_user_authenticated_additionally"}
 	return field in intFields
 
 def useDeterministicCryptography(field):
-	deterministicFields = {"user_id", "role", "username", "key", "token", "filename", "dataset", "severity", "password_hash", "jwt"}
+	deterministicFields = {"user_id", "role", "username", "key", "token", "filename", "dataset", "severity", "password_hash", "jwt", "auth_source_app_id", "is_user_authenticated_additionally", "task"}
 	return field in deterministicFields

@@ -84,14 +84,31 @@ async def tunnelling(request: Request, data: Data):
 	if isAuthenticated != True:
 		raise RequestValidationError("User not allowed.")
 	
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": {
+				"auth_source_app_id": getAppIdFromServiceAuthSource(data.auth_source),
+				"is_user_authenticated_additionally": isAuthenticatedAdditionally,
+				"task": "authorize"
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	authSourceAppId = orchestrationAutomationResult[0].get("data").get("auth_source_app_id")
+	isAuthenticatedAdditionally = orchestrationAutomationResult[0].get("data").get("is_user_authenticated_additionally")
+	task = orchestrationAutomationResult[0].get("data").get("task")
+
 	tasksAuthorization = [
 		sendRequest(
 			"get",
 			"http://127.0.0.1:8082/zta/network",
 			{
-				"is_user_authenticated_additionally": isAuthenticatedAdditionally,
 				"user_id": userId,
-				"auth_source_app_id": getAppIdFromServiceAuthSource(data.auth_source),
+				"auth_source_app_id": authSourceAppId,
+				"is_user_authenticated_additionally": isAuthenticatedAdditionally,
 				"possible_breach": False
 			}
 		),
@@ -99,7 +116,7 @@ async def tunnelling(request: Request, data: Data):
 			"get",
 			"http://127.0.0.1:8083/zta/acl",
 			{
-				"task": "authorize",
+				"task": task,
 				"is_user_authenticated_additionally": isAuthenticatedAdditionally,
 				"user_id": userId,
 				"user_role": userRole
@@ -115,11 +132,26 @@ async def tunnelling(request: Request, data: Data):
 	isAuthorized = aclResult[0].get("is_authorized")
 	isPossibleDosAtack = aclResult[0].get("is_possible_dos_atack")
 	
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/decrypt",
+		{
+			"data": {
+				"user_id": userId,
+				"role": userRole
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("decryption") != "success":
+		raise HTTPException(500)
+	userIdForResponse = orchestrationAutomationResult[0].get("data").get("user_id")
+	userRoleForResponse = orchestrationAutomationResult[0].get("data").get("role")
+	
 	response = {
 		"tunnelling": "success",
 		"is_authorized": isUserAllowed and isAuthorized and not isPossibleDosAtack,
-		"user_id": userId,
-		"user_role": userRole
+		"user_id": userIdForResponse,
+		"user_role": userRoleForResponse
 	}
 
 	tasksFinal = [
