@@ -30,7 +30,7 @@ class Data(BaseModel):
 
 	@validator("ciphertext")
 	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValid = isStringValid(v, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -39,7 +39,7 @@ class Data(BaseModel):
 
 	@validator("key")
 	def validate_key(cls, v, values, **kwargs):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValid = isStringValid(v, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
 
@@ -55,11 +55,11 @@ class Data(BaseModel):
 
 def validateTagAndNonce(data):
 	if data.algorithm == "AES":
-		isValid = isStringValid(data.tag, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValid = isStringValid(data.tag, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
 
-		isValid = isStringValid(data.nonce, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValid = isStringValid(data.nonce, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
 
@@ -69,10 +69,10 @@ async def validation_exception_handler(request, exc):
 		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "ERROR",
 		"logger_source": 12,
-		"user_id": 0, # placeholder value is used because user will not be authenticated
-		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-		"response": "",
-		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
+		"user_id": "35oIObfdlDo=", # placeholder value 0 is used because user will not be authenticated
+		"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+		"response": "__NULL__",
+		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
 	await sendRequest("post", "http://127.0.0.1:8003/cryptography/logging", dataForLoggingUnsuccessfulRequest)
 
@@ -130,9 +130,9 @@ async def decryption(request: Request, data: Data):
 			"level": "INFO",
 			"logger_source": 12,
 			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": json.dumps(response),
-			"error_message": ""
+			"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+			"response": json.dumps(response).translate(str.maketrans("\"'{}:", "_____")),
+			"error_message": "__NULL__"
 		}
 	)
 	if loggingResult[0].get("logging") != "success":

@@ -45,7 +45,7 @@ async def validation_exception_handler(request, exc):
 		"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 		"level": "ERROR",
 		"logger_source": 82,
-		"user_id": 0, # placeholder value is used because user will not be authenticated
+		"user_id": "35oIObfdlDo=", # placeholder value 0 is used because user will not be authenticated
 		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"

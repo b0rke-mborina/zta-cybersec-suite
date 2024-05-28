@@ -47,7 +47,7 @@ async def exceptionHandler(request, exc):
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "FATAL",
 				"logger_source": 5,
-				"user_id": 0, # placeholder value is used because user cannot be authenticated
+				"user_id": "35oIObfdlDo=", # placeholder value 0 is used because user cannot be authenticated
 				"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
 				"response": "__NULL__",
 				"error_message": f"ZTA error. {exc}".translate(str.maketrans("\"'{}:", "_____"))

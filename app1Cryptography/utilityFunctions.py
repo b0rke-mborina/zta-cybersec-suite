@@ -112,14 +112,18 @@ def encryptAES(plaintext, key):
 
 def encryptRSA(plaintext, keyLength):
 	key = RSA.generate(keyLength)
-	privateKeyStr = key.export_key().decode().replace("-----BEGIN RSA PRIVATE KEY-----\n", "").replace("\n-----END RSA PRIVATE KEY-----", "")
-	publicKeyStr = key.publickey().export_key().decode().replace("-----BEGIN PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----", "")
-	
-	publicKeyBytes = base64.b64decode(publicKeyStr)
-	publicKey = RSA.import_key(publicKeyBytes)
+	privateKeyStr = key.export_key().decode()
+	publicKeyStr = key.publickey().export_key().decode()
+
+	publicKey = RSA.import_key(publicKeyStr)
 	cipher = PKCS1_OAEP.new(publicKey)
-	ciphertext = cipher.encrypt(plaintext.encode('utf-8'))
-	return (base64.b64encode(ciphertext).decode('utf-8'), privateKeyStr, publicKeyStr)
+	ciphertext = cipher.encrypt(plaintext.encode("utf-8"))
+
+	return (
+		base64.b64encode(ciphertext).decode("utf-8"),
+		base64.b64encode(privateKeyStr.encode("utf-8")).decode("utf-8"),
+		base64.b64encode(publicKeyStr.encode("utf-8")).decode("utf-8")
+	)
 
 def encryptBlowfish(plaintext, key):
 	plaintext, key = plaintext.encode("utf-8"), key.encode("utf-8")
@@ -180,11 +184,13 @@ def decryptAES(ciphertext, key, tag, nonce):
 
 def decryptRSA(ciphertext, privateKey):
 	try:
-		privateKeyBytes = base64.b64decode(privateKey)
-		privateBey = RSA.import_key(privateKeyBytes)
-		cipher = PKCS1_OAEP.new(privateBey)
-		plaintext = cipher.decrypt(base64.b64decode(ciphertext))
-		return plaintext.decode('utf-8')
+		ciphertextBytes = base64.b64decode(ciphertext.encode("utf-8"))
+		privateKeyBytes = base64.b64decode(privateKey.encode("utf-8"))
+
+		privateKey = RSA.import_key(privateKeyBytes)
+		cipher = PKCS1_OAEP.new(privateKey)
+		plaintext = cipher.decrypt(ciphertextBytes)
+		return plaintext.decode("utf-8")
 	except:
 		return ""
 

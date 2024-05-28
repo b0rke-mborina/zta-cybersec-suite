@@ -76,9 +76,9 @@ async def monitoring(data: Data):
 	)
 	if orchestrationAutomationResult[0].get("encryption") != "success":
 		raise HTTPException(500)
+	
 	logData = orchestrationAutomationResult[0].get("data")
 	logData["user_id"] = userId
-
 	await log(logData, "ztaLogs.db")
 
 	return { "monitoring": "success" }
