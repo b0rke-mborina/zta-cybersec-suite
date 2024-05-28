@@ -132,26 +132,11 @@ async def tunnelling(request: Request, data: Data):
 	isAuthorized = aclResult[0].get("is_authorized")
 	isPossibleDosAtack = aclResult[0].get("is_possible_dos_atack")
 	
-	orchestrationAutomationResult = await sendRequest(
-		"get",
-		"http://127.0.0.1:8086/zta/decrypt",
-		{
-			"data": {
-				"user_id": userId,
-				"role": userRole
-			}
-		}
-	)
-	if orchestrationAutomationResult[0].get("decryption") != "success":
-		raise HTTPException(500)
-	userIdForResponse = orchestrationAutomationResult[0].get("data").get("user_id")
-	userRoleForResponse = orchestrationAutomationResult[0].get("data").get("role")
-	
 	response = {
 		"tunnelling": "success",
 		"is_authorized": isUserAllowed and isAuthorized and not isPossibleDosAtack,
-		"user_id": userIdForResponse,
-		"user_role": userRoleForResponse
+		"user_id": userId,
+		"user_role": userRole
 	}
 
 	tasksFinal = [
