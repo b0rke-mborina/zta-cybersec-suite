@@ -85,7 +85,7 @@ async def isRoleAllowed(dbName, role):
 			(role, )
 		)
 		result = await cursor.fetchone()
-		return result[2] == 1
+		return result[2] == "eMviHPAW92g=" # == 1
 
 async def isUserAllowed(dbName, userId):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
@@ -94,7 +94,7 @@ async def isUserAllowed(dbName, userId):
 			(userId, )
 		)
 		result = await cursor.fetchone()
-		return result[2] == 1
+		return result[2] == "eMviHPAW92g=" # == 1
 
 def verifySignature(publicKeyBase64, signatureBase64, message, hashType):
 	try:
