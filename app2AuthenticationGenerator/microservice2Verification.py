@@ -14,7 +14,7 @@ class DataAPIKey(BaseModel):
 
 	@validator("api_key")
 	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9]{32}$')
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -26,7 +26,7 @@ class DataOAuth2Token(BaseModel):
 
 	@validator("oauth2_token")
 	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9_-]+$')
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -38,7 +38,7 @@ class DataJWT(BaseModel):
 
 	@validator("jwt")
 	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+){2}$')
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -52,9 +52,9 @@ async def validation_exception_handler(request, exc):
 		"level": "ERROR",
 		"logger_source": 22,
 		"user_id": "35oIObfdlDo=", # placeholder value 0 is used because user will not be authenticated
-		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-		"response": "",
-		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
+		"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+		"response": "__NULL__",
+		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
 	await sendRequest("post", "http://127.0.0.1:8013/auth-generator/logging", dataForLoggingUnsuccessfulRequest)
 
@@ -120,9 +120,9 @@ async def verificatorAPIKey(request: Request, data: DataAPIKey):
 			"level": "INFO",
 			"logger_source": 22,
 			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
+			"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+			"response": str(response).translate(str.maketrans("\"'{}:", "_____")),
+			"error_message": "__NULL__"
 		}
 	)
 	if loggingResult[0].get("logging") != "success":
@@ -174,9 +174,9 @@ async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 			"level": "INFO",
 			"logger_source": 22,
 			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
+			"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+			"response": str(response).translate(str.maketrans("\"'{}:", "_____")),
+			"error_message": "__NULL__"
 		}
 	)
 	if loggingResult[0].get("logging") != "success":
@@ -228,9 +228,9 @@ async def verificatorJWT(request: Request, data: DataJWT):
 			"level": "INFO",
 			"logger_source": 22,
 			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
+			"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+			"response": str(response).translate(str.maketrans("\"'{}:", "_____")),
+			"error_message": "__NULL__"
 		}
 	)
 	if loggingResult[0].get("logging") != "success":
