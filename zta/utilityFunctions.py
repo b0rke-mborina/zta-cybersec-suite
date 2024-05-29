@@ -417,6 +417,6 @@ def useDeterministicCryptography(field):
 	deterministicFields = {
 		"user_id", "role", "username", "key", "token", "filename", "dataset", "severity",
 		"password_hash", "jwt", "auth_source_app_id", "is_user_authenticated_additionally", 
-		"task", "auth_type", "token_key", "secret"
+		"task", "auth_type", "token_key"
 	}
 	return field in deterministicFields
