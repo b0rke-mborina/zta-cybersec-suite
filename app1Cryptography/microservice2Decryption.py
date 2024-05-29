@@ -39,11 +39,13 @@ class Data(BaseModel):
 
 	@validator("key")
 	def validate_key(cls, v, values, **kwargs):
-		isValid = isStringValid(v, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
+		algorithm = values.get('algorithm')
+
+		regex = r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$' if algorithm == "RSA" else r'^[A-Za-z0-9]*$'
+		isValid = isStringValid(v, False, regex)
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
 
-		algorithm = values.get('algorithm')
 		if algorithm == "DES" and len(v) != 8:
 			raise ValueError('Key must be 8 characters long for DES algorithm')
 		elif algorithm == "TripleDES" and len(v) != 24:

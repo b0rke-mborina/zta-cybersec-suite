@@ -38,11 +38,13 @@ class Data(BaseModel):
 
 	@validator("key")
 	def validatorKey(cls, v, values, **kwargs):
-		isValid = isStringValid(v, True, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		algorithm = values.get("algorithm")
+
+		regex = r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$' if algorithm == "RSA" else r'^[A-Za-z0-9]*$'
+		isValid = isStringValid(v, True, regex)
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
 
-		algorithm = values.get("algorithm")
 		if algorithm in ["DES", "TripleDES", "AES", "Blowfish"] and v is None:
 			raise RequestValidationError('Key is required for DES, TripleDES, AES or Blowfish algorithm')
 		
