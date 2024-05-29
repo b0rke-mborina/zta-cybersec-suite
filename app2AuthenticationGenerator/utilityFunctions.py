@@ -156,8 +156,8 @@ def generateOAuth2():
 
 def generateJWT(userId):
 	secretKey = "SECRET_KEY_PLACEHOLDER" # PLACEHOLDER
-	expirationTime = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=14)).isoformat()
-	token = jwt.encode({ "user_id": userId, "expires": expirationTime }, secretKey, algorithm='HS256')
+	expirationDatetime = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=14)).isoformat()
+	token = jwt.encode({ "user_id": userId, "expires": expirationDatetime }, secretKey, algorithm='HS256')
 	return token
 
 def verifyAPIKey(dataFromDb, currentDatetime):
@@ -171,8 +171,8 @@ def verifyOAuth2(dataFromDb, currentDatetime, userId):
 	if len(dataFromDb) == 0:
 		return False
 
-	datetimeFromDb = datetime.datetime.fromisoformat(dataFromDb[0][1]).replace(tzinfo=datetime.timezone.utc)
-	userIdFromDb = dataFromDb[0][2]
+	datetimeFromDb = datetime.datetime.fromisoformat(dataFromDb[0][2]).replace(tzinfo=datetime.timezone.utc)
+	userIdFromDb = dataFromDb[0][0]
 
 	return datetimeFromDb > currentDatetime and userId == userIdFromDb
 
@@ -180,9 +180,9 @@ def verifyJWT(token, dataFromDb, currentDatetime, userId):
 	if len(dataFromDb) == 0:
 		return False
 
-	datetimeFromDb = datetime.datetime.fromisoformat(dataFromDb[0][1]).replace(tzinfo=datetime.timezone.utc)
-	userIdFromDb = dataFromDb[0][2]
-	# secretFromDb = dataFromDb[0][3]
+	datetimeFromDb = datetime.datetime.fromisoformat(dataFromDb[0][3]).replace(tzinfo=datetime.timezone.utc)
+	userIdFromDb = dataFromDb[0][0]
+	# secretFromDb = dataFromDb[0][2]
 	
 	try:
 		decodedPayload = jwt.decode(token, "SECRET_KEY_PLACEHOLDER", algorithms=['HS256']) # base64.b64decode(secretFromDb) # PLACEHOLDER

@@ -254,7 +254,7 @@ async def verificatorJWT(request: Request, data: DataJWT):
 	if tokenResult[0].get("getting_info") != "success":
 		raise HTTPException(500)
 	
-	verificationResult = verifyJWT(encryptedData["token_key"], tokenResult[0].get("info"), currentTime, userId)
+	verificationResult = verifyJWT(data.jwt, tokenResult[0].get("info"), currentTime, userId)
 	response = { "verification": "success", "is_valid": verificationResult }
 	
 	loggingResult = await sendRequest(

@@ -51,11 +51,11 @@ class DataNew(BaseModel):
 			raise ValueError("Timestamp must be in ISO 8601 format")
 		return v
 
-	@field_validator("token_key", "expires", "user_id", "secret")
+	@field_validator("token_key", "user_id", "secret")
 	def validateAndSanitizeString(cls, v, info):
 		allowNoneOrEmpty = True if info.field_name == "secret" or info.field_name == "user_id" else False
 		isValid = isStringValid(v, allowNoneOrEmpty, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
-		
+
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
 		

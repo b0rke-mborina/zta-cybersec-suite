@@ -64,7 +64,7 @@ async def handleProblem(request, data, response):
 			"post",
 			"http://127.0.0.1:8087/zta/monitoring",
 			{
-				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat().translate(str.maketrans("\"'{}:", "_____")),
+				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),# .translate(str.maketrans("\"'{}:", "_____")),
 				"level": "INFO",
 				"logger_source": 1,
 				"user_id": data.user_id,

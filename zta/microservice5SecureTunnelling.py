@@ -11,12 +11,15 @@ app = FastAPI()
 
 
 class AuthData(BaseModel):
-	jwt: str
+	jwt: str = ""
 	username: str = ""
 	password_hash: str = ""
 	
 	@field_validator("jwt", "username", "password_hash")
 	def validateAndSanitizeString(cls, v, info):
+		if info.field_name == "jwt" and v == "":
+			return v
+		
 		regex = None
 		if info.field_name == "jwt":
 			regex = r'^[A-Za-z0-9_-]+\.([A-Za-z0-9_-]+\.|[A-Za-z0-9_-]+)+[A-Za-z0-9_-]+$'
@@ -25,8 +28,7 @@ class AuthData(BaseModel):
 		else:
 			regex = r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$'
 
-		allowNoneOrEmpty = False if info.field_name == "jwt" else True
-		isValid = isStringValid(v, allowNoneOrEmpty, regex)
+		isValid = isStringValid(v, True, regex)
 
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -70,10 +72,14 @@ async def exceptionHandler(request, exc):
 
 @app.get("/zta/tunnelling")
 async def tunnelling(request: Request, data: Data):
+	dataForIAM = getDataForIAM(data.model_dump())
+	if dataForIAM.get("jwt") == "":
+		return { "tunnelling": "success", "is_authorized": False }
+	
 	authenticationResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8081/zta/iam",
-		getDataForIAM(data.model_dump())
+		dataForIAM
 	)
 	isAuthenticated = authenticationResult[0].get("is_authenticated")
 	isAuthenticatedAdditionally = authenticationResult[0].get("is_authenticated_additionally")
@@ -82,7 +88,7 @@ async def tunnelling(request: Request, data: Data):
 	if authenticationResult[0].get("iam") != "success":
 		raise HTTPException(500)
 	if isAuthenticated != True:
-		raise RequestValidationError("User not allowed.")
+		return { "tunnelling": "success", "is_authorized": False }
 	
 	orchestrationAutomationResult = await sendRequest(
 		"get",
