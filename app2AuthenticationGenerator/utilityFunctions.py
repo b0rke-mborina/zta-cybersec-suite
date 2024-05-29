@@ -119,9 +119,9 @@ async def saveData(authType, value, expires, userId = None, secret = None):
 		case "api_key":
 			return await storeAPIKey("app2Data.db", value, expires)
 		case "oauth2_token":
-			return await storeOAuth2Token("app2Data.db", value, expires, userId)
+			return await storeOAuth2Token("app2Data.db", userId, value, expires)
 		case "jwt":
-			return await storeJWT("app2Data.db", value, expires, userId, secret)
+			return await storeJWT("app2Data.db", userId, value, secret, expires)
 
 async def storeAPIKey(dbName, key, expires):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
@@ -131,19 +131,19 @@ async def storeAPIKey(dbName, key, expires):
 		)
 		await db.commit()
 
-async def storeOAuth2Token(dbName, token, expires, userId):
+async def storeOAuth2Token(dbName, userId, token, expires):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
 		await db.execute(
-			"INSERT INTO OAuth2Token (token, expires, user_id) VALUES (?, ?, ?)",
-			(token, expires, userId)
+			"INSERT INTO OAuth2Token (user_id, token, expires) VALUES (?, ?, ?)",
+			(userId, token, expires)
 		)
 		await db.commit()
 
-async def storeJWT(dbName, token, expires, userId, secret):
+async def storeJWT(dbName, userId, token, secret, expires):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
 		await db.execute(
-			"INSERT INTO JWT (token, expires, user_id, secret) VALUES (?, ?, ?, ?)",
-			(token, expires, userId, secret)
+			"INSERT INTO JWT (user_id, token, secret, expires) VALUES (?, ?, ?, ?)",
+			(userId, token, secret, expires)
 		)
 		await db.commit()
 
@@ -155,7 +155,7 @@ def generateOAuth2():
 	return secrets.token_urlsafe(32)
 
 def generateJWT(userId):
-	secretKey = "SECRET_KEY_PLACEHOLDER"
+	secretKey = "SECRET_KEY_PLACEHOLDER" # PLACEHOLDER
 	expiration_time = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=14)).isoformat()
 	token = jwt.encode({ "user_id": userId, "expires": expiration_time }, secretKey, algorithm='HS256')
 	return token
