@@ -1,7 +1,7 @@
-import asyncio
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+import asyncio
 import datetime
 from .utilityFunctions import getAuthData, sendRequest, generateAPIKey, generateOAuth2, generateJWT
 
@@ -61,21 +61,32 @@ async def generatorAPIKey(request: Request):
 	userId = tunnellingResult[0].get("user_id")
 
 	apiKey = generateAPIKey()
-	print(apiKey)
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
-	apiKeyData = {
-		"auth_type": "api_key",
-		"token_key": apiKey,
-		"expires": (currentTime + datetime.timedelta(days=14)).isoformat(),
-	}
-
 	response = { "generation": "success", "api_key": apiKey }
+
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": {
+				"auth_type": "api_key",
+				"token_key": apiKey
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	encryptedData = orchestrationAutomationResult[0].get("data")
 
 	tasks = [
 		sendRequest(
 			"post",
 			"http://127.0.0.1:8012/auth-generator/data-new",
-			apiKeyData
+			{
+				"auth_type": encryptedData["auth_type"],
+				"token_key": encryptedData["token_key"],
+				"expires": (currentTime + datetime.timedelta(days=14)).isoformat(),
+			}
 		),
 		sendRequest(
 			"post",
@@ -116,22 +127,33 @@ async def generatorOAuth2(request: Request):
 	userId = tunnellingResult[0].get("user_id")
 
 	oauth2Token = generateOAuth2()
-	print(oauth2Token)
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
-	oauth2TokenData = {
-		"auth_type": "oauth2_token",
-		"token_key": oauth2Token,
-		"expires": (currentTime + datetime.timedelta(days=14)).isoformat(),
-		"user_id": userId
-	}
-
 	response = { "generation": "success", "oauth2_token": oauth2Token }
+
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": {
+				"auth_type": "oauth2_token",
+				"token_key": oauth2Token
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	encryptedData = orchestrationAutomationResult[0].get("data")
 
 	tasks = [
 		sendRequest(
 			"post",
 			"http://127.0.0.1:8012/auth-generator/data-new",
-			oauth2TokenData
+			{
+				"auth_type": encryptedData["auth_type"],
+				"token_key": encryptedData["token_key"],
+				"expires": (currentTime + datetime.timedelta(days=14)).isoformat(),
+				"user_id": userId
+			}
 		),
 		sendRequest(
 			"post",
@@ -172,23 +194,35 @@ async def generatorJWT(request: Request):
 	userId = tunnellingResult[0].get("user_id")
 
 	jwToken = generateJWT(userId)
-	print(jwToken)
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
-	jwtokenData = {
-		"auth_type": "jwt",
-		"token_key": jwToken,
-		"expires": (currentTime + datetime.timedelta(days=14)).isoformat(),
-		"user_id": userId,
-		"secret": "SECRET_KEY_PLACEHOLDER" # PLACEHOLDER
-	}
-
 	response = { "generation": "success", "jwtoken": jwToken }
+
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": {
+				"auth_type": "jwt",
+				"token_key": jwToken,
+				"secret": "SECRET_KEY_PLACEHOLDER" # PLACEHOLDER
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	encryptedData = orchestrationAutomationResult[0].get("data")
 
 	tasks = [
 		sendRequest(
 			"post",
 			"http://127.0.0.1:8012/auth-generator/data-new",
-			jwtokenData
+			{
+				"auth_type": encryptedData["auth_type"],
+				"token_key": encryptedData["token_key"],
+				"expires": (currentTime + datetime.timedelta(days=14)).isoformat(),
+				"user_id": userId,
+				"secret": encryptedData["secret"]
+			}
 		),
 		sendRequest(
 			"post",

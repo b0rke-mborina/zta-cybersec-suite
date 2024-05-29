@@ -95,21 +95,34 @@ async def verificatorAPIKey(request: Request, data: DataAPIKey):
 		raise RequestValidationError("User not allowed.")
 	
 	userId = tunnellingResult[0].get("user_id")
-
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
+
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": {
+				"auth_type": "api_key",
+				"token_key": data.api_key
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	encryptedData = orchestrationAutomationResult[0].get("data")
+
 	keyResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8012/auth-generator/data-info",
 		{
-			"auth_type": "api_key",
-			"token_key": data.api_key
+			"auth_type": encryptedData["auth_type"],
+			"token_key": encryptedData["token_key"]
 		}
 	)
 	if keyResult[0].get("getting_info") != "success":
 		raise HTTPException(500)
 
 	verificationResult = verifyAPIKey(keyResult[0].get("info"), currentTime)
-
 	response = { "verification": "success", "is_valid": verificationResult }
 	
 	loggingResult = await sendRequest(
@@ -147,14 +160,28 @@ async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 		raise RequestValidationError("User not allowed.")
 	
 	userId = tunnellingResult[0].get("user_id")
-
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
+
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": {
+				"auth_type": "oauth2_token",
+				"token_key": data.oauth2_token
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	encryptedData = orchestrationAutomationResult[0].get("data")
+
 	tokenResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8012/auth-generator/data-info",
 		{
-			"auth_type": "oauth2_token",
-			"token_key": data.oauth2_token,
+			"auth_type": encryptedData["auth_type"],
+			"token_key": encryptedData["token_key"],
 			"user_id": userId
 		}
 	)
@@ -162,8 +189,6 @@ async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 		raise HTTPException(500)
 
 	verificationResult = verifyOAuth2(tokenResult[0].get("info"), currentTime, userId)
-	print(verificationResult)
-
 	response = { "verification": "success", "is_valid": verificationResult }
 	
 	loggingResult = await sendRequest(
@@ -201,23 +226,35 @@ async def verificatorJWT(request: Request, data: DataJWT):
 		raise RequestValidationError("User not allowed.")
 	
 	userId = tunnellingResult[0].get("user_id")
-
 	currentTime = datetime.datetime.now(datetime.timezone.utc)
+
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": {
+				"auth_type": "jwt",
+				"token_key": data.jwt
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	encryptedData = orchestrationAutomationResult[0].get("data")
+
 	tokenResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8012/auth-generator/data-info",
 		{
-			"auth_type": "jwt",
-			"token_key": data.jwt,
+			"auth_type": encryptedData["auth_type"],
+			"token_key": encryptedData["token_key"],
 			"user_id": userId
 		}
 	)
 	if tokenResult[0].get("getting_info") != "success":
 		raise HTTPException(500)
 	
-	verificationResult = verifyJWT(data.jwt, tokenResult[0].get("info"), currentTime, userId)
-	print(verificationResult)
-	
+	verificationResult = verifyJWT(encryptedData["token_key"], tokenResult[0].get("info"), currentTime, userId)
 	response = { "verification": "success", "is_valid": verificationResult }
 	
 	loggingResult = await sendRequest(

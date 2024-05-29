@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, validator
 import datetime
 from enum import Enum
 from .utilityFunctions import getData, isStringValid, saveData, sendRequest
@@ -11,21 +11,22 @@ app = FastAPI()
 
 
 class AuthType(str, Enum):
-	API_KEY = "api_key"
-	OAUTH2_TOKEN = "oauth2_token"
-	JWT = "jwt"
+	API_KEY = "tEq0nzMfSsQ="
+	OAUTH2_TOKEN = "S52Z0ZDeDS7mKe43X+Y2sg=="
+	JWT = "MKgIfWpSwwI="
 
 class DataInfo(BaseModel):
 	auth_type: AuthType
 	token_key: str
-	user_id: int = None
+	user_id: str = None
 
 	class Config:
 		use_enum_values = True
 
-	@validator("token_key")
-	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+	@field_validator("token_key", "user_id")
+	def validateAndSanitizeString(cls, v, info):
+		allowNoneOrEmpty = True if info.field_name == "user_id" else False
+		isValid = isStringValid(v, allowNoneOrEmpty, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -36,24 +37,24 @@ class DataNew(BaseModel):
 	auth_type: AuthType
 	token_key: str
 	expires: str
-	user_id: int = None
+	user_id: str = None
 	secret: str = None
 
 	class Config:
 		use_enum_values = True
 
 	@validator("expires")
-	def validateISO8601ExpiresTimestamp(cls, v):
+	def validateISO8601Timestamp(cls, v):
 		try:
 			datetime.datetime.fromisoformat(v)
 		except ValueError:
 			raise ValueError("Timestamp must be in ISO 8601 format")
 		return v
 
-	@validator("token_key", "secret")
-	def validateAndSanitizeString(cls, v, field):
-		allowNoneOrEmpty = False if field.name == "token_key" else True
-		isValid = isStringValid(v, allowNoneOrEmpty, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+	@field_validator("token_key", "expires", "user_id", "secret")
+	def validateAndSanitizeString(cls, v, info):
+		allowNoneOrEmpty = True if info.field_name == "secret" or info.field_name == "user_id" else False
+		isValid = isStringValid(v, allowNoneOrEmpty, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")

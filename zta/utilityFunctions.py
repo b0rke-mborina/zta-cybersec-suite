@@ -407,9 +407,16 @@ def hashData(data):
 	return hashlib.sha512(data.encode()).hexdigest()
 
 def isIntValue(field):
-	intFields = {"logger_source", "user_id", "is_allowed", "request_count", "current_app_id", "auth_source_app_id", "is_user_authenticated_additionally"}
+	intFields = {
+		"logger_source", "user_id", "is_allowed", "request_count",
+		"current_app_id", "auth_source_app_id", "is_user_authenticated_additionally"
+	}
 	return field in intFields
 
 def useDeterministicCryptography(field):
-	deterministicFields = {"user_id", "role", "username", "key", "token", "filename", "dataset", "severity", "password_hash", "jwt", "auth_source_app_id", "is_user_authenticated_additionally", "task"}
+	deterministicFields = {
+		"user_id", "role", "username", "key", "token", "filename", "dataset", "severity",
+		"password_hash", "jwt", "auth_source_app_id", "is_user_authenticated_additionally", 
+		"task", "auth_type", "token_key", "secret"
+	}
 	return field in deterministicFields

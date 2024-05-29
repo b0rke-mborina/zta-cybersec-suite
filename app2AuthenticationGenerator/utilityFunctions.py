@@ -76,11 +76,11 @@ def hashData(data):
 async def getData(authType, value, userId = None):
 	print(authType, value, userId)
 	match authType:
-		case "api_key":
+		case "tEq0nzMfSsQ=": # api_key
 			return await getAPIKeyInfo("app2Data.db", value)
-		case "oauth2_token":
+		case "S52Z0ZDeDS7mKe43X+Y2sg==": # oauth2_token
 			return await getOAuth2TokenInfo("app2Data.db", value, userId)
-		case "jwt":
+		case "MKgIfWpSwwI=": # jwt
 			return await getJWTInfo("app2Data.db", value, userId)
 
 async def getAPIKeyInfo(dbName, key):
@@ -116,11 +116,11 @@ async def getJWTInfo(dbName, token, userId):
 async def saveData(authType, value, expires, userId = None, secret = None):
 	print(authType, value, expires, userId, secret)
 	match authType:
-		case "api_key":
+		case "tEq0nzMfSsQ=": # api_key
 			return await storeAPIKey("app2Data.db", value, expires)
-		case "oauth2_token":
+		case "S52Z0ZDeDS7mKe43X+Y2sg==": # oauth2_token
 			return await storeOAuth2Token("app2Data.db", userId, value, expires)
-		case "jwt":
+		case "MKgIfWpSwwI=": # jwt
 			return await storeJWT("app2Data.db", userId, value, secret, expires)
 
 async def storeAPIKey(dbName, key, expires):
@@ -156,8 +156,8 @@ def generateOAuth2():
 
 def generateJWT(userId):
 	secretKey = "SECRET_KEY_PLACEHOLDER" # PLACEHOLDER
-	expiration_time = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=14)).isoformat()
-	token = jwt.encode({ "user_id": userId, "expires": expiration_time }, secretKey, algorithm='HS256')
+	expirationTime = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=14)).isoformat()
+	token = jwt.encode({ "user_id": userId, "expires": expirationTime }, secretKey, algorithm='HS256')
 	return token
 
 def verifyAPIKey(dataFromDb, currentDatetime):
