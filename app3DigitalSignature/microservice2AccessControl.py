@@ -1,23 +1,33 @@
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from enum import Enum
-from .utilityFunctions import checkIfUserAllowed, sendRequest
+from .utilityFunctions import checkIfUserAllowed, isStringValid, sendRequest
 
 
 app = FastAPI()
 
 
 class Role(str, Enum):
-	USER = "user"
-	ADMIN = "admin"
+	USER = "3DoxBhFdBD8=" # "user"
+	ADMIN = "4I1FoHuYuxc=" # "admin"
 
 class Data(BaseModel):
-	user_id: int
+	user_id: str
 	role: Role
 
 	class Config:
 		use_enum_values = True
+
+	@validator("user_id")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
 
 @app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
