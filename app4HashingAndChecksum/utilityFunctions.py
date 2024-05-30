@@ -51,12 +51,12 @@ async def storeReport(dataItem, dbName):
 		await db.execute(
 			"INSERT INTO Report (timestamp, logger_source, user_id, data, checksum, error_message) VALUES (?, ?, ?, ?, ?, ?)",
 			(
-				dataItem.timestamp,
-				dataItem.logger_source,
-				dataItem.user_id,
-				dataItem.data,
-				dataItem.checksum,
-				f"Data integrity issue. {dataItem.error_message}"
+				dataItem["timestamp"],
+				dataItem["logger_source"],
+				dataItem["user_id"],
+				dataItem["data"],
+				dataItem["checksum"],
+				f"Data integrity issue. {dataItem["error_message"]}"
 			)
 		)
 		await db.commit()
@@ -109,7 +109,7 @@ def validatePassword(password):
 		'requireLowercase': True,
 		'requireDigits': True,
 		'requireSpecialCharacters': True,
-		'specialCharacters': "!@#$%^&*()_-+=<>?/"
+		'specialCharacters': "!@#$%^&*()_-+=/"
 	}
 	brokenPolicies = []
 
@@ -125,7 +125,7 @@ def validatePassword(password):
 	if passwordPolicies.get('requireDigits', False) and not any(char.isdigit() for char in password):
 		brokenPolicies.append("Password should contain at least one digit.")
 
-	special_characters = passwordPolicies.get('specialCharacters', "!@#$%^&*()_-+=<>?/")
+	special_characters = passwordPolicies.get('specialCharacters', "!@#$%^&*()_-+=/")
 	if passwordPolicies.get('requireSpecialCharacters', False) and not any(char in special_characters for char in password):
 		brokenPolicies.append("Password should contain at least one special character.")
 	
