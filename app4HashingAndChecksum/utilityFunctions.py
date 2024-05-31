@@ -56,7 +56,7 @@ async def storeReport(dataItem, dbName):
 				dataItem["user_id"],
 				dataItem["data"],
 				dataItem["checksum"],
-				f"Data integrity issue. {dataItem["error_message"]}"
+				f"Data integrity issue. {dataItem['error_message']}"
 			)
 		)
 		await db.commit()

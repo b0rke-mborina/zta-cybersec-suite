@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, validator
 import asyncio
 import datetime
 from enum import Enum
@@ -25,9 +25,10 @@ class Data(BaseModel):
 	class Config:
 		use_enum_values = True
 
-	@validator("data", "checksum")
-	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+	@field_validator("data", "checksum")
+	def validateAndSanitizeString(cls, v, info):
+		regex = r'^(?:[a-fA-F0-9]{32}|[a-fA-F0-9]{40}|[a-fA-F0-9]{64}|[a-fA-F0-9]{128})$' if info.field_name == "checksum" else r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$'
+		isValid = isStringValid(v, False, regex)
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -41,9 +42,9 @@ async def validation_exception_handler(request, exc):
 		"level": "ERROR",
 		"logger_source": 42,
 		"user_id": "35oIObfdlDo=", # placeholder value 0 is used because user will not be authenticated
-		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-		"response": "",
-		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
+		"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+		"response": "__NULL__",
+		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
 	await sendRequest("post", "http://127.0.0.1:8034/hashing/logging", dataForLoggingUnsuccessfulRequest)
 
@@ -98,9 +99,9 @@ async def verification(request: Request, data: Data):
 				"level": "INFO",
 				"logger_source": 42,
 				"user_id": userId,
-				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-				"response": str(response),
-				"error_message": ""
+				"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+				"response": str(response).translate(str.maketrans("\"'{}:", "_____")),
+				"error_message": "__NULL__"
 			}
 		)
 	]

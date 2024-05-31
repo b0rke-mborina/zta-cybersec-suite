@@ -26,7 +26,7 @@ class Data(BaseModel):
 
 	@validator("data")
 	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$')
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -40,12 +40,13 @@ async def validation_exception_handler(request, exc):
 		"level": "ERROR",
 		"logger_source": 41,
 		"user_id": "35oIObfdlDo=", # placeholder value 0 is used because user will not be authenticated
-		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-		"response": "",
-		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
+		"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+		"response": "__NULL__",
+		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
 	await sendRequest("post", "http://127.0.0.1:8034/hashing/logging", dataForLoggingUnsuccessfulRequest)
 
+	print(exc)
 	return JSONResponse(
 		status_code = 400,
 		content = { "hashing": "failure", "error_message": "Input invalid." },
@@ -84,18 +85,19 @@ async def hashing(request: Request, data: Data):
 	
 	userId = tunnellingResult[0].get("user_id")
 
-	policyResult = await sendRequest(
-		"get",
-		"http://127.0.0.1:8033/hashing/policy",
-		{
-			"data": data.data,
-			"user_id": userId
-		}
-	)
-	if policyResult[0].get("policy_management") != "success":
-		raise HTTPException(500)
-	if policyResult[0].get("is_data_ok"):
-		raise RequestValidationError("Password requirements not fulfilled.")
+	if data.password:
+		policyResult = await sendRequest(
+			"get",
+			"http://127.0.0.1:8033/hashing/policy",
+			{
+				"data": data.data,
+				"user_id": userId
+			}
+		)
+		if policyResult[0].get("policy") != "success":
+			raise HTTPException(500)
+		if not policyResult[0].get("is_data_ok"):
+			raise RequestValidationError("Password requirements not fulfilled.")
 
 	currentTime = datetime.datetime.now(datetime.timezone.utc).isoformat()
 	hash = hashData(data.data, data.algorithm)
@@ -109,9 +111,9 @@ async def hashing(request: Request, data: Data):
 			"level": "INFO",
 			"logger_source": 41,
 			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
+			"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+			"response": str(response).translate(str.maketrans("\"'{}:", "_____")),
+			"error_message": "__NULL__"
 		}
 	)
 	if loggingResult[0].get("logging") != "success":

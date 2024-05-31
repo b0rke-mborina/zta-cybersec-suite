@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, validator
+import asyncio
 import datetime
 from .utilityFunctions import isStringValid, sendRequest, storeReport
 
@@ -12,7 +13,7 @@ app = FastAPI()
 class Data(BaseModel):
 	timestamp: str
 	logger_source: int
-	user_id: int
+	user_id: str
 	data: str
 	checksum: str
 	error_message: str
@@ -25,9 +26,10 @@ class Data(BaseModel):
 			raise ValueError("Timestamp must be in ISO 8601 format")
 		return v
 
-	@validator("data", "checksum", "error_message")
-	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+	@field_validator("user_id", "data", "checksum", "error_message")
+	def validateAndSanitizeString(cls, v, info):
+		regex = r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$' if info.field_name == "user_id" else r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$'
+		isValid = isStringValid(v, False, regex)
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -51,21 +53,41 @@ async def exceptionHandler(request, exc):
 
 @app.post("/hashing/reporting", status_code = 200)
 async def reporting(data: Data):
-	monitoringResult = await sendRequest(
-		"post",
-		"http://127.0.0.1:8087/zta/monitoring",
-		{
-			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-			"level": "WARN",
-			"logger_source": 43,
-			"user_id": data.user_id,
-			"request": "",
-			"response": "",
-			"error_message": "Checksum verification failed. Checksum is invalid."
-		}
-	)
-	if monitoringResult[0].get("monitoring") != "success":
-		raise HTTPException(500)
+	dataForEncryption = data.model_dump()
+	dataForEncryption["timestamp"] = dataForEncryption["timestamp"].translate(str.maketrans("\"'{}:", "_____"))
 
-	await storeReport(data, "app4Reports.db")
+	userId = dataForEncryption["user_id"]
+	del dataForEncryption["user_id"]
+
+	tasks = [
+		sendRequest(
+			"get",
+			"http://127.0.0.1:8086/zta/encrypt",
+			{
+				"data": dataForEncryption
+			}
+		),
+		sendRequest(
+			"post",
+			"http://127.0.0.1:8087/zta/monitoring",
+			{
+				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+				"level": "WARN",
+				"logger_source": 43,
+				"user_id": data.user_id,
+				"request": "__NULL__",
+				"response": "__NULL__",
+				"error_message": "Checksum verification failed. Checksum is invalid."
+			}
+		)
+	]
+
+	[orchestrationAutomationResult, monitoringResult] = await asyncio.gather(*tasks)
+	if orchestrationAutomationResult[0].get("encryption") != "success" or monitoringResult[0].get("monitoring") != "success":
+		raise HTTPException(500)
+	
+	reportData = orchestrationAutomationResult[0].get("data")
+	reportData["user_id"] = userId
+	await storeReport(reportData, "app4Reports.db")
+	
 	return { "reporting": "success" }
