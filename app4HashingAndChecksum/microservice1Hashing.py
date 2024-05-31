@@ -46,7 +46,6 @@ async def validation_exception_handler(request, exc):
 	}
 	await sendRequest("post", "http://127.0.0.1:8034/hashing/logging", dataForLoggingUnsuccessfulRequest)
 
-	print(exc)
 	return JSONResponse(
 		status_code = 400,
 		content = { "hashing": "failure", "error_message": "Input invalid." },
