@@ -22,6 +22,16 @@ async def sendRequest(method, url, reqData):
 		result = await asyncio.gather(task)
 		return result
 
+def validateData(data):
+	isJwtValid = isStringValid(data.auth_data.jwt, False, r'^[A-Za-z0-9_-]+\.([A-Za-z0-9_-]+\.|[A-Za-z0-9_-]+)+[A-Za-z0-9_-]+$')
+	isUsernameValid = isStringValid(data.auth_data.username, True, r'^[a-zA-Z0-9._-]{3,20}$')
+	isPasswordHashValid = isStringValid(data.auth_data.password_hash, True, r'^[a-fA-F0-9]{128}$')
+	
+	if not isJwtValid or not isUsernameValid or not isPasswordHashValid:
+		return False
+	else:
+		return True
+
 def isStringValid(strValue, allowNoneOrEmpty, regex):
 	if not allowNoneOrEmpty and (strValue is None or strValue.strip() == ""):
 		return False

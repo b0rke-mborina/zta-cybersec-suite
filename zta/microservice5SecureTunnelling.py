@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator
 import asyncio
 import datetime
-from .utilityFunctions import getAppIdFromServiceAuthSource, getDataForIAM, isStringValid, sendRequest
+from .utilityFunctions import getAppIdFromServiceAuthSource, getDataForIAM, isStringValid, sendRequest, validateData
 
 
 app = FastAPI()
@@ -14,26 +14,6 @@ class AuthData(BaseModel):
 	jwt: str = ""
 	username: str = ""
 	password_hash: str = ""
-	
-	@field_validator("jwt", "username", "password_hash")
-	def validateAndSanitizeString(cls, v, info):
-		if info.field_name == "jwt" and v == "":
-			return v
-		
-		regex = None
-		if info.field_name == "jwt":
-			regex = r'^[A-Za-z0-9_-]+\.([A-Za-z0-9_-]+\.|[A-Za-z0-9_-]+)+[A-Za-z0-9_-]+$'
-		elif info.field_name == "password_hash":
-			regex = r'^[a-fA-F0-9]{128}$'
-		else:
-			regex = r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$'
-
-		isValid = isStringValid(v, True, regex)
-
-		if not isValid:
-			raise RequestValidationError("String is not valid.")
-		
-		return v
 
 class Data(BaseModel):
 	auth_data: AuthData
@@ -72,10 +52,11 @@ async def exceptionHandler(request, exc):
 
 @app.get("/zta/tunnelling")
 async def tunnelling(request: Request, data: Data):
-	dataForIAM = getDataForIAM(data.model_dump())
-	if dataForIAM.get("jwt") == "":
+	isDataValid = validateData(data)
+	if not isDataValid:
 		return { "tunnelling": "success", "is_authorized": False }
-	
+
+	dataForIAM = getDataForIAM(data.model_dump())
 	authenticationResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8081/zta/iam",
