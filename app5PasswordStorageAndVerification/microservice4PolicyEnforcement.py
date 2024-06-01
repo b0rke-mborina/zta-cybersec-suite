@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 import datetime
 from .utilityFunctions import isStringValid, sendRequest, validatePassword
 
@@ -11,11 +11,12 @@ app = FastAPI()
 
 class Data(BaseModel):
 	data: str
-	user_id: int
+	user_id: str
 
-	@validator("data")
-	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+	@field_validator("data")
+	def validateAndSanitizeString(cls, v, info):
+		regex = r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$' if info.field_name == "user_id" else r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$'
+		isValid = isStringValid(v, False, regex)
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")

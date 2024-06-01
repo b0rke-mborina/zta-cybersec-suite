@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, validator
 import asyncio
 import datetime
 from .utilityFunctions import getAuthData, hashPasswordWithSalt, isStringValid, sendRequest
@@ -15,9 +15,10 @@ class Data(BaseModel):
 	current_password: str
 	new_password: str
 
-	@validator("username", "current_password", "new_password")
-	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+	@field_validator("username", "password")
+	def validateAndSanitizeString(cls, v, info):
+		regex = r'^[a-zA-Z0-9._-]{3,20}$' if info.field_name == "username" else r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$'
+		isValid = isStringValid(v, False, regex)
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -31,7 +32,7 @@ async def validation_exception_handler(request, exc):
 		"level": "ERROR",
 		"logger_source": 53,
 		"user_id": "35oIObfdlDo=", # placeholder value 0 is used because user will not be authenticated
-		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+		"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
 	}
@@ -133,7 +134,7 @@ async def reset(request: Request, data: Data):
 				"level": "INFO",
 				"logger_source": 53,
 				"user_id": userId,
-				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+				"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 				"response": str(response),
 				"error_message": ""
 			}

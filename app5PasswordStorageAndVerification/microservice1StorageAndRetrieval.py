@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, validator
 import asyncio
 import datetime
 from .utilityFunctions import getAuthData, isStringValid, sendRequest, storePasswordHash, getPasswordHashInfo, updatePasswordHash, hashPassword
@@ -14,9 +14,10 @@ class DataStore(BaseModel):
 	username: str
 	password: str
 
-	@validator("username", "password")
-	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+	@field_validator("username", "password")
+	def validateAndSanitizeString(cls, v, info):
+		regex = r'^[a-zA-Z0-9._-]{3,20}$' if info.field_name == "username" else r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$'
+		isValid = isStringValid(v, False, regex)
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -29,7 +30,7 @@ class DataRetrieve(BaseModel):
 
 	@validator("username")
 	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValid = isStringValid(v, False, r'^[a-zA-Z0-9._-]{3,20}$')
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -37,15 +38,25 @@ class DataRetrieve(BaseModel):
 		return v
 
 class DataUpdate(BaseModel):
-	user_id: int
+	user_id: str
 	username: str
 	password_hash: str
 	salt: str
 	algorithm: str
 
-	@validator("username", "password_hash", "salt", "algorithm")
-	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+	@validator("user_id", "username", "password_hash", "salt", "algorithm")
+	def validateAndSanitizeString(cls, v, info):
+		regex = r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$'
+		if info.field_name == "user_id":
+			regex = r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$'
+		elif info.field_name == "username":
+			regex = r'^[a-zA-Z0-9._-]{3,20}$'
+		elif info.field_name == "password_hash":
+			regex = r'^\$2[aby]\$[0-3][0-9]\$[./A-Za-z0-9]{22}[./A-Za-z0-9]{31}$'
+		elif info.field_name == "salt":
+			regex = r'^[./A-Za-z0-9]{22}$'
+
+		isValid = isStringValid(v, False, regex)
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -59,7 +70,7 @@ async def validation_exception_handler(request, exc):
 		"level": "ERROR",
 		"logger_source": 51,
 		"user_id": "35oIObfdlDo=", # placeholder value 0 is used because user will not be authenticated
-		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+		"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 		"response": "",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
 	}
@@ -131,7 +142,7 @@ async def storage(request: Request, data: DataStore):
 				"level": "INFO",
 				"logger_source": 51,
 				"user_id": userId,
-				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
+				"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
 				"response": str(response),
 				"error_message": ""
 			}
