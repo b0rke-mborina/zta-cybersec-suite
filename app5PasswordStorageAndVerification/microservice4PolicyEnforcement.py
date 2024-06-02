@@ -51,8 +51,8 @@ async def policy(data: Data):
 				"level": "WARN",
 				"logger_source": 54,
 				"user_id": data.user_id,
-				"request": "",
-				"response": "",
+				"request": "__NULL__",
+				"response": "__NULL__",
 				"error_message": "Password validation failed. Passwod did not meet the requirements."
 			}
 		)
