@@ -13,9 +13,10 @@ class DataEncrypt(BaseModel):
 
 	@validator("file")
 	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValidTxt = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValidBase64 = isStringValid(v, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
 		
-		if not isValid:
+		if not isValidTxt and not isValidBase64:
 			raise RequestValidationError("String is not valid.")
 		
 		return v
@@ -28,7 +29,7 @@ class DataDecrypt(BaseModel):
 
 	@validator("file", "key", "tag", "nonce")
 	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValid = isStringValid(v, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")

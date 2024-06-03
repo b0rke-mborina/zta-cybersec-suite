@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, validator
 from enum import Enum
 from .utilityFunctions import getFile, isStringValid, sendRequest, storeFile
 
@@ -14,7 +14,7 @@ class Format(str, Enum):
 	BASE64 = "base64"
 
 class DataStore(BaseModel):
-	user_id: int
+	user_id: str
 	format: Format
 	filename: str
 	file: str
@@ -22,9 +22,25 @@ class DataStore(BaseModel):
 	class Config:
 		use_enum_values = True
 
-	@validator("filename", "file")
-	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+	@field_validator("user_id")
+	def validateAndSanitizeString(cls, v, info):
+		isValid = isStringValid(v, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
+
+	@validator("filename", "file", always = True)
+	def validateAndSanitizeString(cls, v, values):
+		formatValue = values.get("format")
+		fileValue = values.get("file")
+
+		regex = r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$'
+		if formatValue == "base64" and v == fileValue:
+			regex = r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$'
+		
+		isValid = isStringValid(v, False, regex)
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -32,8 +48,17 @@ class DataStore(BaseModel):
 		return v
 
 class DataRetrieve(BaseModel):
-	user_id: int
+	user_id: str
 	filename: str
+
+	@field_validator("user_id")
+	def validateAndSanitizeString(cls, v, info):
+		isValid = isStringValid(v, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
 
 	@validator("filename")
 	def validateAndSanitizeString(cls, v):
