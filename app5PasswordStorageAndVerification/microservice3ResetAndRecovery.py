@@ -15,7 +15,7 @@ class Data(BaseModel):
 	current_password: str
 	new_password: str
 
-	@field_validator("username", "password")
+	@field_validator("username", "current_password", "new_password")
 	def validateAndSanitizeString(cls, v, info):
 		regex = r'^[a-zA-Z0-9._-]{3,20}$' if info.field_name == "username" else r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$'
 		isValid = isStringValid(v, False, regex)

@@ -64,17 +64,24 @@ async def exceptionHandler(request, exc):
 
 @app.post("/password/logging", status_code = 200)
 async def logging(data: Data):
+	dataForEncryption = data.model_dump()
+	dataForEncryption["timestamp"] = dataForEncryption["timestamp"].translate(str.maketrans("\"'{}:", "_____"))
+
+	userId = dataForEncryption["user_id"]
+	del dataForEncryption["user_id"]
+
 	orchestrationAutomationResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8086/zta/encrypt",
 		{
-			"data": data.model_dump()
+			"data": dataForEncryption
 		}
 	)
 	if orchestrationAutomationResult[0].get("encryption") != "success":
 		raise HTTPException(500)
 	
 	logData = orchestrationAutomationResult[0].get("data")
+	logData["user_id"] = userId
 	await log(logData, "app5Logs.db")
 	
 	return { "logging": "success" }

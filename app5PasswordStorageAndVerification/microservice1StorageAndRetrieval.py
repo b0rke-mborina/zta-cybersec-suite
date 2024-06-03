@@ -25,12 +25,13 @@ class DataStore(BaseModel):
 		return v
 
 class DataRetrieve(BaseModel):
-	user_id: int
+	user_id: str
 	username: str
 
-	@validator("username")
-	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[a-zA-Z0-9._-]{3,20}$')
+	@field_validator("user_id", "username")
+	def validateAndSanitizeString(cls, v, info):
+		regex = r'^[a-zA-Z0-9._-]{3,20}$' if info.field_name == "username" else r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$'
+		isValid = isStringValid(v, False, regex)
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -44,7 +45,7 @@ class DataUpdate(BaseModel):
 	salt: str
 	algorithm: str
 
-	@validator("user_id", "username", "password_hash", "salt", "algorithm")
+	@field_validator("user_id", "username", "password_hash", "salt", "algorithm")
 	def validateAndSanitizeString(cls, v, info):
 		regex = r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$'
 		if info.field_name == "user_id":
@@ -54,7 +55,7 @@ class DataUpdate(BaseModel):
 		elif info.field_name == "password_hash":
 			regex = r'^\$2[aby]\$[0-3][0-9]\$[./A-Za-z0-9]{22}[./A-Za-z0-9]{31}$'
 		elif info.field_name == "salt":
-			regex = r'^[./A-Za-z0-9]{22}$'
+			regex = r'^\$2[aby]\$[0-9]{2}\$[./A-Za-z0-9]{22}$'
 
 		isValid = isStringValid(v, False, regex)
 		
@@ -131,9 +132,25 @@ async def storage(request: Request, data: DataStore):
 	passwordHashString = passwordHash.decode("utf-8")
 	saltString = salt.decode("utf-8")
 	response = { "storage": "success" }
+
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": {
+				"username": data.username,
+				"algorithm": algorithm
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
 	
+	usernameEncrypted = orchestrationAutomationResult[0].get("data").get("username")
+	algorithmEncrypted = orchestrationAutomationResult[0].get("data").get("algorithm")
+
 	tasks = [
-		storePasswordHash("app5Data.db", userId, data.username, passwordHashString, saltString, algorithm),
+		storePasswordHash("app5Data.db", userId, usernameEncrypted, passwordHashString, saltString, algorithmEncrypted),
 		sendRequest(
 			"post",
 			"http://127.0.0.1:8044/password/logging",
@@ -156,10 +173,40 @@ async def storage(request: Request, data: DataStore):
 
 @app.get("/password/retrieve")
 async def retrieval(data: DataRetrieve):
-	passwordInfo = await getPasswordHashInfo("app5Data.db", data.user_id, data.username)
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": {
+				"username": data.username
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	
+	usernameEncrypted = orchestrationAutomationResult[0].get("data").get("username")
+	passwordInfo = await getPasswordHashInfo("app5Data.db", data.user_id, usernameEncrypted)
+
 	return { "retrieval": "success", "info": passwordInfo }
 
 @app.post("/password/update")
 async def storage(data: DataUpdate):
-	await updatePasswordHash("app5Data.db", data.user_id, data.username, data.password_hash, data.salt, data.algorithm)
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": {
+				"username": data.username,
+				"algorithm": data.algorithm
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	
+	usernameEncrypted = orchestrationAutomationResult[0].get("data").get("username")
+	algorithmEncrypted = orchestrationAutomationResult[0].get("data").get("algorithm")
+	await updatePasswordHash("app5Data.db", data.user_id, usernameEncrypted, data.password_hash, data.salt, algorithmEncrypted)
+
 	return { "update": "success" }
