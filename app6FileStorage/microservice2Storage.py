@@ -39,6 +39,8 @@ class DataStore(BaseModel):
 		regex = r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$'
 		if formatValue == "base64" and v == fileValue:
 			regex = r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$'
+		elif formatValue == "txt" and v == fileValue:
+			regex = r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$'
 		
 		isValid = isStringValid(v, False, regex)
 		

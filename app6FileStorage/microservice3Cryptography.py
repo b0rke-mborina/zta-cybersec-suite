@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
-from .utilityFunctions import decryptFile, encryptFile, isStringValid, sendRequest
+from .utilityFunctions import decryptFile, decryptSecret, encryptFile, encryptSecret, isStringValid, sendRequest
 
 
 app = FastAPI()
@@ -53,10 +53,20 @@ async def exceptionHandler(request, exc):
 
 @app.get("/file/encrypt")
 async def encryption(data: DataEncrypt):
-	(encryptedFile, key, tag, nonce) = await encryptFile(data.file)
-	return { "encryption": "success", "file": encryptedFile, "key": key, "tag": tag, "nonce": nonce }
+	(encryptedFile, key, tag, nonce) = encryptFile(data.file)
+	
+	encryptedKey = encryptSecret(key)
+	encryptedTag = encryptSecret(tag)
+	encryptedNonce = encryptSecret(nonce)
+
+	return { "encryption": "success", "file": encryptedFile, "key": encryptedKey, "tag": encryptedTag, "nonce": encryptedNonce }
 
 @app.get("/file/decrypt")
 async def decryption(data: DataDecrypt):
-	decryptedFile = await decryptFile(data.file, data.key, data.tag, data.nonce)
+	decryptedKey = decryptSecret(data.key)
+	decryptedTag = decryptSecret(data.tag)
+	decryptedNonce = decryptSecret(data.nonce)
+
+	decryptedFile = decryptFile(data.file, decryptedKey, decryptedTag, decryptedNonce)
+
 	return { "decryption": "success", "file": decryptedFile }
