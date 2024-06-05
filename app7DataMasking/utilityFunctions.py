@@ -2,7 +2,6 @@ import aiohttp
 import asyncio
 import aiosqlite
 import copy
-import json
 import hashlib
 import html
 import re
@@ -62,7 +61,7 @@ async def isRoleAllowed(dbName, role):
 			(role, )
 		)
 		result = await cursor.fetchone()
-		return result[2] == 1
+		return result[2] == "eMviHPAW92g=" # == 1
 
 async def isUserAllowed(dbName, userId):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
@@ -71,7 +70,7 @@ async def isUserAllowed(dbName, userId):
 			(userId, )
 		)
 		result = await cursor.fetchone()
-		return result[2] == 1
+		return result[2] == "eMviHPAW92g=" # == 1
 
 def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
@@ -117,8 +116,8 @@ async def storeData(dbName, userId, dataset, originalData, maskedData):
 				(
 					userId,
 					dataset,
-					json.dumps(originalData),
-					json.dumps(maskedData)
+					originalData,
+					maskedData
 				)
 			)
 			await db.commit()
@@ -132,7 +131,7 @@ async def retrieveData(dbName, userId, dataset):
 			(userId, dataset)
 		)
 		result = await cursor.fetchone()
-		return json.loads(result[2])
+		return result[2]
 
 def maskData(data):
 	print(data)

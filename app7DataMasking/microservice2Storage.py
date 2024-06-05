@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
+import json
 from .utilityFunctions import isStringValid, retrieveData, sendRequest, storeData
 
 
@@ -9,10 +10,19 @@ app = FastAPI()
 
 
 class DataStorage(BaseModel):
-	user_id: int
+	user_id: str
 	dataset: str
 	data_original: list
 	data_masked: list
+
+	@validator("user_id")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
 
 	@validator("dataset")
 	def validateAndSanitizeString(cls, v):
@@ -34,8 +44,17 @@ class DataStorage(BaseModel):
 					return v
 
 class DataRetrieval(BaseModel):
-	user_id: int
+	user_id: str
 	dataset: str
+
+	@validator("user_id")
+	def validateAndSanitizeString(cls, v):
+		isValid = isStringValid(v, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
+		
+		if not isValid:
+			raise RequestValidationError("String is not valid.")
+		
+		return v
 
 	@validator("dataset")
 	def validateAndSanitizeString(cls, v):
@@ -63,10 +82,58 @@ async def exceptionHandler(request, exc):
 
 @app.post("/data/store")
 async def storage(data: DataStorage):
-	await storeData("app7Data.db", data.user_id, data.dataset, data.data_original, data.data_masked)
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": {
+				"dataset": data.dataset,
+				"data_original": json.dumps(data.data_original),
+				"data_masked": json.dumps(data.data_masked),
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	
+	dataset = orchestrationAutomationResult[0].get("data").get("dataset")
+	dataOriginal = orchestrationAutomationResult[0].get("data").get("data_original")
+	dataMasked = orchestrationAutomationResult[0].get("data").get("data_masked")
+
+	await storeData("app7Data.db", data.user_id, dataset, dataOriginal, dataMasked)
+
 	return { "storage": "success" }
 
 @app.get("/data/retrieve")
 async def retrieval(data: DataRetrieval):
-	data = await retrieveData("app7Data.db", data.user_id, data.dataset)
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": {
+				"dataset": data.dataset
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	
+	dataset = orchestrationAutomationResult[0].get("data").get("dataset")
+	encrypedData = await retrieveData("app7Data.db", data.user_id, dataset)
+
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/decrypt",
+		{
+			"data": {
+				"data_original": encrypedData
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	
+	decryptedData = orchestrationAutomationResult[0].get("data").get("data_original")
+	data = json.loads(decryptedData)
+
 	return { "retrieval": "success", "data": data }

@@ -1,8 +1,8 @@
-import asyncio
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
+import asyncio
 import datetime
 from .utilityFunctions import getAuthData, isStringValid, maskData, sendRequest, checkData
 
@@ -52,9 +52,9 @@ async def validation_exception_handler(request, exc):
 		"level": "ERROR",
 		"logger_source": 71,
 		"user_id": "35oIObfdlDo=", # placeholder value 0 is used because user will not be authenticated
-		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-		"response": "",
-		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
+		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+		"response": "__NULL__",
+		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
 	await sendRequest("post", "http://127.0.0.1:8063/data/logging", dataForLoggingUnsuccessfulRequest)
 
@@ -132,9 +132,9 @@ async def masking(request: Request, data: DataMask):
 				"level": "INFO",
 				"logger_source": 71,
 				"user_id": userId,
-				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-				"response": str(response),
-				"error_message": ""
+				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+				"response": str(response).translate(str.maketrans("\"'{}:", "_____")),
+				"error_message": "__NULL__"
 			}
 		)
 	]
@@ -195,9 +195,9 @@ async def unmasking(request: Request, data: DataUnmask):
 			"level": "INFO",
 			"logger_source": 71,
 			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+			"response": str(response).translate(str.maketrans("\"'{}:", "_____")),
+			"error_message": "__NULL__"
 		}
 	)
 	if loggingResult[0].get("logging") != "success":
