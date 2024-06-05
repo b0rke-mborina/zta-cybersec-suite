@@ -63,7 +63,7 @@ async def isRoleAllowed(dbName, role):
 			(role, )
 		)
 		result = await cursor.fetchone()
-		return result[2] == 1
+		return result[2] == "eMviHPAW92g=" # == 1
 
 async def isUserAllowed(dbName, userId):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
@@ -72,7 +72,7 @@ async def isUserAllowed(dbName, userId):
 			(userId, )
 		)
 		result = await cursor.fetchone()
-		return result[2] == 1
+		return result[2] == "eMviHPAW92g=" # == 1
 
 def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
@@ -113,7 +113,7 @@ async def storeFile(dbName, userId, filename, format, file, key, tag, nonce):
 			)
 			await db.commit()
 	except:
-		raise RequestValidationError("Username must be unique.")
+		raise RequestValidationError("Filename must be unique.")
 
 async def getFile(dbName, userId, filename):
 	async with aiosqlite.connect(getDbPath(dbName)) as conn:
@@ -146,7 +146,7 @@ def decryptFile(file, key, tag, nonce):
 	return plaintext.decode()
 
 def encryptSecret(secretBase64):
-	secretBytes = base64.decode(secretBase64)
+	secretBytes = base64.b64decode(secretBase64)
 	key = "KEY_PLACEHOLDER".encode("utf-8") # PLACEHOLDER
 	mode = Blowfish.MODE_CBC
 

@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator, validator
+import asyncio
 from enum import Enum
 from .utilityFunctions import getFile, isStringValid, sendRequest, storeFile
 
@@ -71,7 +72,7 @@ class DataRetrieve(BaseModel):
 		
 		return v
 
-@app.exception_handler(HTTPException)
+@app.exception_handler(Exception)
 async def exceptionHandler(request, exc):
 	await sendRequest(
 		"post",
@@ -88,26 +89,58 @@ async def exceptionHandler(request, exc):
 
 @app.post("/file/storage")
 async def storage(data: DataStore):
-	encryptionResult = await sendRequest(
-		"get",
-		"http://127.0.0.1:8052/file/encrypt",
-		{
-			"file": data.file
-		}
-	)
-	encryptedFile = encryptionResult[0].get("file")
-	key = encryptionResult[0].get("key")
-	tag = encryptionResult[0].get("tag")
-	nonce = encryptionResult[0].get("nonce")
-	if encryptionResult[0].get("encryption") != "success" or any(value is None for value in [encryptedFile, key, tag, nonce]):
+	tasks = [
+		sendRequest(
+			"get",
+			"http://127.0.0.1:8052/file/encrypt",
+			{
+				"file": data.file
+			}
+		),
+		sendRequest(
+			"get",
+			"http://127.0.0.1:8086/zta/encrypt",
+			{
+				"data": {
+					"filename": data.filename,
+					"format": data.format,
+				}
+			}
+		)
+	]
+	[cryptographyResult, orchestrationAutomationResult] = await asyncio.gather(*tasks)
+
+	encryptedFile = cryptographyResult[0].get("file")
+	key = cryptographyResult[0].get("key")
+	tag = cryptographyResult[0].get("tag")
+	nonce = cryptographyResult[0].get("nonce")
+	filename = orchestrationAutomationResult[0].get("data").get("filename")
+	fileFormat = orchestrationAutomationResult[0].get("data").get("format")
+
+	if cryptographyResult[0].get("encryption") != "success" or any(value is None for value in [encryptedFile, key, tag, nonce]):
+		raise HTTPException(500)
+	if orchestrationAutomationResult[0].get("encryption") != "success" or any(value is None for value in [filename, fileFormat]):
 		raise HTTPException(500)
 
-	await storeFile("app6Data.db", data.user_id, data.filename, data.format, encryptedFile, key, tag, nonce)
+	await storeFile("app6Data.db", data.user_id, filename, fileFormat, encryptedFile, key, tag, nonce)
 	return { "storage": "success" }
 
 @app.get("/file/retrieval")
 async def retrieval(data: DataRetrieve):
-	fileData = await getFile("app6Data.db", data.user_id, data.filename)
+	orchestrationAutomationResult = await sendRequest(
+		"get",
+		"http://127.0.0.1:8086/zta/encrypt",
+		{
+			"data": {
+				"filename": data.filename
+			}
+		}
+	)
+	if orchestrationAutomationResult[0].get("encryption") != "success":
+		raise HTTPException(500)
+	
+	filename = orchestrationAutomationResult[0].get("data").get("filename")
+	fileData = await getFile("app6Data.db", data.user_id, filename)
 
 	decryptionResult = await sendRequest(
 		"get",

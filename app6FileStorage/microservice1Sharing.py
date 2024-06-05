@@ -113,8 +113,10 @@ async def storage(request: Request, data: DataStore):
 			"role": userRole
 		}
 	)
-	if accessControlResult[0].get("access_control") != "success" or not accessControlResult[0].get("is_allowed"):
+	if accessControlResult[0].get("access_control") != "success":
 		raise HTTPException(500)
+	if not accessControlResult[0].get("is_allowed"):
+		raise RequestValidationError("User not allowed.")
 	
 	response = { "storage": "success" }
 

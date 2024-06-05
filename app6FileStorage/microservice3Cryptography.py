@@ -13,7 +13,7 @@ class DataEncrypt(BaseModel):
 
 	@validator("file")
 	def validateAndSanitizeString(cls, v):
-		isValidTxt = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+		isValidTxt = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$')
 		isValidBase64 = isStringValid(v, False, r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$')
 		
 		if not isValidTxt and not isValidBase64:
