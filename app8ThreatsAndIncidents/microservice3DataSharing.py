@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, validator
 import asyncio
 import datetime
 from enum import Enum
@@ -17,7 +17,7 @@ class Severity(str, Enum):
 	HIGH = "high"
 
 class DataIncident(BaseModel):
-	user_id: int
+	user_id: str
 	username: str
 	timestamp: str
 	affected_assets: list
@@ -41,9 +41,10 @@ class DataIncident(BaseModel):
 			raise ValueError("Timestamp must be in ISO 8601 format")
 		return v
 
-	@validator("username")
-	def validateAndSanitizeString(cls, v):
-		isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+	@field_validator("user_id", "username")
+	def validateAndSanitizeString(cls, v, info):
+		regex = r'^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$' if info.field_name == "user_id" else r'^[a-zA-Z0-9._-]{3,20}$'
+		isValid = isStringValid(v, False, regex)
 		
 		if not isValid:
 			raise RequestValidationError("String is not valid.")
@@ -54,10 +55,9 @@ class DataIncident(BaseModel):
 	def validateAndSanitizeList(cls, v):
 		for item in v:
 			if isinstance(item, str):
-				isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+				isValid = isStringValid(item, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$')
 				if not isValid:
 					raise RequestValidationError("String is not valid.")
-				return v
 			else:
 				raise RequestValidationError("Request not valid.")
 		
@@ -71,7 +71,7 @@ class DataIncident(BaseModel):
 		for item in v:
 			for value in item:
 				if isinstance(value, str):
-					isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+					isValid = isStringValid(value, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$')
 					if not isValid:
 						raise RequestValidationError("String is not valid.")
 					return v
@@ -88,20 +88,12 @@ class DataThreats(BaseModel):
 	class Config:
 		use_enum_values = True
 
-	@validator("time_from")
+	@validator("time_from", "time_to")
 	def validateISO8601Timestamp(cls, v):
 		try:
 			datetime.datetime.fromisoformat(v)
 		except ValueError:
-			raise ValueError("Value of time_from must be in ISO 8601 format")
-		return v
-
-	@validator("time_to")
-	def validateISO8601Timestamp(cls, v):
-		try:
-			datetime.datetime.fromisoformat(v)
-		except ValueError:
-			raise ValueError("Value of time_to must be in ISO 8601 format")
+			raise ValueError("Time value must be in ISO 8601 format.")
 		return v
 
 @app.exception_handler(Exception)

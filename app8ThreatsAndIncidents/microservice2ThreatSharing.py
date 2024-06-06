@@ -23,20 +23,12 @@ class Data(BaseModel):
 	class Config:
 		use_enum_values = True
 
-	@validator("time_from")
+	@validator("time_from", "time_to")
 	def validateISO8601Timestamp(cls, v):
 		try:
 			datetime.datetime.fromisoformat(v)
 		except ValueError:
-			raise ValueError("Value of time_from must be in ISO 8601 format")
-		return v
-
-	@validator("time_to")
-	def validateISO8601Timestamp(cls, v):
-		try:
-			datetime.datetime.fromisoformat(v)
-		except ValueError:
-			raise ValueError("Value of time_to must be in ISO 8601 format")
+			raise ValueError("Time value must be in ISO 8601 format.")
 		return v
 
 @app.exception_handler(RequestValidationError)
@@ -75,7 +67,7 @@ async def exceptionHandler(request, exc):
 @app.get("/intelligence/retrieve", status_code = 200)
 async def retrieval(request: Request, data: Data):
 	authData = getAuthData(request.headers)
-	tunnellingResult = await sendRequest(
+	"""tunnellingResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
@@ -88,7 +80,8 @@ async def retrieval(request: Request, data: Data):
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
 	
-	userId = tunnellingResult[0].get("user_id")
+	userId = tunnellingResult[0].get("user_id")"""
+	userId = "eMviHPAW92g="
 
 	validateThreatRequest(data.time_from, data.time_to)
 

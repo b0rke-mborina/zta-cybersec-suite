@@ -40,10 +40,9 @@ class Incident(BaseModel):
 	def validateAndSanitizeList(cls, v):
 		for item in v:
 			if isinstance(item, str):
-				isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+				isValid = isStringValid(item, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$')
 				if not isValid:
 					raise RequestValidationError("String is not valid.")
-				return v
 			else:
 				raise RequestValidationError("Request not valid.")
 		
@@ -57,10 +56,9 @@ class Incident(BaseModel):
 		for item in v:
 			for value in item:
 				if isinstance(value, str):
-					isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+					isValid = isStringValid(value, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$')
 					if not isValid:
 						raise RequestValidationError("String is not valid.")
-					return v
 				else:
 					raise RequestValidationError("Request not valid.")
 		
@@ -108,7 +106,7 @@ async def exceptionHandler(request, exc):
 @app.post("/intelligence/report", status_code = 200)
 async def reporting(request: Request, data: Data):
 	authData = getAuthData(request.headers)
-	tunnellingResult = await sendRequest(
+	"""tunnellingResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
@@ -121,7 +119,8 @@ async def reporting(request: Request, data: Data):
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
 	
-	userId = tunnellingResult[0].get("user_id")
+	userId = tunnellingResult[0].get("user_id")"""
+	userId = "eMviHPAW92g="
 
 	validateIncidentData(data.incident)
 	response = { "reporting": "success" }

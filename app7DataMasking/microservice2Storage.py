@@ -41,7 +41,7 @@ class DataStorage(BaseModel):
 					isValid = isStringValid(dataValue, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
 					if not isValid:
 						raise RequestValidationError("String is not valid.")
-					return v
+		return v
 
 class DataRetrieval(BaseModel):
 	user_id: str
