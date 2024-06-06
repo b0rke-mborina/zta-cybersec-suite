@@ -5,7 +5,7 @@ from pydantic import BaseModel, field_validator, validator
 import asyncio
 import datetime
 from enum import Enum
-from .utilityFunctions import getThreats, isStringValid, sendRequest, storeThreat
+from .utilityFunctions import encryptBlowfish, encryptData, getThreats, isStringValid, sendRequest, storeThreat
 
 
 app = FastAPI()
@@ -56,11 +56,11 @@ class DataIncident(BaseModel):
 		for item in v:
 			if isinstance(item, str):
 				isValid = isStringValid(item, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-\s]*$')
+				
 				if not isValid:
 					raise RequestValidationError("String is not valid.")
 			else:
 				raise RequestValidationError("Request not valid.")
-		
 		return v
 
 	@validator("attack_vectors")
@@ -113,6 +113,16 @@ async def exceptionHandler(request, exc):
 
 @app.post("/intelligence/incident", status_code = 200)
 async def incident(data: DataIncident):
+	dataForEncryption = data.model_dump()
+	userId = dataForEncryption["user_id"]
+	del dataForEncryption["user_id"]
+	timestamp = dataForEncryption["timestamp"]
+	del dataForEncryption["timestamp"]
+
+	dataForStorage = encryptData(dataForEncryption)
+	dataForStorage["user_id"] = userId
+	dataForStorage["timestamp"] = timestamp
+
 	tasks = [
 		sendRequest(
 			"get",
@@ -127,7 +137,7 @@ async def incident(data: DataIncident):
 				"user_accounts_involved": data.user_accounts_involved
 			}
 		),
-		storeThreat("app8Data.db", data.user_id, data)
+		storeThreat("app8Data.db", data.user_id, dataForStorage)
 	]
 	
 	results = await asyncio.gather(*tasks)
@@ -138,5 +148,7 @@ async def incident(data: DataIncident):
 
 @app.get("/intelligence/threats", status_code = 200)
 async def threats(data: DataThreats):
-	threats = await getThreats("app8Data.db", data.time_from, data.time_to, data.severity)
+	severity = encryptBlowfish("severity", data.severity)
+	threats = await getThreats("app8Data.db", data.time_from, data.time_to, severity)
+
 	return { "threats": "success", "data": threats }

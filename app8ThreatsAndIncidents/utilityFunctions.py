@@ -6,7 +6,11 @@ import json
 import hashlib
 import html
 import re
+import base64
 import os.path
+from Crypto.Cipher import Blowfish
+from Crypto.Util.Padding import pad, unpad
+from struct import pack
 from fastapi.exceptions import RequestValidationError
 
 async def request(session, method, url, data):
@@ -77,16 +81,16 @@ async def storeThreat(dbName, userId, dataItem):
 			"INSERT INTO Threat (user_id, timestamp, affected_assets, attack_vectors, malicious_code, compromised_data, indicators_of_compromise, severity, user_accounts_involved, logs, actions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 			(
 				userId,
-				dataItem.timestamp,
-				json.dumps(dataItem.affected_assets),
-				json.dumps(dataItem.attack_vectors),
-				json.dumps(dataItem.malicious_code),
-				json.dumps(dataItem.compromised_data),
-				json.dumps(dataItem.indicators_of_compromise),
-				dataItem.severity,
-				json.dumps(dataItem.user_accounts_involved),
-				json.dumps(dataItem.logs),
-				json.dumps(dataItem.actions)
+				dataItem["timestamp"],
+				dataItem["affected_assets"],
+				dataItem["attack_vectors"],
+				dataItem["malicious_code"],
+				dataItem["compromised_data"],
+				dataItem["indicators_of_compromise"],
+				dataItem["severity"],
+				dataItem["user_accounts_involved"],
+				dataItem["logs"],
+				dataItem["actions"]
 			)
 		)
 		await db.commit()
@@ -110,15 +114,15 @@ async def getThreats(dbName, timeFrom, timeTo, severity):
 def loadThreat(threat):
 	loadedThreat = {
 		"timestamp": threat[1],
-		"affected_assets": json.loads(threat[2]),
-		"attack_vectors": json.loads(threat[3]),
-		"malicious_code": json.loads(threat[4]),
-		"compromised_data": json.loads(threat[5]),
-		"indicators_of_compromise": json.loads(threat[6]),
-		"severity": threat[7],
-		"user_accounts_involved": json.loads(threat[8]),
-		"logs": json.loads(threat[9]),
-		"actions": json.loads(threat[10])
+		"affected_assets": json.loads(decryptBlowfish("affected_assets", threat[2])),
+		"attack_vectors": json.loads(decryptBlowfish("attack_vectors", threat[3])),
+		"malicious_code": json.loads(decryptBlowfish("malicious_code", threat[4])),
+		"compromised_data": json.loads(decryptBlowfish("compromised_data", threat[5])),
+		"indicators_of_compromise": json.loads(decryptBlowfish("indicators_of_compromise", threat[6])),
+		"severity": decryptBlowfish("severity", threat[7]),
+		"user_accounts_involved": json.loads(decryptBlowfish("user_accounts_involved", threat[8])),
+		"logs": json.loads(decryptBlowfish("logs", threat[9])),
+		"actions": json.loads(decryptBlowfish("actions", threat[10]))
 	}
 	return loadedThreat
 
@@ -161,3 +165,59 @@ def incidentIncludesThisSystem(data):
 		return True
 	
 	return False
+
+def encryptData(data):
+	result = {}
+	for field, value in data.items():
+		result[field] = encryptBlowfish(field, value)
+	return result
+
+def encryptBlowfish(field, plaintext):
+	if not isinstance(plaintext, str):
+		plaintext = json.dumps(plaintext)
+	plaintextBytes = plaintext.encode("utf-8")
+	key = "KEY_PLACEHOLDER".encode("utf-8") # PLACEHOLDER
+	ciphertext = None
+
+	if field == "severity":
+		mode = Blowfish.MODE_ECB
+		cipher = Blowfish.new(key, Blowfish.MODE_ECB)
+		paddedText = pad(plaintextBytes, Blowfish.block_size)
+		ciphertext = cipher.encrypt(paddedText)
+	else:
+		mode = Blowfish.MODE_CBC
+		cipher = Blowfish.new(key, mode)
+		bs = Blowfish.block_size
+		plen = bs - len(plaintextBytes) % bs
+		padding = [plen]*plen
+		padding = pack('b'*plen, *padding)
+		ciphertext = cipher.iv + cipher.encrypt(plaintextBytes + padding)
+
+	return base64.b64encode(ciphertext).decode("utf-8")
+
+def decryptData(data):
+	result = {}
+	for field, value in data.items():
+		result[field] = decryptBlowfish(field, value)
+	return result
+
+def decryptBlowfish(field, ciphertext):
+	try:
+		ciphertextBytes = base64.b64decode(ciphertext)
+		key = "KEY_PLACEHOLDER".encode("utf-8") # PLACEHOLDER
+		plaintextBytes = None
+
+		if field == "severity":
+			cipher = Blowfish.new(key, Blowfish.MODE_ECB)
+			plaintextBytes = unpad(cipher.decrypt(ciphertextBytes), Blowfish.block_size)
+		else:
+			iv = ciphertextBytes[:Blowfish.block_size]
+			cipher = Blowfish.new(key, Blowfish.MODE_CBC, iv)
+			plaintextBytes = cipher.decrypt(ciphertextBytes[Blowfish.block_size:])
+			paddingLength = plaintextBytes[-1]
+			plaintextBytes = plaintextBytes[:-paddingLength]
+
+		plaintext = plaintextBytes.decode("utf-8")
+		return plaintext
+	except:
+		return ""

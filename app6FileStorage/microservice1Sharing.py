@@ -60,7 +60,7 @@ async def validation_exception_handler(request, exc):
 		"level": "ERROR",
 		"logger_source": 61,
 		"user_id": "35oIObfdlDo=", # placeholder value 0 is used because user will not be authenticated
-		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+		"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
 		"response": "__NULL__",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
@@ -139,7 +139,7 @@ async def storage(request: Request, data: DataStore):
 				"level": "INFO",
 				"logger_source": 61,
 				"user_id": userId,
-				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+				"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
 				"response": str(response).translate(str.maketrans("\"'{}:", "_____")),
 				"error_message": "__NULL__"
 			}
@@ -202,7 +202,7 @@ async def retrieval(request: Request, data: DataRetrieve):
 			"level": "INFO",
 			"logger_source": 61,
 			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+			"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
 			"response": str(response).translate(str.maketrans("\"'{}:", "_____")),
 			"error_message": "__NULL__"
 		}

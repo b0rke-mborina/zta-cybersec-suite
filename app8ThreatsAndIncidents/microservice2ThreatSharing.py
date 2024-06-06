@@ -38,9 +38,9 @@ async def validation_exception_handler(request, exc):
 		"level": "ERROR",
 		"logger_source": 82,
 		"user_id": "35oIObfdlDo=", # placeholder value 0 is used because user will not be authenticated
-		"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-		"response": "",
-		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}"
+		"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
+		"response": "__NULL__",
+		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
 	await sendRequest("post", "http://127.0.0.1:8074/intelligence/logging", dataForLoggingUnsuccessfulRequest)
 
@@ -67,7 +67,7 @@ async def exceptionHandler(request, exc):
 @app.get("/intelligence/retrieve", status_code = 200)
 async def retrieval(request: Request, data: Data):
 	authData = getAuthData(request.headers)
-	"""tunnellingResult = await sendRequest(
+	tunnellingResult = await sendRequest(
 		"get",
 		"http://127.0.0.1:8085/zta/tunnelling",
 		{
@@ -80,8 +80,7 @@ async def retrieval(request: Request, data: Data):
 	if not tunnellingResult[0].get("is_authorized"):
 		raise RequestValidationError("User not allowed.")
 	
-	userId = tunnellingResult[0].get("user_id")"""
-	userId = "eMviHPAW92g="
+	userId = tunnellingResult[0].get("user_id")
 
 	validateThreatRequest(data.time_from, data.time_to)
 
@@ -108,9 +107,9 @@ async def retrieval(request: Request, data: Data):
 			"level": "INFO",
 			"logger_source": 82,
 			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}",
-			"response": str(response),
-			"error_message": ""
+			"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}[]:", "_______")),
+			"response": str(response).translate(str.maketrans("\"'{}[]:", "_______")),
+			"error_message": "__NULL__"
 		}
 	)
 	if loggingResult[0].get("logging") != "success":
