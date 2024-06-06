@@ -28,7 +28,7 @@ class DataMask(BaseModel):
 		for l in v:
 			for dataValue in l:
 				if isinstance(dataValue, str):
-					isValid = isStringValid(v, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
+					isValid = isStringValid(dataValue, False, r'^[A-Za-z0-9+/=.,!@#$%^&*()_+\-]*$')
 					if not isValid:
 						raise RequestValidationError("String is not valid.")
 					return v
@@ -132,8 +132,8 @@ async def masking(request: Request, data: DataMask):
 				"level": "INFO",
 				"logger_source": 71,
 				"user_id": userId,
-				"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
-				"response": str(response).translate(str.maketrans("\"'{}:", "_____")),
+				"request": f"Request {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}[]:", "_______")),
+				"response": str(response).translate(str.maketrans("\"'{}[]:", "_______")),
 				"error_message": "__NULL__"
 			}
 		)
@@ -195,8 +195,8 @@ async def unmasking(request: Request, data: DataUnmask):
 			"level": "INFO",
 			"logger_source": 71,
 			"user_id": userId,
-			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}:", "_____")),
-			"response": str(response).translate(str.maketrans("\"'{}:", "_____")),
+			"request": f"Request: {request.url} {request.method} {request.headers} {request.query_params} {request.path_params} {await request.body()}".translate(str.maketrans("\"'{}[]:", "_______")),
+			"response": str(response).translate(str.maketrans("\"'{}[]:", "_______")),
 			"error_message": "__NULL__"
 		}
 	)

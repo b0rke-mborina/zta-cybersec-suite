@@ -5,7 +5,11 @@ import copy
 import hashlib
 import html
 import re
+import base64
 import os.path
+from Crypto.Cipher import Blowfish
+from Crypto.Util.Padding import pad, unpad
+from struct import pack
 from faker import Faker
 from fastapi.exceptions import RequestValidationError
 
@@ -152,3 +156,45 @@ def maskData(data):
 			else:
 				maskedData[i][j] = "MASKED"
 	return maskedData
+
+def encryptBlowfish(field, plaintext):
+	plaintextBytes = plaintext.encode("utf-8")
+	key = "KEY_PLACEHOLDER".encode("utf-8") # PLACEHOLDER
+	ciphertext = None
+
+	if field == "dataset":
+		mode = Blowfish.MODE_ECB
+		cipher = Blowfish.new(key, Blowfish.MODE_ECB)
+		paddedText = pad(plaintextBytes, Blowfish.block_size)
+		ciphertext = cipher.encrypt(paddedText)
+	else:
+		mode = Blowfish.MODE_CBC
+		cipher = Blowfish.new(key, mode)
+		bs = Blowfish.block_size
+		plen = bs - len(plaintextBytes) % bs
+		padding = [plen]*plen
+		padding = pack('b'*plen, *padding)
+		ciphertext = cipher.iv + cipher.encrypt(plaintextBytes + padding)
+
+	return base64.b64encode(ciphertext).decode("utf-8")
+
+def decryptBlowfish(field, ciphertext):
+	try:
+		ciphertextBytes = base64.b64decode(ciphertext)
+		key = "KEY_PLACEHOLDER".encode("utf-8") # PLACEHOLDER
+		plaintextBytes = None
+
+		if field == "dataset":
+			cipher = Blowfish.new(key, Blowfish.MODE_ECB)
+			plaintextBytes = unpad(cipher.decrypt(ciphertextBytes), Blowfish.block_size)
+		else:
+			iv = ciphertextBytes[:Blowfish.block_size]
+			cipher = Blowfish.new(key, Blowfish.MODE_CBC, iv)
+			plaintextBytes = cipher.decrypt(ciphertextBytes[Blowfish.block_size:])
+			paddingLength = plaintextBytes[-1]
+			plaintextBytes = plaintextBytes[:-paddingLength]
+
+		plaintext = plaintextBytes.decode("utf-8")
+		return plaintext
+	except:
+		return ""
