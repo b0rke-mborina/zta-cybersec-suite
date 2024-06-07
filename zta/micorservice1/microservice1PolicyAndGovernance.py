@@ -2,8 +2,9 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import datetime
+import os
 from enum import Enum
-from .utilityFunctions import handleProblem, sendRequest
+from utilityFunctions import handleProblem, sendRequest
 
 
 app = FastAPI()
@@ -37,7 +38,7 @@ async def exceptionHandler(request, exc):
 		"response": "__NULL__",
 		"error_message": f"ZTA error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
-	await sendRequest("post", "http://127.0.0.1:8087/zta/monitoring", dataForMonitoringUnsuccessfulRequest)
+	await sendRequest("post", os.getenv("URL_MONITORING_MICROSERVICE"), dataForMonitoringUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 500,
