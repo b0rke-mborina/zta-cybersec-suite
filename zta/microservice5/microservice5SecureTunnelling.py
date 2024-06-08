@@ -3,7 +3,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import asyncio
 import datetime
-from .utilityFunctions import getAppIdFromServiceAuthSource, getDataForIAM, isStringValid, sendRequest, validateData
+import os
+from utilityFunctions import getAppIdFromServiceAuthSource, getDataForIAM, sendRequest, validateData
 
 
 app = FastAPI()
@@ -23,7 +24,7 @@ async def exceptionHandler(request, exc):
 	tasks = [
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8087/zta/monitoring",
+			os.getenv("URL_MONITORING_MICROSERVICE"),
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "FATAL",
@@ -36,7 +37,7 @@ async def exceptionHandler(request, exc):
 		),
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8080/zta/governance",
+			os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 			{
 				"problem": "total_system_failure"
 			}
@@ -58,7 +59,7 @@ async def tunnelling(request: Request, data: Data):
 	dataForIAM = getDataForIAM(data.model_dump())
 	authenticationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8081/zta/iam",
+		os.getenv("URL_IAM_MICROSERVICE"),
 		dataForIAM
 	)
 	isAuthenticated = authenticationResult[0].get("is_authenticated")
@@ -72,7 +73,7 @@ async def tunnelling(request: Request, data: Data):
 	
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": {
 				"auth_source_app_id": getAppIdFromServiceAuthSource(data.auth_source),
@@ -90,7 +91,7 @@ async def tunnelling(request: Request, data: Data):
 	tasksAuthorization = [
 		sendRequest(
 			"get",
-			"http://127.0.0.1:8082/zta/network",
+			os.getenv("URL_NETWORK_MICROSERVICE"),
 			{
 				"user_id": userId,
 				"auth_source_app_id": authSourceAppId,
@@ -100,7 +101,7 @@ async def tunnelling(request: Request, data: Data):
 		),
 		sendRequest(
 			"get",
-			"http://127.0.0.1:8083/zta/acl",
+			os.getenv("URL_ACL_MICROSERVICE"),
 			{
 				"task": task,
 				"is_user_authenticated_additionally": isAuthenticatedAdditionally,
@@ -128,7 +129,7 @@ async def tunnelling(request: Request, data: Data):
 	tasksFinal = [
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8087/zta/monitoring",
+			os.getenv("URL_MONITORING_MICROSERVICE"),
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "INFO",
@@ -145,7 +146,7 @@ async def tunnelling(request: Request, data: Data):
 		tasksFinal.append(
 			sendRequest(
 				"post",
-				"http://127.0.0.1:8080/zta/governance",
+				os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 				{
 					"problem": "dos_attack",
 					"user_id": userId

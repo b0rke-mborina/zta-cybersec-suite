@@ -4,8 +4,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 import asyncio
 import datetime
+import os
 from enum import Enum
-from .utilityFunctions import handleACLTask, isStringValid, sendRequest
+from utilityFunctions import handleACLTask, isStringValid, sendRequest
 
 
 app = FastAPI()
@@ -45,7 +46,7 @@ async def exceptionHandler(request, exc):
 	tasks = [
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8087/zta/monitoring",
+			os.getenv("URL_MONITORING_MICROSERVICE"),
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "FATAL",
@@ -58,7 +59,7 @@ async def exceptionHandler(request, exc):
 		),
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8080/zta/governance",
+			os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 			{
 				"problem": "total_system_failure"
 			}

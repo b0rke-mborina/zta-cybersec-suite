@@ -3,8 +3,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator, field_validator
 import datetime
+import os
 from enum import Enum
-from .utilityFunctions import isStringValid, log, reportToAdmin, sendRequest
+from utilityFunctions import isStringValid, log, sendRequest
 
 
 app = FastAPI()
@@ -52,7 +53,7 @@ async def exceptionHandler(request, exc):
 	dataForGovernanceUnsuccessfulRequest = {
 		"problem": "total_system_failure"
 	}
-	await sendRequest("post", "http://127.0.0.1:8080/zta/governance", dataForGovernanceUnsuccessfulRequest)
+	await sendRequest("post", os.getenv("URL_GOVERNANCE_MICROSERVICE"), dataForGovernanceUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 500,
@@ -69,7 +70,7 @@ async def monitoring(data: Data):
 
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": dataForEncryption
 		}
