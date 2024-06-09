@@ -69,7 +69,7 @@ async def exceptionHandler(request, exc):
 async def identityManagement(data: Data):
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": {
 				"jwt": data.jwt,
