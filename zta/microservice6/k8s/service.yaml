@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: zta-microservice6
+spec:
+  selector:
+    app: zta-microservice6
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8086
+  type: ClusterIP

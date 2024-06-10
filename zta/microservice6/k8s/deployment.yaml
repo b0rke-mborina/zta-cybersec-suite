@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zta-microservice6
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zta-microservice6
+  template:
+    metadata:
+      labels:
+        app: zta-microservice6
+    spec:
+      containers:
+      - name: zta-microservice6
+        image: b0rkemborina/zta-cybersec-suite:ztamicroservice6
+        ports:
+        - containerPort: 8086
