@@ -1,11 +1,9 @@
 import aiohttp
 import asyncio
-import aiosqlite
 import hashlib
 import html
 import re
 import base64
-import os.path
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -35,27 +33,6 @@ def isStringValid(strValue, allowNoneOrEmpty, regex):
 	
 	return True
 
-async def log(dataItem, dbName):
-	async with aiosqlite.connect(getDbPath(dbName)) as db:
-		await db.execute(
-			"INSERT INTO Log (timestamp, level, logger_source, user_id, request, response, error_message) VALUES (?, ?, ?, ?, ?, ?, ?)",
-			(
-				dataItem["timestamp"],
-				dataItem["level"],
-				dataItem["logger_source"],
-				dataItem["user_id"],
-				dataItem["request"],
-				dataItem["response"],
-				dataItem["error_message"]
-			)
-		)
-		await db.commit()
-
-def getDbPath(dbFilename):
-	baseDir = os.path.dirname(os.path.abspath(__file__))
-	dbPath = os.path.join(baseDir, dbFilename)
-	return dbPath
-
 def getAuthData(headers):
 	jwt = headers.get("jwt")
 	username = headers.get("username")
@@ -72,29 +49,6 @@ def getAuthData(headers):
 
 def hashData(data):
 	return hashlib.sha512(data.encode()).hexdigest()
-
-async def checkIfUserAllowed(dbName, userId, role):
-	tasks = [isRoleAllowed(dbName, role), isUserAllowed(dbName, userId)]
-	results = await asyncio.gather(*tasks)
-	return results[0] and results[1]
-
-async def isRoleAllowed(dbName, role):
-	async with aiosqlite.connect(getDbPath(dbName)) as conn:
-		cursor = await conn.execute(
-			"SELECT * FROM ACL WHERE role = ?",
-			(role, )
-		)
-		result = await cursor.fetchone()
-		return result[2] == "eMviHPAW92g=" # == 1
-
-async def isUserAllowed(dbName, userId):
-	async with aiosqlite.connect(getDbPath(dbName)) as conn:
-		cursor = await conn.execute(
-			"SELECT * FROM ACL WHERE user_id = ?",
-			(userId, )
-		)
-		result = await cursor.fetchone()
-		return result[2] == "eMviHPAW92g=" # == 1
 
 def verifySignature(publicKeyBase64, signatureBase64, message, hashType):
 	try:

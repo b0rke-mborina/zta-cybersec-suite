@@ -3,8 +3,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator, validator
 import datetime
+import os
 from enum import Enum
-from .utilityFunctions import getAuthData, isStringValid, sendRequest, verifySignature
+from utilityFunctions import getAuthData, isStringValid, sendRequest, verifySignature
 
 
 app = FastAPI()
@@ -44,7 +45,7 @@ async def validation_exception_handler(request, exc):
 		"response": "__NULL__",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
-	await sendRequest("post", "http://127.0.0.1:8022/digital-signature/logging", dataForLoggingUnsuccessfulRequest)
+	await sendRequest("post", os.getenv("URL_LOGGING_MICROSERVICE"), dataForLoggingUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 400,
@@ -55,7 +56,7 @@ async def validation_exception_handler(request, exc):
 async def httpExceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -71,7 +72,7 @@ async def digitalSignatureVerificator(request: Request, data: Data):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 31
@@ -87,7 +88,7 @@ async def digitalSignatureVerificator(request: Request, data: Data):
 
 	accessControlResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8021/digital-signature/access-control",
+		os.getenv("URL_ACCESSCONTROL_MICROSERVICE"),
 		{
 			"user_id": userId,
 			"role": userRole
@@ -102,7 +103,7 @@ async def digitalSignatureVerificator(request: Request, data: Data):
 
 	loggingResult = await sendRequest(
 		"post",
-		"http://127.0.0.1:8022/digital-signature/logging",
+		os.getenv("URL_LOGGING_MICROSERVICE"),
 		{
 			"timestamp": currentTime,
 			"level": "INFO",
