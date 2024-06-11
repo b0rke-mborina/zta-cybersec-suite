@@ -4,7 +4,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator, validator
 import asyncio
 import datetime
-from .utilityFunctions import isStringValid, sendRequest, storeReport
+import os
+from utilityFunctions import isStringValid, sendRequest, storeReport
 
 
 app = FastAPI()
@@ -40,7 +41,7 @@ class Data(BaseModel):
 async def exceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -62,14 +63,14 @@ async def reporting(data: Data):
 	tasks = [
 		sendRequest(
 			"get",
-			"http://127.0.0.1:8086/zta/encrypt",
+			os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 			{
 				"data": dataForEncryption
 			}
 		),
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8087/zta/monitoring",
+			os.getenv("URL_MONITORING_MICROSERVICE"),
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "WARN",

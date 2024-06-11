@@ -9,6 +9,6 @@ ENV URL_OA_MICROSERVICE_ENCRYPTION=http://127.0.0.1:8086/zta/encrypt
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 8022
+EXPOSE 8034
 
-CMD ["uvicorn", "microservice3Logging:app", "--host", "0.0.0.0", "--port", "8022"]
+CMD ["uvicorn", "microservice5Logging:app", "--host", "0.0.0.0", "--port", "8034"]

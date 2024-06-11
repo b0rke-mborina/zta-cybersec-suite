@@ -3,8 +3,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator, validator
 import datetime
+import os
 from enum import Enum
-from .utilityFunctions import isStringValid, log, sendRequest
+from utilityFunctions import isStringValid, log, sendRequest
 
 
 app = FastAPI()
@@ -51,7 +52,7 @@ class Data(BaseModel):
 async def exceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -72,7 +73,7 @@ async def logging(data: Data):
 
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": dataForEncryption
 		}

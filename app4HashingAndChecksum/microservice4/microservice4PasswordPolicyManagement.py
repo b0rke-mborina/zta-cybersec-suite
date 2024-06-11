@@ -1,9 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, field_validator, validator
+from pydantic import BaseModel, field_validator
 import datetime
-from .utilityFunctions import isStringValid, sendRequest, validatePassword
+import os
+from utilityFunctions import isStringValid, sendRequest, validatePassword
 
 
 app = FastAPI()
@@ -27,7 +28,7 @@ class Data(BaseModel):
 async def exceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -44,7 +45,7 @@ async def reporting(data: Data):
 	if not isPasswordValid:
 		monitoringResult = await sendRequest(
 			"post",
-			"http://127.0.0.1:8087/zta/monitoring",
+			os.getenv("URL_MONITORING_MICROSERVICE"),
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "WARN",

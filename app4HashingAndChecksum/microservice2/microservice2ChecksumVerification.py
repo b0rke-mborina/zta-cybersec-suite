@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, field_validator, validator
+from pydantic import BaseModel, field_validator
 import asyncio
 import datetime
+import os
 from enum import Enum
-from .utilityFunctions import getAuthData, isStringValid, sendRequest, verifyChecksum
+from utilityFunctions import getAuthData, isStringValid, sendRequest, verifyChecksum
 
 
 app = FastAPI()
@@ -46,7 +47,7 @@ async def validation_exception_handler(request, exc):
 		"response": "__NULL__",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
-	await sendRequest("post", "http://127.0.0.1:8034/hashing/logging", dataForLoggingUnsuccessfulRequest)
+	await sendRequest("post", os.getenv("URL_LOGGING_MICROSERVICE"), dataForLoggingUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 400,
@@ -57,7 +58,7 @@ async def validation_exception_handler(request, exc):
 async def httpExceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -73,7 +74,7 @@ async def verification(request: Request, data: Data):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 42
@@ -93,7 +94,7 @@ async def verification(request: Request, data: Data):
 	tasks = [
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8034/hashing/logging",
+			os.getenv("URL_LOGGING_MICROSERVICE"),
 			{
 				"timestamp": currentTime,
 				"level": "INFO",
@@ -109,7 +110,7 @@ async def verification(request: Request, data: Data):
 		tasks.append(
 			sendRequest(
 				"post",
-				"http://127.0.0.1:8032/hashing/reporting",
+				os.getenv("URL_REPORTING_MICROSERVICE"),
 				{
 					"timestamp": currentTime,
 					"logger_source": 42,

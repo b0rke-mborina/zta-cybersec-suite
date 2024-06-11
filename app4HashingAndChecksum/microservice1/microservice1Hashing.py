@@ -3,8 +3,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 import datetime
+import os
 from enum import Enum
-from .utilityFunctions import getAuthData, hashData, isStringValid, sendRequest
+from utilityFunctions import getAuthData, hashData, isStringValid, sendRequest
 
 
 app = FastAPI()
@@ -44,7 +45,7 @@ async def validation_exception_handler(request, exc):
 		"response": "__NULL__",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
-	await sendRequest("post", "http://127.0.0.1:8034/hashing/logging", dataForLoggingUnsuccessfulRequest)
+	await sendRequest("post", os.getenv("URL_LOGGING_MICROSERVICE"), dataForLoggingUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 400,
@@ -55,7 +56,7 @@ async def validation_exception_handler(request, exc):
 async def httpExceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -71,7 +72,7 @@ async def hashing(request: Request, data: Data):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 41
@@ -87,7 +88,7 @@ async def hashing(request: Request, data: Data):
 	if data.password:
 		policyResult = await sendRequest(
 			"get",
-			"http://127.0.0.1:8033/hashing/policy",
+			os.getenv("URL_POLICY_MICROSERVICE"),
 			{
 				"data": data.data,
 				"user_id": userId
@@ -104,7 +105,7 @@ async def hashing(request: Request, data: Data):
 
 	loggingResult = await sendRequest(
 		"post",
-		"http://127.0.0.1:8034/hashing/logging",
+		os.getenv("URL_LOGGING_MICROSERVICE"),
 		{
 			"timestamp": currentTime,
 			"level": "INFO",
