@@ -3,7 +3,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 import datetime
-from .utilityFunctions import getAuthData, isStringValid, sendRequest, verifyAPIKey, verifyOAuth2, verifyJWT
+import os
+from utilityFunctions import getAuthData, isStringValid, sendRequest, verifyAPIKey, verifyOAuth2, verifyJWT
 
 
 app = FastAPI()
@@ -56,7 +57,7 @@ async def validation_exception_handler(request, exc):
 		"response": "__NULL__",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
-	await sendRequest("post", "http://127.0.0.1:8013/auth-generator/logging", dataForLoggingUnsuccessfulRequest)
+	await sendRequest("post", os.getenv("URL_LOGGING_MICROSERVICE"), dataForLoggingUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 400,
@@ -67,7 +68,7 @@ async def validation_exception_handler(request, exc):
 async def httpExceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -83,7 +84,7 @@ async def verificatorAPIKey(request: Request, data: DataAPIKey):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 22
@@ -99,7 +100,7 @@ async def verificatorAPIKey(request: Request, data: DataAPIKey):
 
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": {
 				"auth_type": "api_key",
@@ -113,7 +114,7 @@ async def verificatorAPIKey(request: Request, data: DataAPIKey):
 
 	keyResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8012/auth-generator/data-info",
+		os.getenv("URL_STORAGE_MICROSERVICE_INFO"),
 		{
 			"auth_type": encryptedData["auth_type"],
 			"token_key": encryptedData["token_key"]
@@ -127,7 +128,7 @@ async def verificatorAPIKey(request: Request, data: DataAPIKey):
 	
 	loggingResult = await sendRequest(
 		"post",
-		"http://127.0.0.1:8013/auth-generator/logging",
+		os.getenv("URL_LOGGING_MICROSERVICE"),
 		{
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
@@ -148,7 +149,7 @@ async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 22
@@ -164,7 +165,7 @@ async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": {
 				"auth_type": "oauth2_token",
@@ -178,7 +179,7 @@ async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 
 	tokenResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8012/auth-generator/data-info",
+		os.getenv("URL_STORAGE_MICROSERVICE_INFO"),
 		{
 			"auth_type": encryptedData["auth_type"],
 			"token_key": encryptedData["token_key"],
@@ -193,7 +194,7 @@ async def verificatorOAuth2(request: Request, data: DataOAuth2Token):
 	
 	loggingResult = await sendRequest(
 		"post",
-		"http://127.0.0.1:8013/auth-generator/logging",
+		os.getenv("URL_LOGGING_MICROSERVICE"),
 		{
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",
@@ -214,7 +215,7 @@ async def verificatorJWT(request: Request, data: DataJWT):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 22
@@ -230,7 +231,7 @@ async def verificatorJWT(request: Request, data: DataJWT):
 
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": {
 				"auth_type": "jwt",
@@ -244,7 +245,7 @@ async def verificatorJWT(request: Request, data: DataJWT):
 
 	tokenResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8012/auth-generator/data-info",
+		os.getenv("URL_STORAGE_MICROSERVICE_INFO"),
 		{
 			"auth_type": encryptedData["auth_type"],
 			"token_key": encryptedData["token_key"],
@@ -259,7 +260,7 @@ async def verificatorJWT(request: Request, data: DataJWT):
 	
 	loggingResult = await sendRequest(
 		"post",
-		"http://127.0.0.1:8013/auth-generator/logging",
+		os.getenv("URL_LOGGING_MICROSERVICE"),
 		{
 			"timestamp": currentTime.isoformat(),
 			"level": "INFO",

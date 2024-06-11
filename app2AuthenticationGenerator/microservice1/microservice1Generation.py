@@ -3,7 +3,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 import asyncio
 import datetime
-from .utilityFunctions import getAuthData, sendRequest, generateAPIKey, generateOAuth2, generateJWT
+import os
+from utilityFunctions import getAuthData, sendRequest, generateAPIKey, generateOAuth2, generateJWT
 
 
 app = FastAPI()
@@ -20,7 +21,7 @@ async def validation_exception_handler(request, exc):
 		"response": "__NULL__",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
-	await sendRequest("post", "http://127.0.0.1:8013/auth-generator/logging", dataForLoggingUnsuccessfulRequest)
+	await sendRequest("post", os.getenv("URL_LOGGING_MICROSERVICE"), dataForLoggingUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 400,
@@ -31,7 +32,7 @@ async def validation_exception_handler(request, exc):
 async def httpExceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -47,7 +48,7 @@ async def generatorAPIKey(request: Request):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 21
@@ -66,7 +67,7 @@ async def generatorAPIKey(request: Request):
 
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": {
 				"auth_type": "api_key",
@@ -81,7 +82,7 @@ async def generatorAPIKey(request: Request):
 	tasks = [
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8012/auth-generator/data-new",
+			os.getenv("URL_STORAGE_MICROSERVICE_NEW"),
 			{
 				"auth_type": encryptedData["auth_type"],
 				"token_key": encryptedData["token_key"],
@@ -90,7 +91,7 @@ async def generatorAPIKey(request: Request):
 		),
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8013/auth-generator/logging",
+			os.getenv("URL_LOGGING_MICROSERVICE"),
 			{
 				"timestamp": currentTime.isoformat(),
 				"level": "INFO",
@@ -113,7 +114,7 @@ async def generatorOAuth2(request: Request):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 21
@@ -132,7 +133,7 @@ async def generatorOAuth2(request: Request):
 
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": {
 				"auth_type": "oauth2_token",
@@ -147,7 +148,7 @@ async def generatorOAuth2(request: Request):
 	tasks = [
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8012/auth-generator/data-new",
+			os.getenv("URL_STORAGE_MICROSERVICE_NEW"),
 			{
 				"auth_type": encryptedData["auth_type"],
 				"token_key": encryptedData["token_key"],
@@ -157,7 +158,7 @@ async def generatorOAuth2(request: Request):
 		),
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8013/auth-generator/logging",
+			os.getenv("URL_LOGGING_MICROSERVICE"),
 			{
 				"timestamp": currentTime.isoformat(),
 				"level": "INFO",
@@ -180,7 +181,7 @@ async def generatorJWT(request: Request):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 21
@@ -199,7 +200,7 @@ async def generatorJWT(request: Request):
 
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": {
 				"auth_type": "jwt",
@@ -215,7 +216,7 @@ async def generatorJWT(request: Request):
 	tasks = [
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8012/auth-generator/data-new",
+			os.getenv("URL_STORAGE_MICROSERVICE_NEW"),
 			{
 				"auth_type": encryptedData["auth_type"],
 				"token_key": encryptedData["token_key"],
@@ -226,7 +227,7 @@ async def generatorJWT(request: Request):
 		),
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8013/auth-generator/logging",
+			os.getenv("URL_LOGGING_MICROSERVICE"),
 			{
 				"timestamp": currentTime.isoformat(),
 				"level": "INFO",

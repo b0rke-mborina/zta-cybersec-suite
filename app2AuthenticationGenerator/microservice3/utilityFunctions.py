@@ -1,14 +1,8 @@
 import aiohttp
 import asyncio
 import aiosqlite
-import jwt
-import datetime
-import hashlib
-import secrets
-import string
 import html
 import re
-import base64
 import os.path
 
 async def request(session, method, url, data):
@@ -35,43 +29,10 @@ def isStringValid(strValue, allowNoneOrEmpty, regex):
 	
 	return True
 
-async def log(dataItem, dbName):
-	async with aiosqlite.connect(getDbPath(dbName)) as db:
-		await db.execute(
-			"INSERT INTO Log (timestamp, level, logger_source, user_id, request, response, error_message) VALUES (?, ?, ?, ?, ?, ?, ?)",
-			(
-				dataItem["timestamp"],
-				dataItem["level"],
-				dataItem["logger_source"],
-				dataItem["user_id"],
-				dataItem["request"],
-				dataItem["response"],
-				dataItem["error_message"]
-			)
-		)
-		await db.commit()
-
 def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
-
-def getAuthData(headers):
-	jwt = headers.get("jwt")
-	username = headers.get("username")
-	password = headers.get("password")
-
-	authData = {
-		"jwt": jwt if jwt is not None and jwt != "" else ""
-	}
-	if username is not None and username != "" and password is not None and password != "":
-		authData["username"] = username
-		authData["password_hash"] = hashData(password)
-	
-	return authData
-
-def hashData(data):
-	return hashlib.sha512(data.encode()).hexdigest()
 
 async def getData(authType, value, userId = None):
 	print(authType, value, userId)
@@ -146,54 +107,3 @@ async def storeJWT(dbName, userId, token, secret, expires):
 			(userId, token, secret, expires)
 		)
 		await db.commit()
-
-def generateAPIKey():
-	alphabet = string.ascii_letters + string.digits
-	return ''.join(secrets.choice(alphabet) for _ in range(32))
-
-def generateOAuth2():
-	return secrets.token_urlsafe(32)
-
-def generateJWT(userId):
-	secretKey = "SECRET_KEY_PLACEHOLDER" # PLACEHOLDER
-	expirationDatetime = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=14)).isoformat()
-	token = jwt.encode({ "user_id": userId, "expires": expirationDatetime }, secretKey, algorithm='HS256')
-	return token
-
-def verifyAPIKey(dataFromDb, currentDatetime):
-	if len(dataFromDb) == 0:
-		return False
-	
-	datetimeFromDb = datetime.datetime.fromisoformat(dataFromDb[0][1]).replace(tzinfo=datetime.timezone.utc)
-	return datetimeFromDb > currentDatetime
-
-def verifyOAuth2(dataFromDb, currentDatetime, userId):
-	if len(dataFromDb) == 0:
-		return False
-
-	datetimeFromDb = datetime.datetime.fromisoformat(dataFromDb[0][2]).replace(tzinfo=datetime.timezone.utc)
-	userIdFromDb = dataFromDb[0][0]
-
-	return datetimeFromDb > currentDatetime and userId == userIdFromDb
-
-def verifyJWT(token, dataFromDb, currentDatetime, userId):
-	if len(dataFromDb) == 0:
-		return False
-
-	datetimeFromDb = datetime.datetime.fromisoformat(dataFromDb[0][3]).replace(tzinfo=datetime.timezone.utc)
-	userIdFromDb = dataFromDb[0][0]
-	# secretFromDb = dataFromDb[0][2]
-	
-	try:
-		decodedPayload = jwt.decode(token, "SECRET_KEY_PLACEHOLDER", algorithms=['HS256']) # base64.b64decode(secretFromDb) # PLACEHOLDER
-		print(decodedPayload)
-
-		datetimeFromPayload = datetime.datetime.fromisoformat(decodedPayload.get("expires")).replace(tzinfo=datetime.timezone.utc)
-		userIdFromPayload = decodedPayload.get("user_id")
-
-		isDatetimeOk = datetimeFromDb == datetimeFromPayload and datetimeFromPayload > currentDatetime
-		isUserIdOk = userIdFromDb == userIdFromPayload and userIdFromPayload == userId
-
-		return isDatetimeOk and isUserIdOk
-	except:
-		return False
