@@ -1,10 +1,11 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, field_validator, validator
+from pydantic import BaseModel, field_validator
 import asyncio
 import datetime
-from .utilityFunctions import getAuthData, hashPasswordWithSalt, isStringValid, sendRequest
+import os
+from utilityFunctions import getAuthData, hashPasswordWithSalt, isStringValid, sendRequest
 
 
 app = FastAPI()
@@ -36,7 +37,7 @@ async def validation_exception_handler(request, exc):
 		"response": "__NULL__",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
-	await sendRequest("post", "http://127.0.0.1:8044/password/logging", dataForLoggingUnsuccessfulRequest)
+	await sendRequest("post", os.getenv("URL_LOGGING_MICROSERVICE"), dataForLoggingUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 400,
@@ -47,7 +48,7 @@ async def validation_exception_handler(request, exc):
 async def exceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -63,7 +64,7 @@ async def reset(request: Request, data: Data):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 53
@@ -78,7 +79,7 @@ async def reset(request: Request, data: Data):
 
 	policyResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8043/password/policy",
+		os.getenv("URL_POLICY_MICROSERVICE"),
 		{
 			"data": data.new_password,
 			"user_id": userId
@@ -91,7 +92,7 @@ async def reset(request: Request, data: Data):
 
 	retrievalResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8040/password/retrieve",
+		os.getenv("URL_STORAGE_MICROSERVICE_RETRIEVE"),
 		{
 			"user_id": userId,
 			"username": data.username
@@ -117,7 +118,7 @@ async def reset(request: Request, data: Data):
 	tasks = [
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8040/password/update",
+			os.getenv("URL_STORAGE_MICROSERVICE_UPDATE"),
 			{
 				"user_id": userId,
 				"username": data.username,
@@ -128,7 +129,7 @@ async def reset(request: Request, data: Data):
 		),
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8044/password/logging",
+			os.getenv("URL_LOGGING_MICROSERVICE"),
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "INFO",

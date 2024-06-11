@@ -1,10 +1,11 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, field_validator, validator
+from pydantic import BaseModel, field_validator
 import asyncio
 import datetime
-from .utilityFunctions import getAuthData, isStringValid, sendRequest, storePasswordHash, getPasswordHashInfo, updatePasswordHash, hashPassword
+import os
+from utilityFunctions import getAuthData, isStringValid, sendRequest, storePasswordHash, getPasswordHashInfo, updatePasswordHash, hashPassword
 
 
 app = FastAPI()
@@ -75,7 +76,7 @@ async def validation_exception_handler(request, exc):
 		"response": "__NULL__",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
-	await sendRequest("post", "http://127.0.0.1:8044/password/logging", dataForLoggingUnsuccessfulRequest)
+	await sendRequest("post", os.getenv("URL_LOGGING_MICROSERVICE"), dataForLoggingUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 400,
@@ -86,7 +87,7 @@ async def validation_exception_handler(request, exc):
 async def httpExceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -102,7 +103,7 @@ async def storage(request: Request, data: DataStore):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 51
@@ -117,7 +118,7 @@ async def storage(request: Request, data: DataStore):
 
 	policyResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8043/password/policy",
+		os.getenv("URL_POLICY_MICROSERVICE"),
 		{
 			"data": data.password,
 			"user_id": userId
@@ -135,7 +136,7 @@ async def storage(request: Request, data: DataStore):
 
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": {
 				"username": data.username,
@@ -153,7 +154,7 @@ async def storage(request: Request, data: DataStore):
 		storePasswordHash("app5Data.db", userId, usernameEncrypted, passwordHashString, saltString, algorithmEncrypted),
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8044/password/logging",
+			os.getenv("URL_LOGGING_MICROSERVICE"),
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "INFO",
@@ -175,7 +176,7 @@ async def storage(request: Request, data: DataStore):
 async def retrieval(data: DataRetrieve):
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": {
 				"username": data.username
@@ -194,7 +195,7 @@ async def retrieval(data: DataRetrieve):
 async def storage(data: DataUpdate):
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": {
 				"username": data.username,
