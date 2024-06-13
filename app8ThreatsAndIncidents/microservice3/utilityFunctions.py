@@ -3,7 +3,6 @@ import asyncio
 import aiosqlite
 import datetime
 import json
-import hashlib
 import html
 import re
 import base64
@@ -11,7 +10,6 @@ import os.path
 from Crypto.Cipher import Blowfish
 from Crypto.Util.Padding import pad, unpad
 from struct import pack
-from fastapi.exceptions import RequestValidationError
 
 async def request(session, method, url, data):
 	async with session.request(method = method, url = url, json = data) as response:
@@ -37,43 +35,10 @@ def isStringValid(strValue, allowNoneOrEmpty, regex):
 	
 	return True
 
-async def log(dataItem, dbName):
-	async with aiosqlite.connect(getDbPath(dbName)) as db:
-		await db.execute(
-			"INSERT INTO Log (timestamp, level, logger_source, user_id, request, response, error_message) VALUES (?, ?, ?, ?, ?, ?, ?)",
-			(
-				dataItem["timestamp"],
-				dataItem["level"],
-				dataItem["logger_source"],
-				dataItem["user_id"],
-				dataItem["request"],
-				dataItem["response"],
-				dataItem["error_message"]
-			)
-		)
-		await db.commit()
-
 def getDbPath(dbFilename):
 	baseDir = os.path.dirname(os.path.abspath(__file__))
 	dbPath = os.path.join(baseDir, dbFilename)
 	return dbPath
-
-def getAuthData(headers):
-	jwt = headers.get("jwt")
-	username = headers.get("username")
-	password = headers.get("password")
-
-	authData = {
-		"jwt": jwt if jwt is not None and jwt != "" else ""
-	}
-	if username is not None and username != "" and password is not None and password != "":
-		authData["username"] = username
-		authData["password_hash"] = hashData(password)
-	
-	return authData
-
-def hashData(data):
-	return hashlib.sha512(data.encode()).hexdigest()
 
 async def storeThreat(dbName, userId, dataItem):
 	async with aiosqlite.connect(getDbPath(dbName)) as db:
@@ -126,46 +91,6 @@ def loadThreat(threat):
 	}
 	return loadedThreat
 
-def validateIncidentData(data):
-	fieldsToValidate = [
-		"affected_assets",
-		"attack_vectors",
-		"malicious_code",
-		"compromised_data",
-		"indicators_of_compromise",
-		"user_accounts_involved",
-		"logs",
-		"actions"
-	]
-
-	for field in fieldsToValidate:
-		if field == "attack_vectors":
-			if not all(isinstance(item, list) for item in getattr(data, field)):
-				raise RequestValidationError("Request not valid.")
-		else:
-			if not all(isinstance(item, str) for item in getattr(data, field)):
-				raise RequestValidationError("Request not valid.")
-
-
-def validateThreatRequest(timeFrom, timeTo):
-	datetimeFrom = datetime.datetime.fromisoformat(timeFrom).replace(tzinfo=datetime.timezone.utc)
-	datetimeTo = datetime.datetime.fromisoformat(timeTo).replace(tzinfo=datetime.timezone.utc)
-	if not datetimeFrom < datetimeTo:
-		raise RequestValidationError("Request not valid.")
-
-def incidentIncludesThisSystem(data):
-	assets = {"CyberSecSuite", "you", "me", "this system"}
-	affectedAssets = getattr(data, "affected_assets", [])
-	if any(asset in assets for asset in affectedAssets):
-		return True
-	
-	accounts = {data.user_id, data.username}
-	userAccounts = getattr(data, "user_accounts_involved", [])
-	if any(account in accounts for account in userAccounts):
-		return True
-	
-	return False
-
 def encryptData(data):
 	result = {}
 	for field, value in data.items():
@@ -194,12 +119,6 @@ def encryptBlowfish(field, plaintext):
 		ciphertext = cipher.iv + cipher.encrypt(plaintextBytes + padding)
 
 	return base64.b64encode(ciphertext).decode("utf-8")
-
-def decryptData(data):
-	result = {}
-	for field, value in data.items():
-		result[field] = decryptBlowfish(field, value)
-	return result
 
 def decryptBlowfish(field, ciphertext):
 	try:

@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator, validator
 import asyncio
 import datetime
+import os
 from enum import Enum
 from .utilityFunctions import encryptBlowfish, encryptData, getThreats, isStringValid, sendRequest, storeThreat
 
@@ -100,7 +101,7 @@ class DataThreats(BaseModel):
 async def exceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -126,7 +127,7 @@ async def incident(data: DataIncident):
 	tasks = [
 		sendRequest(
 			"get",
-			"http://127.0.0.1:8073/intelligence/analysis",
+			os.getenv("URL_ANALYSIS_MICROSERVICE"),
 			{
 				"user_id": data.user_id,
 				"username": data.username,

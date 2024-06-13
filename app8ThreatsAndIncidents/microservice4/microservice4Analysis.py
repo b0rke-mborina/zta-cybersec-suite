@@ -3,6 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator, validator
 import datetime
+import os
 from enum import Enum
 from .utilityFunctions import incidentIncludesThisSystem, isStringValid, sendRequest
 
@@ -60,7 +61,7 @@ class Data(BaseModel):
 async def exceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -79,7 +80,7 @@ async def analysis(data: Data):
 	if isThisSystemIncluded:
 		governanceResult = await sendRequest(
 			"post",
-			"http://127.0.0.1:8080/zta/governance",
+			os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 			{
 				"problem": "security_breach",
 				"user_id": data.user_id
