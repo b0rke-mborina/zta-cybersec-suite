@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app8-microservice1
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /intelligence/report
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /app8-microservice1
+        pathType: Prefix
+        backend:
+          service:
+            name: app8-microservice1
+            port:
+              number: 80
