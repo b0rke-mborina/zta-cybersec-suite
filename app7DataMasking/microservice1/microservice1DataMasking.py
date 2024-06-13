@@ -4,7 +4,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 import asyncio
 import datetime
-from .utilityFunctions import getAuthData, isStringValid, maskData, sendRequest, checkData
+import os
+from utilityFunctions import getAuthData, isStringValid, maskData, sendRequest, checkData
 
 
 app = FastAPI()
@@ -56,7 +57,7 @@ async def validation_exception_handler(request, exc):
 		"response": "__NULL__",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
-	await sendRequest("post", "http://127.0.0.1:8063/data/logging", dataForLoggingUnsuccessfulRequest)
+	await sendRequest("post", os.getenv("URL_LOGGING_MICROSERVICE"), dataForLoggingUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 400,
@@ -67,7 +68,7 @@ async def validation_exception_handler(request, exc):
 async def exceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -83,7 +84,7 @@ async def masking(request: Request, data: DataMask):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 71
@@ -100,7 +101,7 @@ async def masking(request: Request, data: DataMask):
 	checkData(data.data)
 	accessControlResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8062/data/access-control",
+		os.getenv("URL_ACCESSCONTROL_MICROSERVICE"),
 		{
 			"user_id": userId,
 			"role": userRole
@@ -116,7 +117,7 @@ async def masking(request: Request, data: DataMask):
 	tasks = [
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8061/data/store",
+			os.getenv("URL_STORAGE_MICROSERVICE_STORE"),
 			{
 				"user_id": userId,
 				"dataset": data.dataset,
@@ -126,7 +127,7 @@ async def masking(request: Request, data: DataMask):
 		),
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8063/data/logging",
+			os.getenv("URL_LOGGING_MICROSERVICE"),
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "INFO",
@@ -149,7 +150,7 @@ async def unmasking(request: Request, data: DataUnmask):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 71
@@ -165,7 +166,7 @@ async def unmasking(request: Request, data: DataUnmask):
 
 	accessControlResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8062/data/access-control",
+		os.getenv("URL_ACCESSCONTROL_MICROSERVICE"),
 		{
 			"user_id": userId,
 			"role": userRole
@@ -176,7 +177,7 @@ async def unmasking(request: Request, data: DataUnmask):
 
 	storageResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8061/data/retrieve",
+		os.getenv("URL_STORAGE_MICROSERVICE_RETRIEVE"),
 		{
 			"user_id": userId,
 			"dataset": data.dataset
@@ -189,7 +190,7 @@ async def unmasking(request: Request, data: DataUnmask):
 	
 	loggingResult = await sendRequest(
 		"post",
-		"http://127.0.0.1:8063/data/logging",
+		os.getenv("URL_LOGGING_MICROSERVICE"),
 		{
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "INFO",

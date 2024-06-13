@@ -1,0 +1,7 @@
+uvicorn
+fastapi
+pydantic
+aiohttp
+asyncio
+aiosqlite
+pycryptodome

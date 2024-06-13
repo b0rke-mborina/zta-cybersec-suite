@@ -8,6 +8,6 @@ ENV URL_GOVERNANCE_MICROSERVICE=http://127.0.0.1:8080/zta/governance
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 8052
+EXPOSE 8062
 
-CMD ["uvicorn", "microservice3Cryptography:app", "--host", "0.0.0.0", "--port", "8052"]
+CMD ["uvicorn", "microservice3AccessControl:app", "--host", "0.0.0.0", "--port", "8062"]

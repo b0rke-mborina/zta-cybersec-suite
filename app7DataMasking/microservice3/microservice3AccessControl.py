@@ -2,8 +2,9 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
+import os
 from enum import Enum
-from .utilityFunctions import checkIfUserAllowed, isStringValid, sendRequest
+from utilityFunctions import checkIfUserAllowed, isStringValid, sendRequest
 
 
 app = FastAPI()
@@ -33,7 +34,7 @@ class Data(BaseModel):
 async def exceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
