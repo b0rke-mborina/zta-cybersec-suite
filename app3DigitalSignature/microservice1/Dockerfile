@@ -4,10 +4,10 @@ WORKDIR /app
 
 COPY . /app
 
-ENV URL_ACCESSCONTROL_MICROSERVICE=http://127.0.0.1:8021/digital-signature/access-control
-ENV URL_LOGGING_MICROSERVICE=http://127.0.0.1:8022/digital-signature/logging
-ENV URL_GOVERNANCE_MICROSERVICE=http://127.0.0.1:8080/zta/governance
-ENV URL_TUNNELLING_MICROSERVICE=http://127.0.0.1:8085/zta/tunnelling
+ENV URL_ACCESSCONTROL_MICROSERVICE=http://app3-microservice2/digital-signature/access-control
+ENV URL_LOGGING_MICROSERVICE=http://app3-microservice3/digital-signature/logging
+ENV URL_GOVERNANCE_MICROSERVICE=http://zta-microservice1/zta/governance
+ENV URL_TUNNELLING_MICROSERVICE=http://zta-microservice5/zta/tunnelling
 
 RUN pip install --no-cache-dir -r requirements.txt
 

@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app4-microservice1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app4-microservice1
+  template:
+    metadata:
+      labels:
+        app: app4-microservice1
+    spec:
+      containers:
+      - name: app4-microservice1
+        image: b0rkemborina/zta-cybersec-suite:app4microservice1
+        ports:
+        - containerPort: 8030
