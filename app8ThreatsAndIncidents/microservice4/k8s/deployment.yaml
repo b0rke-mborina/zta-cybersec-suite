@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app8-microservice4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app8-microservice4
+  template:
+    metadata:
+      labels:
+        app: app8-microservice4
+    spec:
+      containers:
+      - name: app8-microservice4
+        image: b0rkemborina/zta-cybersec-suite:app8microservice4
+        ports:
+        - containerPort: 8073

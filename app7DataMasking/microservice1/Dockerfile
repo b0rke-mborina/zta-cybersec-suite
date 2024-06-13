@@ -4,13 +4,13 @@ WORKDIR /app
 
 COPY . /app
 
-ENV URL_STORAGE_MICROSERVICE_STORE=http://127.0.0.1:8061/data/store
-ENV URL_STORAGE_MICROSERVICE_RETRIEVE=http://127.0.0.1:8061/data/retrieve
-ENV URL_ACCESSCONTROL_MICROSERVICE=http://127.0.0.1:8062/data/access-control
-ENV URL_LOGGING_MICROSERVICE=http://127.0.0.1:8063/data/logging
-ENV URL_GOVERNANCE_MICROSERVICE=http://127.0.0.1:8080/zta/governance
-ENV URL_TUNNELLING_MICROSERVICE=http://127.0.0.1:8085/zta/tunnelling
-ENV URL_OA_MICROSERVICE_ENCRYPTION=http://127.0.0.1:8086/zta/encrypt
+ENV URL_STORAGE_MICROSERVICE_STORE=http://app7-microservice2/data/store
+ENV URL_STORAGE_MICROSERVICE_RETRIEVE=http://app7-microservice2/data/retrieve
+ENV URL_ACCESSCONTROL_MICROSERVICE=http://app7-microservice3/data/access-control
+ENV URL_LOGGING_MICROSERVICE=http://app7-microservice4/data/logging
+ENV URL_GOVERNANCE_MICROSERVICE=http://zta-microservice1/zta/governance
+ENV URL_TUNNELLING_MICROSERVICE=http://zta-microservice5/zta/tunnelling
+ENV URL_OA_MICROSERVICE_ENCRYPTION=http://zta-microservice6/zta/encrypt
 
 RUN pip install --no-cache-dir -r requirements.txt
 

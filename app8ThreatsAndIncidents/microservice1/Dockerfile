@@ -4,10 +4,10 @@ WORKDIR /app
 
 COPY . /app
 
-ENV URL_STORAGE_MICROSERVICE_INCIDENT=http://127.0.0.1:8072/intelligence/incident
-ENV URL_LOGGING_MICROSERVICE=http://127.0.0.1:8074/intelligence/logging
-ENV URL_GOVERNANCE_MICROSERVICE=http://127.0.0.1:8080/zta/governance
-ENV URL_TUNNELLING_MICROSERVICE=http://127.0.0.1:8085/zta/tunnelling
+ENV URL_STORAGE_MICROSERVICE_INCIDENT=http://app8-microservice3/intelligence/incident
+ENV URL_LOGGING_MICROSERVICE=http://app8-microservice5/intelligence/logging
+ENV URL_GOVERNANCE_MICROSERVICE=http://zta-microservice1/zta/governance
+ENV URL_TUNNELLING_MICROSERVICE=http://zta-microservice5/zta/tunnelling
 
 RUN pip install --no-cache-dir -r requirements.txt
 

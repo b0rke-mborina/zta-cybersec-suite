@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app5-microservice3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app5-microservice3
+  template:
+    metadata:
+      labels:
+        app: app5-microservice3
+    spec:
+      containers:
+      - name: app5-microservice3
+        image: b0rkemborina/zta-cybersec-suite:app5microservice3
+        ports:
+        - containerPort: 8042

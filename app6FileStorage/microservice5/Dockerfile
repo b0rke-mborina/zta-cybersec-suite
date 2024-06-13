@@ -4,8 +4,8 @@ WORKDIR /app
 
 COPY . /app
 
-ENV URL_GOVERNANCE_MICROSERVICE=http://127.0.0.1:8080/zta/governance
-ENV URL_OA_MICROSERVICE_ENCRYPTION=http://127.0.0.1:8086/zta/encrypt
+ENV URL_GOVERNANCE_MICROSERVICE=http://zta-microservice1/zta/governance
+ENV URL_OA_MICROSERVICE_ENCRYPTION=http://zta-microservice6/zta/encrypt
 
 RUN pip install --no-cache-dir -r requirements.txt
 

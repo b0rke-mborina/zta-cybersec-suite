@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: app6-microservice5
+spec:
+  selector:
+    app: app6-microservice5
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8054
+  type: ClusterIP

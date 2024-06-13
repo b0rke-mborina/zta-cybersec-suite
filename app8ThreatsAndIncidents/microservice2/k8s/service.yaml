@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: app8-microservice2
+spec:
+  selector:
+    app: app8-microservice2
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8071
+  type: ClusterIP
