@@ -3,8 +3,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator, validator
 import asyncio
+import os
 from enum import Enum
-from .utilityFunctions import getFile, isStringValid, sendRequest, storeFile
+from utilityFunctions import getFile, isStringValid, sendRequest, storeFile
 
 
 app = FastAPI()
@@ -76,7 +77,7 @@ class DataRetrieve(BaseModel):
 async def exceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -92,14 +93,14 @@ async def storage(data: DataStore):
 	tasks = [
 		sendRequest(
 			"get",
-			"http://127.0.0.1:8052/file/encrypt",
+			os.getenv("URL_CRYPTOGRAPHY_MICROSERVICE_ENCRYPT"),
 			{
 				"file": data.file
 			}
 		),
 		sendRequest(
 			"get",
-			"http://127.0.0.1:8086/zta/encrypt",
+			os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 			{
 				"data": {
 					"filename": data.filename,
@@ -129,7 +130,7 @@ async def storage(data: DataStore):
 async def retrieval(data: DataRetrieve):
 	orchestrationAutomationResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8086/zta/encrypt",
+		os.getenv("URL_OA_MICROSERVICE_ENCRYPTION"),
 		{
 			"data": {
 				"filename": data.filename
@@ -144,7 +145,7 @@ async def retrieval(data: DataRetrieve):
 
 	decryptionResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8052/file/decrypt",
+		os.getenv("URL_CRYPTOGRAPHY_MICROSERVICE_DECRYPT"),
 		{
 			"file": fileData[0][3],
 			"key": fileData[0][4],

@@ -4,8 +4,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
 import asyncio
 import datetime
+import os
 from enum import Enum
-from .utilityFunctions import getAuthData, isStringValid, sendRequest
+from utilityFunctions import getAuthData, isStringValid, sendRequest
 
 
 app = FastAPI()
@@ -64,7 +65,7 @@ async def validation_exception_handler(request, exc):
 		"response": "__NULL__",
 		"error_message": f"Unsuccessful request due to a Request Validation error. {exc}".translate(str.maketrans("\"'{}:", "_____"))
 	}
-	await sendRequest("post", "http://127.0.0.1:8054/file/logging", dataForLoggingUnsuccessfulRequest)
+	await sendRequest("post", os.getenv("URL_LOGGING_MICROSERVICE"), dataForLoggingUnsuccessfulRequest)
 
 	return JSONResponse(
 		status_code = 400,
@@ -75,7 +76,7 @@ async def validation_exception_handler(request, exc):
 async def exceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
@@ -91,7 +92,7 @@ async def storage(request: Request, data: DataStore):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 61
@@ -107,7 +108,7 @@ async def storage(request: Request, data: DataStore):
 
 	accessControlResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8053/file/access-control",
+		os.getenv("URL_ACCESSCONTROL_MICROSERVICE"),
 		{
 			"user_id": userId,
 			"role": userRole
@@ -123,7 +124,7 @@ async def storage(request: Request, data: DataStore):
 	tasks = [
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8051/file/storage",
+			os.getenv("URL_STORAGE_MICROSERVICE_STORAGE"),
 			{
 				"user_id": userId,
 				"format": data.format,
@@ -133,7 +134,7 @@ async def storage(request: Request, data: DataStore):
 		),
 		sendRequest(
 			"post",
-			"http://127.0.0.1:8054/file/logging",
+			os.getenv("URL_LOGGING_MICROSERVICE"),
 			{
 				"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 				"level": "INFO",
@@ -156,7 +157,7 @@ async def retrieval(request: Request, data: DataRetrieve):
 	authData = getAuthData(request.headers)
 	tunnellingResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8085/zta/tunnelling",
+		os.getenv("URL_TUNNELLING_MICROSERVICE"),
 		{
 			"auth_data": authData,
 			"auth_source": 61
@@ -172,7 +173,7 @@ async def retrieval(request: Request, data: DataRetrieve):
 
 	accessControlResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8053/file/access-control",
+		os.getenv("URL_ACCESSCONTROL_MICROSERVICE"),
 		{
 			"user_id": userId,
 			"role": userRole
@@ -183,7 +184,7 @@ async def retrieval(request: Request, data: DataRetrieve):
 	
 	retrievalResult = await sendRequest(
 		"get",
-		"http://127.0.0.1:8051/file/retrieval",
+		os.getenv("URL_STORAGE_MICROSERVICE_RETRIEVAL"),
 		{
 			"user_id": userId,
 			"filename": data.filename
@@ -196,7 +197,7 @@ async def retrieval(request: Request, data: DataRetrieve):
 
 	loggingResult = await sendRequest(
 		"post",
-		"http://127.0.0.1:8054/file/logging",
+		os.getenv("URL_LOGGING_MICROSERVICE"),
 		{
 			"timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
 			"level": "INFO",

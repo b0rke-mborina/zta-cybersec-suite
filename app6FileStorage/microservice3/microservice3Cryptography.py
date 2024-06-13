@@ -2,7 +2,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, validator
-from .utilityFunctions import decryptFile, decryptSecret, encryptFile, encryptSecret, isStringValid, sendRequest
+import os
+from utilityFunctions import decryptFile, decryptSecret, encryptFile, encryptSecret, isStringValid, sendRequest
 
 
 app = FastAPI()
@@ -40,7 +41,7 @@ class DataDecrypt(BaseModel):
 async def exceptionHandler(request, exc):
 	await sendRequest(
 		"post",
-		"http://127.0.0.1:8080/zta/governance",
+		os.getenv("URL_GOVERNANCE_MICROSERVICE"),
 		{
 			"problem": "partial_system_failure"
 		}
