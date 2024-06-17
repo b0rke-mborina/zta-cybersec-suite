@@ -10,7 +10,6 @@ ENV URL_ACCESSCONTROL_MICROSERVICE=http://app7-microservice3/data/access-control
 ENV URL_LOGGING_MICROSERVICE=http://app7-microservice4/data/logging
 ENV URL_GOVERNANCE_MICROSERVICE=http://zta-microservice1/zta/governance
 ENV URL_TUNNELLING_MICROSERVICE=http://zta-microservice5/zta/tunnelling
-ENV URL_OA_MICROSERVICE_ENCRYPTION=http://zta-microservice6/zta/encrypt
 
 RUN pip install --no-cache-dir -r requirements.txt
 

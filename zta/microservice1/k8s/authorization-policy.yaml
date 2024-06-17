@@ -1,0 +1,13 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: zta-microservice1
+spec:
+  selector:
+    matchLabels:
+      app: zta-microservice1
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        namespaces: ["default"]

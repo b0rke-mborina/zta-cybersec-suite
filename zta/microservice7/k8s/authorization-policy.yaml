@@ -1,0 +1,23 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: zta-microservice5
+spec:
+  selector:
+    matchLabels:
+      app: zta-microservice5
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: [
+          "cluster.local/ns/default/sa/app4-microservice3",
+          "cluster.local/ns/default/sa/app4-microservice4",
+          "cluster.local/ns/default/sa/app5-microservice4",
+          "cluster.local/ns/default/sa/zta-microservice1",
+          "cluster.local/ns/default/sa/zta-microservice2",
+          "cluster.local/ns/default/sa/zta-microservice3",
+          "cluster.local/ns/default/sa/zta-microservice4",
+          "cluster.local/ns/default/sa/zta-microservice5",
+          "cluster.local/ns/default/sa/zta-microservice6"
+        ]

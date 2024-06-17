@@ -1,0 +1,17 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: app5-microservice5
+spec:
+  selector:
+    matchLabels:
+      app: app5-microservice5
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: [
+          "cluster.local/ns/default/sa/app5-microservice1",
+          "cluster.local/ns/default/sa/app5-microservice2",
+          "cluster.local/ns/default/sa/app5-microservice3"
+        ]
